@@ -1,0 +1,73 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="24dp">
+
+        <TextView android:id="@+id/tvStep" android:textStyle="bold" android:textSize="18sp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Step 1: Phone + OTP"/>
+
+        <!-- Step 1: request OTP -->
+        <LinearLayout android:id="@+id/stepPhone" android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+            <EditText android:id="@+id/etPhone" android:hint="Phone (+263…)" android:inputType="phone"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnSendOtp" android:text="Send OTP"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <EditText android:id="@+id/etOtp" android:hint="Enter OTP"
+                android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnVerifyOtp" android:text="Verify OTP"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Step 2: set PIN (if first time or not set) -->
+        <LinearLayout android:id="@+id/stepPin" android:visibility="gone" android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create your PIN (required for future pickups)"/>
+            <EditText android:id="@+id/etPin1"
+                android:hint="PIN"
+                android:inputType="numberPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+            <EditText android:id="@+id/etPin2"
+                android:hint="Confirm PIN"
+                android:inputType="numberPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnSavePin"
+                android:text="Save PIN"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Step 3: parcels -->
+        <LinearLayout android:id="@+id/stepParcels" android:visibility="gone" android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your available parcels (one at a time)"/>
+            <ListView android:id="@+id/listParcels"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"/>
+            <TextView
+                android:id="@+id/tvSelected"
+                android:text=""
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button android:id="@+id/btnOpenLocker"
+                android:text="Open locker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnClosed"
+                android:text="I closed the door"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

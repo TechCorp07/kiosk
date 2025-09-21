@@ -1,0 +1,47 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="24dp">
+
+        <TextView android:id="@+id/tvHeader" android:text="Courier" android:textStyle="bold" android:textSize="18sp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+        <!-- Login -->
+        <LinearLayout android:id="@+id/stepLogin" android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+            <TextView
+                android:text="Scan badge or enter PIN"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText android:id="@+id/etCode" android:hint="Badge / PIN" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnLogin" android:text="Login" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Worklist -->
+        <LinearLayout android:id="@+id/stepWork" android:visibility="gone" android:orientation="vertical"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tvCourier"
+                android:text="-" />
+            <TextView
+                android:id="@+id/tvItem"
+                android:text="Next item: -"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvScanStatus"
+                android:text="Waiting for scan..."
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText android:id="@+id/etTracking" android:hint="Scan tracking code" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnOpen" android:text="Open locker" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnConfirm" android:text="Confirm collected" android:layout_width="match_parent" android:layout_height="wrap_content" android:enabled="false"/>
+            <Button android:id="@+id/btnDone" android:text="Done" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">PudoKiosk</string>
+    <string name="pudo_kiosk">PUDO Kiosk</string>
+    <string name="send_a_package">Send a package</string>
+    <string name="collect_a_package">Collect a package</string>
+    <string name="courier">Courier</string>
+    <string name="admin_dev_mode">Admin / Dev Mode</string>
+    <string name="notif_channel_name">Device Service</string>
+    <string name="notif_channel_desc">Keeps device I/O and sync running</string>
+    <string name="notif_running">PUDO device service is running</string>
+    <string name="recipient_details">Recipient details</string>
+    <string name="package_size_measure_with_locker_ruler">Package size (measure with locker ruler)</string>
+    <string name="i_confirm_this_package_meets_pudo_postal_restrictions">I confirm this package meets PUDO/postal restrictions</string>
+    <string name="recipient_phone">Recipient phone</string>
+    <string name="recipient_name">Recipient name</string>
+    <string name="locker_pending">Locker: (pending)</string>
+    <string name="amount_usd_cents_e_g_500">Amount (USD cents e.g. 500)</string>
+</resources>

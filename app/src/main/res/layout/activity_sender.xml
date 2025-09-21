@@ -1,0 +1,95 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="24dp">
+
+        <!-- Step title -->
+        <TextView android:id="@+id/tvStep"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textStyle="bold" android:textSize="18sp" android:text="Step 1: Login / Signup"/>
+
+        <!-- Step 1: login/signup -->
+        <EditText android:id="@+id/etPhone" android:hint="Phone (+263…)"
+            android:inputType="phone" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <CheckBox android:id="@+id/cbNewUser"
+            android:text="I am a new user (signup)" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <EditText android:id="@+id/etName" android:hint="Full name"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone"/>
+        <EditText android:id="@+id/etEmail" android:hint="Email (optional)"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone"/>
+
+        <!-- Step 2: recipient -->
+        <LinearLayout android:id="@+id/stepRecipient"
+            android:orientation="vertical" android:visibility="gone"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="16dp">
+            <TextView
+                android:text="@string/recipient_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText android:id="@+id/etRecName" android:hint="@string/recipient_name"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <EditText android:id="@+id/etRecPhone" android:hint="@string/recipient_phone"
+                android:inputType="phone" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Step 3: size + declaration -->
+        <LinearLayout android:id="@+id/stepSize"
+            android:orientation="vertical" android:visibility="gone"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="16dp">
+            <TextView
+                android:text="@string/package_size_measure_with_locker_ruler"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Spinner android:id="@+id/spSize"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <CheckBox
+                android:id="@+id/cbDeclaration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/i_confirm_this_package_meets_pudo_postal_restrictions"
+                />
+        </LinearLayout>
+
+        <!-- Step 4: payment -->
+        <LinearLayout android:id="@+id/stepPayment"
+            android:orientation="vertical" android:visibility="gone"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="16dp">
+            <TextView
+                android:text="Payment (Backend method)"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText android:id="@+id/etAmount"
+                android:hint="@string/amount_usd_cents_e_g_500" android:inputType="number"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnPay" android:text="Pay via Backend"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Step 5: locker -->
+        <LinearLayout android:id="@+id/stepLocker"
+            android:orientation="vertical" android:visibility="gone"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="16dp">
+            <TextView
+                android:id="@+id/tvLocker"
+                android:text="@string/locker_pending"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button android:id="@+id/btnOpenLocker" android:text="Open locker"
+                android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnDoorClosed" android:text="I closed the door"
+                android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
+        </LinearLayout>
+
+        <!-- Actions -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:paddingTop="24dp">
+            <Button android:id="@+id/btnNext" android:text="Next"
+                android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
+            <Button android:id="@+id/btnCancel" android:text="Cancel"
+                android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="12dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

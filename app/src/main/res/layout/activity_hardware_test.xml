@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical" android:padding="16dp"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <TextView android:id="@+id/tvUsb"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="USB:" android:textStyle="bold" />
+
+        <!-- Serial (RS232/RS485, incl. MDB) -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Serial (RS232 / RS485)"/>
+
+        <Spinner android:id="@+id/spSerial"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+        <Spinner android:id="@+id/spBaud"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <Button android:id="@+id/btnOpenSerial"
+                android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:text="Open Serial"/>
+            <Button android:id="@+id/btnSendProbe"
+                android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:text="Send Probe"/>
+        </LinearLayout>
+
+        <!-- Locker RS-485 quick test -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Locker RS-485 (9600 8N1): station &amp; lock"/>
+
+        <LinearLayout
+            android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <EditText android:id="@+id/etStation" android:hint="Station" android:inputType="number"
+                android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"/>
+            <EditText android:id="@+id/etLock" android:hint="Lock" android:inputType="number"
+                android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <Button android:id="@+id/btnOpenLocker"
+                android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:text="Open Locker"/>
+            <Button android:id="@+id/btnCheckLocker"
+                android:layout_weight="1" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:text="Check Status"/>
+        </LinearLayout>
+
+        <!-- Printer -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Printer (Custom TG2480HIII via USB)"/>
+        <Button android:id="@+id/btnPrintTest"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Print Test Ticket"/>
+
+        <!-- Scanner (USB HID) -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Scanner (USB HID). Put focus below and scan."/>
+        <Button android:id="@+id/btnScannerFocus"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Focus Scanner Box"/>
+        <EditText android:id="@+id/etScannerSink"
+            android:layout_width="match_parent" android:layout_height="100dp"
+            android:gravity="top" android:inputType="textVisiblePassword"/>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,35 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="24dp">
+
+        <TextView android:text="Developer Settings" android:textStyle="bold" android:textSize="18sp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+        <CheckBox
+            android:id="@+id/chkSimHw"
+            android:text="Simulate hardware (RS485 &amp; Scanner)"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" />
+
+        <CheckBox
+            android:id="@+id/chkIm30"
+            android:text="Use IM30 backup payment"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+        <EditText
+            android:id="@+id/etScannerBaud"
+            android:hint="Scanner baud (e.g., 9600)"
+            android:inputType="number"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:text="Save"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>

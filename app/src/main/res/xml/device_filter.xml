@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom TG2480HIII vendor -->
+    <usb-device vendor-id="3540"/>
+</resources>

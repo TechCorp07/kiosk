@@ -1,0 +1,8 @@
+{
+  "welcome.send": "Send a package",
+  "welcome.collect": "Collect a package",
+  "welcome.courier": "Courier",
+  "admin.devmode": "Admin / Dev Mode",
+  "locker.reminder": "Please close the locker door.",
+  "size.tip": "Use the ruler to measure your parcel and choose a size."
+}
