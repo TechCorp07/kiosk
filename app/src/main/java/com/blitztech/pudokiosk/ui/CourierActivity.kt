@@ -12,7 +12,6 @@ import com.blitztech.pudokiosk.data.events.Outbox
 import com.blitztech.pudokiosk.data.repo.CourierRepository
 import com.blitztech.pudokiosk.data.sync.WorkScheduler
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner1900
-import com.blitztech.pudokiosk.deviceio.rs485.LockerController
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -35,7 +34,7 @@ class CourierActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
 
     private val repo = CourierRepository(useStub = true)
-    private lateinit var locker: LockerController
+    private lateinit var locker: `LockerController.kt`
     private lateinit var scanner: BarcodeScanner1900
 
     private var reminder: LockerReminder? = null
@@ -53,7 +52,7 @@ class CourierActivity : AppCompatActivity() {
         setContentView(R.layout.activity_courier)
 
         prefs = Prefs(this)
-        locker = LockerController(this, simulate = prefs.isSimHardware())
+        locker = `LockerController.kt`(this, simulate = prefs.isSimHardware())
         scanner = BarcodeScanner1900(this, preferredBaud = prefs.getScannerBaud())
 
         stepLogin = findViewById(R.id.stepLogin)

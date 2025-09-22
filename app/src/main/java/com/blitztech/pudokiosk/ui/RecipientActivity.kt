@@ -13,7 +13,6 @@ import com.blitztech.pudokiosk.data.repo.AuthRepository
 import com.blitztech.pudokiosk.data.repo.RecipientRepository
 import com.blitztech.pudokiosk.data.net.ParcelItem
 import com.blitztech.pudokiosk.data.sync.WorkScheduler
-import com.blitztech.pudokiosk.deviceio.rs485.LockerController
 import com.blitztech.pudokiosk.secure.PinStore
 import kotlinx.coroutines.launch
 import com.blitztech.pudokiosk.data.AuditLogger
@@ -45,7 +44,7 @@ class RecipientActivity : AppCompatActivity() {
     private val auth = AuthRepository(useStub = true) // set false when backend ready
     private val repo = RecipientRepository(useStub = true)
     private lateinit var pinStore: PinStore
-    private lateinit var locker: LockerController
+    private lateinit var locker: `LockerController.kt`
     private var reminder: LockerReminder? = null
     private var simulateHardware = true
 
@@ -59,7 +58,7 @@ class RecipientActivity : AppCompatActivity() {
         setContentView(R.layout.activity_recipient)
 
         prefs = Prefs(this)
-        locker = LockerController(this, simulate = prefs.isSimHardware())
+        locker = `LockerController.kt`(this, simulate = prefs.isSimHardware())
 
         tvStep = findViewById(R.id.tvStep)
         stepPhone = findViewById(R.id.stepPhone)

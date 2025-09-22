@@ -21,7 +21,6 @@ import it.custom.printer.api.android.CustomAndroidAPI
 
 // Barcode scanner imports
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner1900
-import com.blitztech.pudokiosk.deviceio.rs232.RS232DiagnosticUtility
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
@@ -840,42 +839,193 @@ Press 'Run Diagnostics' for detailed analysis.
 
         lifecycleScope.launch {
             try {
-                showPrinterStatus("📊 Printing barcode test...")
+                showPrinterStatus("📊 Starting barcode printing test...")
 
-                val barcodeText = buildString {
-                    appendLine("=== BARCODE TEST ===")
-                    appendLine()
-                    appendLine("Code 128: 123456789012")
-                    appendLine("EAN-13: 1234567890123")
-                    appendLine("QR Code: PUDO-KIOSK-TEST")
-                    appendLine()
-                    appendLine("Note: Actual barcode printing")
-                    appendLine("requires specific ESC/POS commands")
-                    appendLine("or Custom API barcode methods.")
-                    appendLine()
-                    appendLine("This is a text representation.")
-                    appendLine("================")
-                    appendLine()
-                }
-
-                val result = enhancedPrinter.printText(
-                    text = barcodeText,
-                    fontSize = 1,
-                    bold = true,
-                    centered = true
-                )
+                // Use the new comprehensive barcode test
+                val result = enhancedPrinter.printBarcodeTest()
 
                 if (result.isSuccess) {
-                    showPrinterStatus("✅ Barcode test printed successfully")
-                    showToast("✅ Barcode test completed!")
+                    showPrinterStatus("✅ All barcode tests completed successfully!")
+                    showToast("✅ All barcodes printed successfully!")
+                    AuditLogger.log("SUCCESS", "BARCODE_TEST_SUCCESS", "All barcode types printed")
                 } else {
-                    showPrinterStatus("❌ Barcode test failed")
-                    showToast("❌ Barcode test failed!")
+                    val error = result.exceptionOrNull()?.message ?: "Unknown error"
+                    showPrinterStatus("❌ Barcode test failed: $error")
+                    showToast("❌ Some barcodes failed to print!")
+                    AuditLogger.log("ERROR", "BARCODE_TEST_FAIL", "msg=$error")
                 }
 
             } catch (e: Exception) {
                 showPrinterStatus("❌ Barcode test error: ${e.message}")
                 showToast("❌ Barcode test error!")
+                AuditLogger.log("ERROR", "BARCODE_TEST_EXCEPTION", "msg=${e.message}")
+            }
+        }
+    }
+
+    private fun testSingleBarcode(barcodeType: String, data: String) {
+        if (!printerInitialized) {
+            showToast("⚠️ Printer not initialized yet")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                showPrinterStatus("📊 Printing $barcodeType...")
+
+                val result = when (barcodeType.uppercase()) {
+                    "CODE128" -> enhancedPrinter.printCode128(data)
+                    "EAN13" -> enhancedPrinter.printEAN13(data)
+                    "QRCODE" -> enhancedPrinter.printQRCode(data)
+                    "CODE39" -> enhancedPrinter.printCode39(data)
+                    else -> {
+                        // Use custom barcode config for other types
+                        val config = CustomTG2480HIIIDriver.BarcodeConfig(
+                            type = when (barcodeType.uppercase()) {
+                                "UPC-A" -> CustomTG2480HIIIDriver.BarcodeType.UPC_A
+                                "UPC-E" -> CustomTG2480HIIIDriver.BarcodeType.UPC_E
+                                "EAN8" -> CustomTG2480HIIIDriver.BarcodeType.EAN8
+                                "ITF" -> CustomTG2480HIIIDriver.BarcodeType.ITF
+                                "CODABAR" -> CustomTG2480HIIIDriver.BarcodeType.CODABAR
+                                "CODE93" -> CustomTG2480HIIIDriver.BarcodeType.CODE93
+                                "CODE32" -> CustomTG2480HIIIDriver.BarcodeType.CODE32
+                                else -> CustomTG2480HIIIDriver.BarcodeType.CODE128 // Default fallback
+                            },
+                            data = data,
+                            height = 162,
+                            centered = true
+                        )
+                        enhancedPrinter.printBarcode(config)
+                    }
+                }
+
+                if (result.isSuccess) {
+                    showPrinterStatus("✅ $barcodeType printed successfully!")
+                    showToast("✅ $barcodeType completed!")
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Unknown error"
+                    showPrinterStatus("❌ $barcodeType failed: $error")
+                    showToast("❌ $barcodeType failed!")
+                }
+
+            } catch (e: Exception) {
+                showPrinterStatus("❌ $barcodeType error: ${e.message}")
+                showToast("❌ $barcodeType error!")
+            }
+        }
+    }
+
+    private fun testReceiptWithBarcode() {
+        if (!printerInitialized) {
+            showToast("⚠️ Printer not initialized yet")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                showPrinterStatus("🧾 Printing receipt with barcode...")
+
+                // Print receipt header
+                enhancedPrinter.printText(
+                    text = buildString {
+                        appendLine("PUDO KIOSK RECEIPT")
+                        appendLine("==================")
+                        appendLine("Date: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
+                        appendLine("Transaction ID: TXN001234")
+                        appendLine("==================")
+                        appendLine()
+                    },
+                    fontSize = 1,
+                    bold = true,
+                    centered = true
+                )
+
+                // Print tracking barcode
+                val barcodeResult = enhancedPrinter.printCode128("TXN001234567890")
+
+                if (barcodeResult.isSuccess) {
+                    // Print footer
+                    enhancedPrinter.printText(
+                        text = buildString {
+                            appendLine()
+                            appendLine("Thank you!")
+                            appendLine("==================")
+                            appendLine()
+                        },
+                        centered = true
+                    )
+
+                    showPrinterStatus("✅ Receipt with barcode printed!")
+                    showToast("✅ Receipt completed!")
+                } else {
+                    showPrinterStatus("❌ Receipt barcode failed")
+                    showToast("❌ Receipt barcode failed!")
+                }
+
+            } catch (e: Exception) {
+                showPrinterStatus("❌ Receipt printing error: ${e.message}")
+                showToast("❌ Receipt error!")
+            }
+        }
+    }
+
+    private fun testShippingLabel() {
+        if (!printerInitialized) {
+            showToast("⚠️ Printer not initialized yet")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                showPrinterStatus("🏷️ Printing shipping label...")
+
+                // Label header
+                enhancedPrinter.printText(
+                    text = "PUDO SHIPPING LABEL\n" + "=".repeat(30) + "\n",
+                    fontSize = 2,
+                    bold = true,
+                    centered = true
+                )
+
+                // Recipient info
+                enhancedPrinter.printText(
+                    text = buildString {
+                        appendLine("TO: John Doe")
+                        appendLine("123 Main Street")
+                        appendLine("Harare, Zimbabwe")
+                        appendLine()
+                    },
+                    fontSize = 1
+                )
+
+                // Tracking number as Code 128
+                enhancedPrinter.printText("TRACKING NUMBER:", bold = true, centered = true)
+                val trackingResult = enhancedPrinter.printCode128("1Z999AA1234567890")
+
+                if (trackingResult.isSuccess) {
+                    // QR code with tracking info
+                    enhancedPrinter.printText("\nSCAN FOR DETAILS:", bold = true, centered = true)
+                    val qrResult = enhancedPrinter.printQRCode("https://pudo.co.zw/track/1Z999AA1234567890")
+
+                    if (qrResult.isSuccess) {
+                        enhancedPrinter.printText(
+                            text = "\n" + "=".repeat(30) + "\n",
+                            centered = true
+                        )
+                        showPrinterStatus("✅ Shipping label printed!")
+                        showToast("✅ Shipping label completed!")
+                    } else {
+                        showPrinterStatus("❌ QR code failed")
+                        showToast("❌ QR code failed!")
+                    }
+                } else {
+                    showPrinterStatus("❌ Tracking barcode failed")
+                    showToast("❌ Tracking barcode failed!")
+                }
+
+            } catch (e: Exception) {
+                showPrinterStatus("❌ Shipping label error: ${e.message}")
+                showToast("❌ Shipping label error!")
             }
         }
     }

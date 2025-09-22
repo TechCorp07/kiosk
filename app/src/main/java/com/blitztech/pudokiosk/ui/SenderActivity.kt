@@ -1,6 +1,5 @@
 package com.blitztech.pudokiosk.ui
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -13,7 +12,6 @@ import com.blitztech.pudokiosk.data.events.Outbox
 import com.blitztech.pudokiosk.data.repo.BackendRepository
 import com.blitztech.pudokiosk.util.Ids
 import kotlinx.coroutines.launch
-import com.blitztech.pudokiosk.deviceio.rs485.LockerController
 import com.blitztech.pudokiosk.data.sync.WorkScheduler
 import com.blitztech.pudokiosk.payment.*
 import com.blitztech.pudokiosk.data.AuditLogger
@@ -24,7 +22,7 @@ class SenderActivity : AppCompatActivity() {
 
     private enum class Step { LOGIN, RECIPIENT, SIZE, PAYMENT, LOCKER }
     private var simulateHardware = true // set to false when you plug in devices
-    private lateinit var locker: LockerController
+    private lateinit var locker: `LockerController.kt`
     private var useBackupIM30 = false // set true to exercise IM30 path
     private lateinit var terminal: PaymentTerminal
 
@@ -67,7 +65,7 @@ class SenderActivity : AppCompatActivity() {
         setContentView(R.layout.activity_sender)
         prefs = Prefs(this)
         useBackupIM30 = prefs.isUseBackupIM30()
-        locker = LockerController(this, simulate = simulateHardware)
+        locker = `LockerController.kt`(this, simulate = simulateHardware)
         terminal = Im30MdbDriver(this, simulate = true) // set simulate=false on device
 
         tvStep = findViewById(R.id.tvStep)
