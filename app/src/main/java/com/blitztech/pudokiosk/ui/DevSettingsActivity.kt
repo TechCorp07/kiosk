@@ -27,14 +27,10 @@ class DevSettingsActivity : AppCompatActivity() {
         btnSave = findViewById(R.id.btnSave)
 
         // Load
-        chkSimHw.isChecked = prefs.isSimHardware()
-        chkIm30.isChecked = prefs.isUseBackupIM30()
         etScannerBaud.setText(prefs.getScannerBaud().toString())
 
         btnSave.setOnClickListener {
-            val baud = etScannerBaud.text.toString().toIntOrNull() ?: 9600
-            prefs.setSimHardware(chkSimHw.isChecked)
-            prefs.setUseBackupIM30(chkIm30.isChecked)
+            val baud = etScannerBaud.text.toString().toIntOrNull() ?: 115200
             prefs.setScannerBaud(baud)
             Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
             finish()

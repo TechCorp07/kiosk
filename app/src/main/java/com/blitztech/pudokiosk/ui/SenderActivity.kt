@@ -21,9 +21,6 @@ import com.blitztech.pudokiosk.prefs.Prefs
 class SenderActivity : AppCompatActivity() {
 
     private enum class Step { LOGIN, RECIPIENT, SIZE, PAYMENT, LOCKER }
-    private var simulateHardware = true // set to false when you plug in devices
-    private lateinit var locker: `LockerController.kt`
-    private var useBackupIM30 = false // set true to exercise IM30 path
     private lateinit var terminal: PaymentTerminal
 
     private lateinit var tvStep: TextView
@@ -64,9 +61,6 @@ class SenderActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sender)
         prefs = Prefs(this)
-        useBackupIM30 = prefs.isUseBackupIM30()
-        locker = `LockerController.kt`(this, simulate = simulateHardware)
-        terminal = Im30MdbDriver(this, simulate = true) // set simulate=false on device
 
         tvStep = findViewById(R.id.tvStep)
         etPhone = findViewById(R.id.etPhone)
@@ -109,8 +103,6 @@ class SenderActivity : AppCompatActivity() {
 
         btnNext.setOnClickListener { onNext() }
         btnPay.setOnClickListener { onPay() }
-        btnOpenLocker.setOnClickListener { onOpenLocker() }
-        btnDoorClosed.setOnClickListener { onDoorClosed() }
 
         render()
     }
@@ -179,74 +171,6 @@ class SenderActivity : AppCompatActivity() {
         val cents = etAmount.text.toString().toIntOrNull()
         if (cents == null || cents <= 0) { toast("Enter valid amount (cents)"); return }
 
-        // ----- IM30 backup path -----
-        if (useBackupIM30) {
-            lifecycleScope.launch {
-                try {
-                    if (!terminal.init()) {
-                        AuditLogger.log("ERROR", "PAYMENT_ERROR", "method=IM30 msg=not_ready")
-                        toast("IM30 not ready")
-                        return@launch
-                    }
-                    val res = terminal.pay(PaymentRequest(cents))
-                    when (res) {
-                        is PaymentResult.Approved -> {
-                            AuditLogger.log("INFO", "PAYMENT_SUCCESS", "amount=$cents method=IM30")
-                            Outbox.enqueue(EventType.PAYMENT_RESULT, mapOf(
-                                "status" to "SUCCESS",
-                                "method" to "IM30",
-                                "amountCents" to cents,
-                                "auth" to (res.authCode ?: "")
-                            ))
-                            WorkScheduler.flushOutboxNow(this@SenderActivity)
-
-                            // Create parcel record (client-side ID) to mirror backend path
-                            Outbox.enqueue(EventType.PARCEL_CREATED, mapOf(
-                                "parcelId" to tracking,
-                                "senderPhone" to etPhone.text.toString().trim(),
-                                "recipientPhone" to etRecPhone.text.toString().trim(),
-                                "size" to spSize.selectedItem.toString()
-                            ))
-                            WorkScheduler.flushOutboxNow(this@SenderActivity)
-
-                            // Allocate locker
-                            val alloc = backend.allocateLocker(spSize.selectedItem.toString())
-                            lockerId = alloc.lockerId
-                            tvLocker.text = "Locker: ${alloc.lockerId} (${alloc.size})"
-                            current = Step.LOCKER
-                            render()
-                        }
-                        is PaymentResult.Declined -> {
-                            AuditLogger.log("ERROR", "PAYMENT_FAILED", "amount=$cents method=IM30 reason=${res.reason}")
-                            Outbox.enqueue(EventType.PAYMENT_RESULT, mapOf(
-                                "status" to "FAILED",
-                                "method" to "IM30",
-                                "amountCents" to cents,
-                                "reason" to res.reason
-                            ))
-                            WorkScheduler.flushOutboxNow(this@SenderActivity)
-                            toast("Payment declined: ${res.reason}")
-                        }
-                        is PaymentResult.Error -> {
-                            AuditLogger.log("ERROR", "PAYMENT_ERROR", "amount=$cents method=IM30 msg=${res.message}")
-                            Outbox.enqueue(EventType.PAYMENT_RESULT, mapOf(
-                                "status" to "ERROR",
-                                "method" to "IM30",
-                                "amountCents" to cents,
-                                "message" to res.message
-                            ))
-                            WorkScheduler.flushOutboxNow(this@SenderActivity)
-                            toast("Payment error: ${res.message}")
-                        }
-                    }
-                } catch (e: Exception) {
-                    AuditLogger.log("ERROR", "PAYMENT_ERROR", "amount=$cents method=IM30 msg=${e.message}")
-                    toast("Payment error")
-                }
-            }
-            return
-        }
-
         // ----- Backend (primary) path -----
         lifecycleScope.launch {
             try {
@@ -285,46 +209,6 @@ class SenderActivity : AppCompatActivity() {
                 AuditLogger.log("ERROR", "PAYMENT_ERROR", "amount=$cents method=BACKEND msg=${e.message}")
                 toast("Payment error")
             }
-        }
-    }
-
-    private fun onOpenLocker() {
-        val id = lockerId ?: run { toast("Locker not allocated"); return }
-        lifecycleScope.launch {
-            Outbox.enqueue(EventType.LOCKER_OPEN_REQUEST, mapOf("lockerId" to id))
-            WorkScheduler.flushOutboxNow(this@SenderActivity)
-
-            val ok = locker.openLocker(id, retries = 2)
-            if (ok) {
-                AuditLogger.log("INFO", "LOCKER_OPEN_SUCCESS", "lockerId=$id")
-                Outbox.enqueue(EventType.LOCKER_OPEN_SUCCESS, mapOf("lockerId" to id))
-                WorkScheduler.flushOutboxNow(this@SenderActivity)
-
-                WorkScheduler.flushOutboxNow(this@SenderActivity)
-
-                reminder?.stop()
-                reminder = LockerReminder(this@SenderActivity, locale).also { it.start() }
-                toast("Locker opened. Place parcel + ticket, then close. Tap 'I closed the door'.")
-            } else {
-                AuditLogger.log("ERROR", "LOCKER_OPEN_FAIL", "lockerId=$id reason=NoACK")
-                Outbox.enqueue(EventType.LOCKER_OPEN_FAIL, mapOf("lockerId" to id, "reason" to "No ACK"))
-                WorkScheduler.flushOutboxNow(this@SenderActivity)
-                toast("Failed to open locker. A technician will be notified.")
-            }
-        }
-    }
-
-    private fun onDoorClosed() {
-        val id = lockerId
-        lifecycleScope.launch {
-            if (id != null && !locker.isClosed(id)) {
-                toast("Door still open. Please close it.")
-                return@launch
-            }
-            reminder?.stop()
-            AuditLogger.log("INFO", "SENDER_LOCKER_CLOSED", "lockerId=$id tracking=$tracking")
-            toast("Thank you. Parcel recorded as in locker.")
-            finish()
         }
     }
 

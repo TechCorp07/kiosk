@@ -44,7 +44,6 @@ class RecipientActivity : AppCompatActivity() {
     private val auth = AuthRepository(useStub = true) // set false when backend ready
     private val repo = RecipientRepository(useStub = true)
     private lateinit var pinStore: PinStore
-    private lateinit var locker: `LockerController.kt`
     private var reminder: LockerReminder? = null
     private var simulateHardware = true
 
@@ -56,9 +55,6 @@ class RecipientActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recipient)
-
-        prefs = Prefs(this)
-        locker = `LockerController.kt`(this, simulate = prefs.isSimHardware())
 
         tvStep = findViewById(R.id.tvStep)
         stepPhone = findViewById(R.id.stepPhone)
@@ -83,8 +79,6 @@ class RecipientActivity : AppCompatActivity() {
         btnSendOtp.setOnClickListener { onSendOtp() }
         btnVerifyOtp.setOnClickListener { onVerifyOtp() }
         btnSavePin.setOnClickListener { onSavePin() }
-        btnOpenLocker.setOnClickListener { onOpenLocker() }
-        btnClosed.setOnClickListener { onClosed() }
 
         listParcels.setOnItemClickListener { _, _, position, _ ->
             val items = getItems() // uses listParcels.tag under the hood
@@ -172,61 +166,6 @@ class RecipientActivity : AppCompatActivity() {
     @Suppress("UNCHECKED_CAST")
     private fun getItems(): List<ParcelItem> =
         (listParcels.tag as? List<ParcelItem>) ?: emptyList()
-
-    private fun onOpenLocker() {
-        val item = selected ?: run { toast("Select a parcel"); return }
-        lifecycleScope.launch {
-            Outbox.enqueue(EventType.LOCKER_OPEN_REQUEST, mapOf("lockerId" to item.lockerId, "parcelId" to item.parcelId))
-            WorkScheduler.flushOutboxNow(this@RecipientActivity)
-
-            val ok = locker.openLocker(item.lockerId, retries = 2)
-            if (ok) {
-                AuditLogger.log("INFO", "LOCKER_OPEN_SUCCESS", "lockerId=${item.lockerId} parcelId=${item.parcelId}")
-                Outbox.enqueue(EventType.LOCKER_OPEN_SUCCESS, mapOf("lockerId" to item.lockerId, "parcelId" to item.parcelId))
-                WorkScheduler.flushOutboxNow(this@RecipientActivity)
-
-                reminder?.stop()
-                reminder = LockerReminder(this@RecipientActivity, locale).also { it.start() }
-                toast("Locker opened. Take parcel, close door, then tap 'I closed the door'.")
-            } else {
-                AuditLogger.log("ERROR", "LOCKER_OPEN_FAIL", "lockerId=${item.lockerId} parcelId=${item.parcelId} reason=NoACK")
-                Outbox.enqueue(EventType.LOCKER_OPEN_FAIL, mapOf("lockerId" to item.lockerId, "parcelId" to item.parcelId, "reason" to "No ACK"))
-                WorkScheduler.flushOutboxNow(this@RecipientActivity)
-                toast("Failed to open locker. Please seek assistance.")
-            }
-        }
-    }
-
-    private fun onClosed() {
-        reminder?.stop()
-        val item = selected ?: return
-        lifecycleScope.launch {
-            if (!locker.isClosed(item.lockerId)) {
-                toast("Door still open. Please close it.")
-                return@launch
-            }
-            AuditLogger.log("INFO", "RECIPIENT_LOCKER_CLOSED", "lockerId=${item.lockerId} parcelId=${item.parcelId}")
-
-            // FYI: replace these placeholder events with your real "collected" event later
-            Outbox.enqueue(EventType.PAYMENT_RESULT, mapOf("note" to "pickup_no_payment"))
-            Outbox.enqueue(EventType.LABEL_PRINTED, mapOf("note" to "n/a"))
-            Outbox.enqueue(EventType.PARCEL_CREATED, mapOf("note" to "collected ${item.parcelId}"))
-            WorkScheduler.flushOutboxNow(this@RecipientActivity)
-
-            val remaining = getItems().drop(1) // simple demo: remove first
-            if (remaining.isEmpty()) {
-                toast("All done. Thank you!")
-                finish()
-            } else {
-                listParcels.tag = remaining
-                val adapter = ArrayAdapter(this@RecipientActivity, android.R.layout.simple_list_item_1,
-                    remaining.map { "${it.tracking} — ${it.size} — ${it.lockerId}" })
-                listParcels.adapter = adapter
-                selected = remaining.first()
-                tvSelected.text = "Selected: ${selected?.tracking} (${selected?.lockerId})"
-            }
-        }
-    }
 
     private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
 }
