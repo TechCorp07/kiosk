@@ -13,82 +13,60 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.concurrent.TimeUnit
-import androidx.core.content.ContextCompat
 
-// Actual Custom Android API imports (based on your documentation)
+// Custom Android API imports (based on your documentation)
 import it.custom.printer.api.android.CustomAndroidAPI
 import it.custom.printer.api.android.CustomException
 import it.custom.printer.api.android.PrinterFont
 import it.custom.printer.api.android.PrinterStatus
 
+// For RS232 fallback
+import com.hoho.android.usbserial.driver.UsbSerialDriver
+import com.hoho.android.usbserial.driver.UsbSerialPort
+import com.hoho.android.usbserial.driver.UsbSerialProber
+
+/**
+ * Enhanced TG2480HIII printer driver with:
+ * 1. Proper Custom API USB enumeration (like working demo app)
+ * 2. RS232 fallback support
+ * 3. Comprehensive debugging and logging
+ * 4. Connection protocol detection
+ */
 class CustomTG2480HIIIDriver(
     private val context: Context,
     private val simulate: Boolean = false,
-    private val enableAutoReconnect: Boolean = true
+    private val enableAutoReconnect: Boolean = true,
+    private val enableRS232Fallback: Boolean = true
 ) {
 
     companion object {
-        private const val TAG = "CustomTG2480HIII"
-        private const val VENDOR_ID = 3540 // Custom SpA vendor ID
+        private const val TAG = "Enhanced-TG2480HIII"
+        private const val CUSTOM_VENDOR_ID = 3540 // Custom SpA vendor ID
         private const val STATUS_CHECK_INTERVAL = 15000L // 15 seconds
         private const val RECONNECT_DELAY = 3000L // 3 seconds
         private const val USB_PERMISSION_ACTION = "com.blitztech.pudokiosk.printer.USB_PERMISSION"
         private const val MAX_RECONNECT_ATTEMPTS = 5
+
+        // RS232 settings for TG2480HIII (from datasheet)
+        private const val RS232_BAUD_RATE = 115200
+        private const val RS232_DATA_BITS = 8
+        private const val RS232_STOP_BITS = 1
+        private const val RS232_PARITY = UsbSerialPort.PARITY_NONE
     }
 
-    // ACTUAL Custom API objects - corrected based on demo code
-    private var customAPI: CustomAndroidAPI? = null
-    private var prnDevice: Any? = null // The actual printer device object returned by getPrinterDriverUSB
-    private val usbManager: UsbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
-
-    // Connection state management
-    private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
-    val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
-
-    private val _printerStatus = MutableStateFlow<CustomPrinterStatus?>(null)
-    val printerStatus: StateFlow<CustomPrinterStatus?> = _printerStatus.asStateFlow()
-
-    // Background status monitoring (like in the demo code)
-    private var statusHandler: Handler? = null
-    private var statusRunnable: Runnable? = null
-
-    // Coroutine management
-    private val driverScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var reconnectJob: Job? = null
-    private var wakeLock: PowerManager.WakeLock? = null
-    private var reconnectAttempts = 0
-
-    // FIXED: Use coroutine-based Mutex instead of synchronized for suspend functions
-    private val printerMutex = Mutex()
-
-    // USB permission handling
-    private val usbReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (USB_PERMISSION_ACTION == intent.action) {
-                synchronized(this@CustomTG2480HIIIDriver) {
-                    val device: UsbDevice? = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
-                    val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-
-                    Log.d(TAG, "USB permission received: granted=$granted, device=${device?.deviceName}")
-
-                    if (granted && device != null && device.vendorId == VENDOR_ID) {
-                        driverScope.launch {
-                            connectToDevice(device)
-                        }
-                    } else {
-                        _connectionState.value = ConnectionState.PERMISSION_DENIED
-                        Log.e(TAG, "USB permission denied for Custom TG2480HIII")
-                    }
-                }
-            }
-        }
+    // Connection protocol tracking
+    enum class ConnectionProtocol {
+        NONE,
+        CUSTOM_USB_API,    // Using Custom Android API via USB
+        RS232_SERIAL,      // Using RS232 via USB-to-Serial
+        SIMULATION
     }
 
     enum class ConnectionState {
@@ -101,7 +79,70 @@ class CustomTG2480HIIIDriver(
         RECONNECTING
     }
 
-    // Our wrapper around the actual PrinterStatus from Custom API
+    // Custom API objects for USB connection
+    private var customAPI: CustomAndroidAPI? = null
+    private var customPrnDevice: Any? = null // Custom API printer device
+
+    // RS232 objects for serial connection
+    private var serialPort: UsbSerialPort? = null
+
+    // Current active connection protocol
+    private var activeProtocol = ConnectionProtocol.NONE
+
+    // USB Manager for device enumeration
+    private val usbManager: UsbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+
+    // State management
+    private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
+    val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
+
+    private val _printerStatus = MutableStateFlow<CustomPrinterStatus?>(null)
+    val printerStatus: StateFlow<CustomPrinterStatus?> = _printerStatus.asStateFlow()
+
+    private val _activeProtocolFlow = MutableStateFlow(ConnectionProtocol.NONE)
+    val currentProtocol: StateFlow<ConnectionProtocol> = _activeProtocolFlow.asStateFlow()
+
+    // Background monitoring
+    private var statusHandler: Handler? = null
+    private var statusRunnable: Runnable? = null
+
+    // Coroutines and synchronization
+    private val driverScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var reconnectJob: Job? = null
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var reconnectAttempts = 0
+    private val printerMutex = Mutex()
+
+    // USB permission handling
+    private val usbReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (USB_PERMISSION_ACTION == intent.action) {
+                synchronized(this@CustomTG2480HIIIDriver) {
+                    val device: UsbDevice? = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE)
+                    val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
+
+                    Log.d(TAG, "USB permission received: granted=$granted, device=${device?.deviceName}")
+
+                    if (granted && device != null && device.vendorId == CUSTOM_VENDOR_ID) {
+                        driverScope.launch {
+                            connectViaCustomAPI(device)
+                        }
+                    } else {
+                        _connectionState.value = ConnectionState.PERMISSION_DENIED
+                        Log.e(TAG, "USB permission denied for Custom TG2480HIII")
+
+                        // Try RS232 fallback if enabled
+                        if (enableRS232Fallback) {
+                            driverScope.launch {
+                                tryRS232Connection()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     data class CustomPrinterStatus(
         val noPaper: Boolean,
         val paperRolling: Boolean,
@@ -110,10 +151,488 @@ class CustomTG2480HIIIDriver(
         val printerInfo: String?,
         val firmwareVersion: String?,
         val isReady: Boolean,
+        val protocol: ConnectionProtocol = ConnectionProtocol.NONE,
         val lastUpdated: Long = System.currentTimeMillis()
     ) {
         val isOperational: Boolean
             get() = isReady && !noPaper
+    }
+
+    suspend fun initialize(): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            Log.i(TAG, "=== Initializing Enhanced Custom TG2480HIII Printer Driver ===")
+            Log.i(TAG, "Configuration: simulate=$simulate, autoReconnect=$enableAutoReconnect, rs232Fallback=$enableRS232Fallback")
+
+            if (simulate) {
+                Log.i(TAG, "SIMULATION MODE: Creating simulated printer connection")
+                _connectionState.value = ConnectionState.CONNECTED
+                _activeProtocolFlow.value = ConnectionProtocol.SIMULATION
+                activeProtocol = ConnectionProtocol.SIMULATION
+                _printerStatus.value = createSimulatedStatus()
+                return@withContext Result.success(true)
+            }
+
+            // Initialize Custom Android API
+            Log.d(TAG, "Initializing Custom Android API...")
+            customAPI = CustomAndroidAPI()
+            Log.i(TAG, "Custom API Version: ${CustomAndroidAPI.getAPIVersion()}")
+
+            // Register USB receiver
+            registerUsbReceiver()
+
+            // Acquire wake lock for stable communication
+            acquireWakeLock()
+
+            // Step 1: Try Custom API USB enumeration first (like working demo app)
+            Log.i(TAG, "Step 1: Attempting Custom API USB device enumeration...")
+            val customApiResult = tryCustomAPIConnection()
+
+            if (customApiResult) {
+                Log.i(TAG, "✓ Custom API USB connection successful!")
+                startStatusMonitoring()
+                return@withContext Result.success(true)
+            }
+
+            // Step 2: Try RS232 fallback if enabled and USB failed
+            if (enableRS232Fallback) {
+                Log.i(TAG, "Step 2: Attempting RS232 serial connection fallback...")
+                val rs232Result = tryRS232Connection()
+
+                if (rs232Result) {
+                    Log.i(TAG, "✓ RS232 serial connection successful!")
+                    startStatusMonitoring()
+                    return@withContext Result.success(true)
+                }
+            }
+
+            Log.e(TAG, "✗ All connection methods failed")
+            _connectionState.value = ConnectionState.DEVICE_NOT_FOUND
+            return@withContext Result.failure(Exception("Custom TG2480HIII printer not detected via USB or RS232"))
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Initialization failed with exception", e)
+            _connectionState.value = ConnectionState.ERROR
+            return@withContext Result.failure(e)
+        }
+    }
+
+    /**
+     * Try connecting using Custom Android API (like the working demo app)
+     * This is the preferred method and should work if the device is properly connected
+     */
+    private suspend fun tryCustomAPIConnection(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "--- Custom API Connection Attempt ---")
+            _connectionState.value = ConnectionState.CONNECTING
+
+            // Use Custom API enumeration method (exactly like demo app)
+            Log.d(TAG, "Calling CustomAndroidAPI.EnumUsbDevices()...")
+            val usbDeviceArray = customAPI?.let { api ->
+                try {
+                    // This is the method the working demo app uses!
+                    api.javaClass.getMethod("EnumUsbDevices", Context::class.java)
+                        .invoke(api, context) as? Array<*>
+                } catch (e: Exception) {
+                    Log.w(TAG, "Custom API EnumUsbDevices method not available, falling back to direct enumeration", e)
+                    null
+                }
+            }
+
+            if (usbDeviceArray != null && usbDeviceArray.isNotEmpty()) {
+                Log.i(TAG, "Custom API found ${usbDeviceArray.size} USB devices:")
+                usbDeviceArray.forEachIndexed { index, device ->
+                    // Extract device info using reflection (since we don't have the exact Custom API classes)
+                    val deviceInfo = try {
+                        val getName = device?.javaClass?.getMethod("getName")
+                        val getVendorId = device?.javaClass?.getMethod("getVendorId")
+                        val name = getName?.invoke(device) ?: "Unknown"
+                        val vendorId = getVendorId?.invoke(device) ?: "Unknown"
+                        "Device $index: $name (Vendor: $vendorId)"
+                    } catch (e: Exception) {
+                        "Device $index: ${device?.toString() ?: "Unknown"}"
+                    }
+                    Log.d(TAG, "  $deviceInfo")
+                }
+
+                // Look for our Custom printer (vendor ID 3540)
+                val customDevice = usbDeviceArray.find { device ->
+                    try {
+                        val getVendorId = device?.javaClass?.getMethod("getVendorId")
+                        val vendorId = getVendorId?.invoke(device) as? Int
+                        vendorId == CUSTOM_VENDOR_ID
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+
+                if (customDevice != null) {
+                    Log.i(TAG, "✓ Found Custom TG2480HIII device via Custom API!")
+
+                    // Try to connect using Custom API
+                    customPrnDevice = customAPI?.javaClass
+                        ?.getMethod("getPrinterDriverUSB", customDevice.javaClass, Context::class.java)
+                        ?.invoke(customAPI, customDevice, context)
+
+                    if (customPrnDevice != null) {
+                        Log.i(TAG, "✓ Custom API USB connection established!")
+
+                        // Get firmware version
+                        val firmwareVersion = try {
+                            customPrnDevice?.javaClass?.getMethod("getFirmwareVersion")?.invoke(customPrnDevice) as? String
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Could not get firmware version", e)
+                            "Unknown"
+                        }
+
+                        Log.i(TAG, "Printer connected via Custom API USB. Firmware: $firmwareVersion")
+
+                        _connectionState.value = ConnectionState.CONNECTED
+                        _activeProtocolFlow.value = ConnectionProtocol.CUSTOM_USB_API
+                        activeProtocol = ConnectionProtocol.CUSTOM_USB_API
+                        reconnectAttempts = 0
+
+                        return@withContext true
+                    }
+                } else {
+                    Log.w(TAG, "Custom TG2480HIII device not found in Custom API enumeration")
+                }
+            } else {
+                Log.w(TAG, "Custom API enumeration returned no devices or failed")
+            }
+
+            // Fallback to native Android USB enumeration if Custom API didn't work
+            Log.d(TAG, "Falling back to native Android USB enumeration...")
+            return@withContext tryNativeUSBConnection()
+
+        } catch (e: CustomException) {
+            Log.e(TAG, "Custom API connection failed: ${e.message}")
+            Log.e(TAG, "Custom API error code: ${e.javaClass.getMethod("GetErrorCode").invoke(e)}")
+            return@withContext false
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error during Custom API connection", e)
+            return@withContext false
+        }
+    }
+
+    /**
+     * Fallback to native Android USB enumeration
+     */
+    private suspend fun tryNativeUSBConnection(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "--- Native Android USB Connection Attempt ---")
+
+            val deviceList = usbManager.deviceList
+            Log.d(TAG, "Native Android USB found ${deviceList.size} devices:")
+
+            // Log all USB devices for debugging
+            deviceList.values.forEachIndexed { index, device ->
+                Log.d(TAG, "  USB Device $index: ${device.deviceName} " +
+                        "(Vendor: ${device.vendorId}, Product: ${device.productId}, " +
+                        "Class: ${device.deviceClass}, Subclass: ${device.deviceSubclass})")
+            }
+
+            // Find Custom device by vendor ID
+            val customDevice = deviceList.values.find { device ->
+                device.vendorId == CUSTOM_VENDOR_ID
+            }
+
+            if (customDevice != null) {
+                Log.i(TAG, "✓ Found Custom device via native enumeration: ${customDevice.deviceName}")
+
+                if (usbManager.hasPermission(customDevice)) {
+                    return@withContext connectViaCustomAPI(customDevice)
+                } else {
+                    Log.d(TAG, "Requesting USB permission for native device...")
+                    requestUsbPermission(customDevice)
+                    return@withContext false // Will continue in permission callback
+                }
+            } else {
+                Log.w(TAG, "Custom TG2480HIII device not found in native USB enumeration")
+                return@withContext false
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Native USB connection attempt failed", e)
+            return@withContext false
+        }
+    }
+
+    /**
+     * Try RS232 serial connection as fallback
+     */
+    private suspend fun tryRS232Connection(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "--- RS232 Serial Connection Attempt ---")
+
+            val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+            val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
+
+            Log.d(TAG, "Found ${availableDrivers.size} USB serial drivers:")
+            availableDrivers.forEachIndexed { index, driver ->
+                val device = driver.device
+                Log.d(TAG, "  Serial Driver $index: ${device.deviceName} " +
+                        "(Vendor: ${device.vendorId}, Product: ${device.productId}, " +
+                        "Ports: ${driver.ports.size})")
+            }
+
+            if (availableDrivers.isEmpty()) {
+                Log.w(TAG, "No USB serial drivers found for RS232 connection")
+                return@withContext false
+            }
+
+            // Try each available serial driver
+            for ((index, driver) in availableDrivers.withIndex()) {
+                try {
+                    Log.d(TAG, "Attempting RS232 connection via driver $index...")
+
+                    val device = driver.device
+                    val connection = usbManager.openDevice(device)
+
+                    if (connection == null) {
+                        Log.w(TAG, "Failed to open USB device for serial driver $index")
+                        continue
+                    }
+
+                    val port = driver.ports.firstOrNull()
+                    if (port == null) {
+                        connection.close()
+                        Log.w(TAG, "No ports available on serial driver $index")
+                        continue
+                    }
+
+                    // Configure RS232 parameters (from TG2480HIII datasheet)
+                    port.open(connection)
+                    port.setParameters(
+                        RS232_BAUD_RATE,
+                        RS232_DATA_BITS,
+                        UsbSerialPort.STOPBITS_1,
+                        RS232_PARITY
+                    )
+                    port.dtr = true
+                    port.rts = true
+
+                    Log.i(TAG, "✓ RS232 serial connection established!")
+                    Log.i(TAG, "Serial parameters: ${RS232_BAUD_RATE} baud, ${RS232_DATA_BITS}N1, DTR/RTS enabled")
+
+                    serialPort = port
+                    _connectionState.value = ConnectionState.CONNECTED
+                    _activeProtocolFlow.value = ConnectionProtocol.RS232_SERIAL
+                    activeProtocol = ConnectionProtocol.RS232_SERIAL
+                    reconnectAttempts = 0
+
+                    return@withContext true
+
+                } catch (e: Exception) {
+                    Log.w(TAG, "RS232 connection failed for driver $index: ${e.message}")
+                    continue
+                }
+            }
+
+            Log.w(TAG, "All RS232 connection attempts failed")
+            return@withContext false
+
+        } catch (e: Exception) {
+            Log.e(TAG, "RS232 connection attempt failed with exception", e)
+            return@withContext false
+        }
+    }
+
+    private suspend fun connectViaCustomAPI(device: UsbDevice): Boolean = withContext(Dispatchers.IO) {
+        try {
+            Log.i(TAG, "Connecting to Custom TG2480HIII via Custom API...")
+
+            customPrnDevice = customAPI?.javaClass
+                ?.getMethod("getPrinterDriverUSB", UsbDevice::class.java, Context::class.java)
+                ?.invoke(customAPI, device, context)
+                ?: throw CustomException("Failed to create Custom printer driver")
+
+            // Get firmware version
+            val firmwareVersion = try {
+                customPrnDevice?.javaClass?.getMethod("getFirmwareVersion")?.invoke(customPrnDevice) as? String
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not get firmware version", e)
+                "Unknown"
+            }
+
+            Log.i(TAG, "✓ Custom printer connected via USB API. Firmware: $firmwareVersion")
+
+            _connectionState.value = ConnectionState.CONNECTED
+            _activeProtocolFlow.value = ConnectionProtocol.CUSTOM_USB_API
+            activeProtocol = ConnectionProtocol.CUSTOM_USB_API
+            reconnectAttempts = 0
+
+            return@withContext true
+
+        } catch (e: CustomException) {
+            Log.e(TAG, "Custom API USB connection failed: ${e.message}")
+            Log.e(TAG, "Custom API error code: ${e.javaClass.getMethod("GetErrorCode").invoke(e)}")
+            return@withContext false
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected USB connection error", e)
+            return@withContext false
+        }
+    }
+
+    /**
+     * Print text using active connection protocol
+     */
+    suspend fun printText(
+        text: String,
+        fontSize: Int = 1,
+        bold: Boolean = false,
+        centered: Boolean = false
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            if (simulate) {
+                Log.d(TAG, "SIMULATION: Print text: '$text'")
+                delay(200)
+                return@withContext Result.success(true)
+            }
+
+            ensureConnected()
+
+            printerMutex.withLock {
+                return@withContext when (activeProtocol) {
+                    ConnectionProtocol.CUSTOM_USB_API -> printViaCustomAPI(text, fontSize, bold, centered)
+                    ConnectionProtocol.RS232_SERIAL -> printViaRS232(text, fontSize, bold, centered)
+                    else -> Result.failure(Exception("No active connection protocol"))
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Print text failed", e)
+            return@withContext Result.failure(e)
+        }
+    }
+
+    private fun printViaCustomAPI(text: String, fontSize: Int, bold: Boolean, centered: Boolean): Result<Boolean> {
+        try {
+            Log.d(TAG, "Printing via Custom API: '$text'")
+
+            // Create PrinterFont object
+            val printerFont = PrinterFont().apply {
+                when (fontSize) {
+                    1 -> {
+                        setCharHeight(PrinterFont.FONT_SIZE_X1)
+                        setCharWidth(PrinterFont.FONT_SIZE_X1)
+                    }
+                    2 -> {
+                        setCharHeight(PrinterFont.FONT_SIZE_X2)
+                        setCharWidth(PrinterFont.FONT_SIZE_X2)
+                    }
+                    else -> {
+                        setCharHeight(PrinterFont.FONT_SIZE_X1)
+                        setCharWidth(PrinterFont.FONT_SIZE_X1)
+                    }
+                }
+
+                //if (bold) setEmphasis(true)
+
+                if (centered) {
+                    setJustification(PrinterFont.FONT_JUSTIFICATION_CENTER)
+                } else {
+                    setJustification(PrinterFont.FONT_JUSTIFICATION_LEFT)
+                }
+            }
+
+            // Print using Custom API
+            customPrnDevice?.javaClass?.getMethod("printText", String::class.java, Int::class.java, Int::class.java, PrinterFont::class.java)
+                ?.invoke(customPrnDevice, text, 104, 510, printerFont)
+
+            Log.d(TAG, "✓ Custom API print successful")
+            return Result.success(true)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Custom API print failed", e)
+            return Result.failure(e)
+        }
+    }
+
+    private fun printViaRS232(text: String, fontSize: Int, bold: Boolean, centered: Boolean): Result<Boolean> {
+        try {
+            Log.d(TAG, "Printing via RS232: '$text'")
+
+            val port = serialPort ?: throw Exception("RS232 port not available")
+
+            // Build ESC/POS command sequence
+            val commands = mutableListOf<Byte>()
+
+            // Initialize printer
+            commands.addAll(byteArrayOf(0x1B, 0x40).toList()) // ESC @
+
+            // Set font size
+            if (fontSize > 1) {
+                commands.addAll(byteArrayOf(0x1D, 0x21, (fontSize - 1).toByte()).toList()) // GS ! n
+            }
+
+            // Set bold
+            if (bold) {
+                commands.addAll(byteArrayOf(0x1B, 0x45, 0x01).toList()) // ESC E 1
+            }
+
+            // Set justification
+            if (centered) {
+                commands.addAll(byteArrayOf(0x1B, 0x61, 0x01).toList()) // ESC a 1
+            }
+
+            // Add text
+            commands.addAll(text.toByteArray(Charsets.UTF_8).toList())
+
+            // Line feed and cut
+            commands.addAll(byteArrayOf(0x0A, 0x0D).toList()) // LF CR
+
+            // Reset formatting
+            if (bold) commands.addAll(byteArrayOf(0x1B, 0x45, 0x00).toList()) // ESC E 0
+            if (centered) commands.addAll(byteArrayOf(0x1B, 0x61, 0x00).toList()) // ESC a 0
+
+            // Send to printer
+            val commandArray = commands.toByteArray()
+            port.write(commandArray, 1000)
+
+            Log.d(TAG, "✓ RS232 print successful (sent ${commandArray.size} bytes)")
+            return Result.success(true)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "RS232 print failed", e)
+            return Result.failure(e)
+        }
+    }
+
+    private suspend fun ensureConnected() {
+        if (_connectionState.value != ConnectionState.CONNECTED) {
+            throw Exception("Printer not connected (state: ${_connectionState.value})")
+        }
+        when (activeProtocol) {
+            ConnectionProtocol.CUSTOM_USB_API -> {
+                if (customPrnDevice == null) {
+                    throw Exception("Custom API printer device not initialized")
+                }
+            }
+            ConnectionProtocol.RS232_SERIAL -> {
+                if (serialPort == null) {
+                    throw Exception("RS232 serial port not initialized")
+                }
+            }
+            ConnectionProtocol.SIMULATION -> {
+                // Simulation is always "connected"
+            }
+            else -> {
+                throw Exception("No active connection protocol")
+            }
+        }
+    }
+
+    private fun createSimulatedStatus(): CustomPrinterStatus {
+        return CustomPrinterStatus(
+            noPaper = false,
+            paperRolling = false,
+            lfPressed = false,
+            printerName = "Simulated TG2480HIII",
+            printerInfo = "Simulation Mode",
+            firmwareVersion = "SIM_1.0",
+            isReady = true,
+            protocol = ConnectionProtocol.SIMULATION
+        )
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -121,7 +640,6 @@ class CustomTG2480HIIIDriver(
         val filter = IntentFilter(USB_PERMISSION_ACTION)
 
         if (Build.VERSION.SDK_INT >= 33) {
-            // Android 13+ requires explicit exported-ness
             ContextCompat.registerReceiver(
                 context,
                 usbReceiver,
@@ -129,78 +647,10 @@ class CustomTG2480HIIIDriver(
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
         } else {
-            // Legacy registration for older Android versions
             context.registerReceiver(usbReceiver, filter)
         }
     }
 
-    suspend fun initialize(): Result<Boolean> = withContext(Dispatchers.IO) {
-        try {
-            Log.i(TAG, "Initializing Custom TG2480HIII printer driver (simulate=$simulate)")
-
-            if (simulate) {
-                _connectionState.value = ConnectionState.CONNECTED
-                _printerStatus.value = createSimulatedStatus()
-                Log.i(TAG, "Simulation mode: printer connected")
-                return@withContext Result.success(true)
-            }
-
-            // Initialize Custom Android API (exactly like demo code)
-            customAPI = CustomAndroidAPI()
-
-            registerUsbReceiver()
-
-            // Acquire wake lock for reliable hardware communication
-            acquireWakeLock()
-            val deviceFound = detectAndConnectPrinter()
-
-            if (deviceFound) {
-                startStatusMonitoring()
-                Result.success(true)
-            } else {
-                Result.failure(Exception("Custom TG2480HIII printer not detected"))
-            }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Initialization failed", e)
-            _connectionState.value = ConnectionState.ERROR
-            Result.failure(e)
-        }
-    }
-
-    private suspend fun detectAndConnectPrinter(): Boolean {
-        _connectionState.value = ConnectionState.CONNECTING
-
-        val deviceList = usbManager.deviceList
-        Log.d(TAG, "Scanning ${deviceList.size} USB devices for Custom TG2480HIII")
-
-        // Find Custom device by vendor ID (like in demo)
-        val customDevice = deviceList.values.find { device ->
-            device.vendorId == VENDOR_ID
-        }
-
-        return if (customDevice != null) {
-            Log.d(TAG, "Found Custom device: ${customDevice.deviceName}")
-
-            if (usbManager.hasPermission(customDevice)) {
-                // Already have permission, connect directly
-                connectToDevice(customDevice)
-                true
-            } else {
-                // Request permission, connection will happen in broadcast receiver
-                requestUsbPermission(customDevice)
-                true
-            }
-        } else {
-            Log.w(TAG, "Custom TG2480HIII not found in USB device list")
-            _connectionState.value = ConnectionState.DEVICE_NOT_FOUND
-            false
-        }
-    }
-
-    /**
-     * Request USB permission with proper Android intent handling
-     */
     private fun requestUsbPermission(device: UsbDevice) {
         Log.d(TAG, "Requesting USB permission for device: ${device.deviceName}")
 
@@ -217,256 +667,17 @@ class CustomTG2480HIIIDriver(
         usbManager.requestPermission(device, permissionIntent)
     }
 
-    private suspend fun connectToDevice(device: UsbDevice) {
-        try {
-            Log.i(TAG, "Connecting to Custom TG2480HIII via manufacturer API")
-
-            // Use ACTUAL Custom API method from your demo code
-            prnDevice = customAPI?.getPrinterDriverUSB(device, context)
-                ?: throw CustomException("Failed to create Custom printer driver")
-
-            // Get firmware version (like in demo code)
-            val firmwareVersion = try {
-                // This is the actual method call from your demo
-                (prnDevice as? Any)?.javaClass?.getMethod("getFirmwareVersion")?.invoke(prnDevice) as? String
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not get firmware version", e)
-                null
-            }
-
-            Log.i(TAG, "Custom printer connected. Firmware: $firmwareVersion")
-
-            _connectionState.value = ConnectionState.CONNECTED
-            reconnectAttempts = 0 // Reset reconnect counter on successful connection
-
-        } catch (e: CustomException) {
-            Log.e(TAG, "Custom API connection failed: ${e.message}", e)
-            Log.e(TAG, "Custom API error code: ${e.GetErrorCode()}") // Note: capital G as in demo
-            _connectionState.value = ConnectionState.ERROR
-
-            if (enableAutoReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                scheduleReconnect()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Unexpected connection error", e)
-            _connectionState.value = ConnectionState.ERROR
-        }
-    }
-
-    suspend fun printText(
-        text: String,
-        fontSize: Int = 1,
-        bold: Boolean = false,
-        centered: Boolean = false
-    ): Result<Boolean> = withContext(Dispatchers.IO) {
-        try {
-            if (simulate) {
-                Log.d(TAG, "Simulating print: $text")
-                delay(200)
-                return@withContext Result.success(true)
-            }
-
-            ensureConnected()
-
-            // FIXED: Use coroutine Mutex instead of synchronized
-            printerMutex.withLock {
-                try {
-                    // Create PrinterFont object exactly like in demo code
-                    val printerFont = PrinterFont().apply {
-                        // Set character height and width based on fontSize
-                        when (fontSize) {
-                            1 -> {
-                                setCharHeight(PrinterFont.FONT_SIZE_X1)
-                                setCharWidth(PrinterFont.FONT_SIZE_X1)
-                            }
-                            2 -> {
-                                setCharHeight(PrinterFont.FONT_SIZE_X2)
-                                setCharWidth(PrinterFont.FONT_SIZE_X2)
-                            }
-                            else -> {
-                                setCharHeight(PrinterFont.FONT_SIZE_X1)
-                                setCharWidth(PrinterFont.FONT_SIZE_X1)
-                            }
-                        }
-
-                        // Set bold (emphasized in Custom API terminology)
-                        setEmphasized(bold)
-                        setItalic(false)
-                        setUnderline(false)
-
-                        // Set justification (alignment)
-                        setJustification(
-                            if (centered) PrinterFont.FONT_JUSTIFICATION_CENTER
-                            else PrinterFont.FONT_JUSTIFICATION_LEFT
-                        )
-
-                        // Set default international character set
-                        setInternationalCharSet(PrinterFont.FONT_CS_DEFAULT)
-                    }
-
-                    // Use ACTUAL Custom API method from demo code
-                    val printTextMethod = prnDevice?.javaClass?.getMethod("printTextLF", String::class.java, PrinterFont::class.java)
-                    printTextMethod?.invoke(prnDevice, text, printerFont)
-
-                    Log.d(TAG, "Printed text successfully: ${text.take(50)}...")
-                    Result.success(true)
-
-                } catch (e: CustomException) {
-                    Log.e(TAG, "Custom API print failed: ${e.message}", e)
-                    handleCustomException(e)
-                    Result.failure(e)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Print failed with reflection error", e)
-                    Result.failure(e)
-                }
-            }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Print operation failed", e)
-            Result.failure(e)
-        }
-    }
-
-    // FIXED: Use Mutex instead of synchronized for suspend functions
-    suspend fun printReceipt(
-        header: String,
-        items: List<Pair<String, String>>,
-        footer: String,
-        cutPaper: Boolean = true
-    ): Result<Boolean> = withContext(Dispatchers.IO) {
-        try {
-            ensureConnected()
-
-            // FIXED: Use coroutine Mutex instead of synchronized
-            printerMutex.withLock {
-                printText(header, fontSize = 2, bold = true, centered = true)
-                printText("=" * 32, fontSize = 1, bold = false, centered = false)
-
-                // Print items with normal formatting
-                items.forEach { (name, price) ->
-                    val line = formatReceiptLine(name, price, 32)
-                    printText(line, fontSize = 1, bold = false, centered = false)
-                }
-
-                // Print footer with centering
-                printText("=" * 32, fontSize = 1, bold = false, centered = false)
-                printText(footer, fontSize = 1, bold = false, centered = true)
-
-                // Feed paper and cut (using actual Custom API methods)
-                if (cutPaper) {
-                    try {
-                        // Feed 3 lines like in demo code
-                        val feedMethod = prnDevice?.javaClass?.getMethod("feed", Int::class.java)
-                        feedMethod?.invoke(prnDevice, 3)
-
-                        // Cut paper using actual Custom API constant
-                        val cutMethod = prnDevice?.javaClass?.getMethod("cut", Int::class.java)
-                        // Note: We need to use the actual constant value from CustomPrinter.CUT_TOTAL
-                        // For now using reflection to get the constant
-                        val customPrinterClass = Class.forName("it.custom.printer.api.android.CustomPrinter")
-                        val cutTotalValue = customPrinterClass.getField("CUT_TOTAL").getInt(null)
-                        cutMethod?.invoke(prnDevice, cutTotalValue)
-
-                    } catch (e: CustomException) {
-                        // Only show error if it's not "unsupported function" (like in demo)
-                        if (e.GetErrorCode() != CustomException.ERR_UNSUPPORTEDFUNCTION.toLong()) {
-                            Log.w(TAG, "Feed/Cut operation issue: ${e.message}")
-                        }
-                    }
-                }
-
-                Log.i(TAG, "Receipt printed successfully")
-                Result.success(true)
-            }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Receipt printing failed", e)
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Get printer status using ACTUAL Custom API
-     *
-     * This follows the exact pattern from your demo's GetStatusRunnable
-     * FIXED: Use Mutex instead of synchronized for suspend functions
-     */
-    suspend fun getCurrentStatus(): Result<CustomPrinterStatus> = withContext(Dispatchers.IO) {
-        try {
-            if (simulate) {
-                return@withContext Result.success(createSimulatedStatus())
-            }
-
-            ensureConnected()
-
-            // FIXED: Use coroutine Mutex instead of synchronized
-            printerMutex.withLock {
-                try {
-                    // Use ACTUAL Custom API method from demo code
-                    val getStatusMethod = prnDevice?.javaClass?.getMethod("getPrinterFullStatus")
-                    val printerStatus = getStatusMethod?.invoke(prnDevice) as? PrinterStatus
-                        ?: throw Exception("Could not get printer status")
-
-                    // Get printer info (like in demo)
-                    val getNameMethod = prnDevice?.javaClass?.getMethod("getPrinterName")
-                    val printerName = getNameMethod?.invoke(prnDevice) as? String
-
-                    val getInfoMethod = prnDevice?.javaClass?.getMethod("getPrinterInfo")
-                    val printerInfo = getInfoMethod?.invoke(prnDevice) as? String
-
-                    val getFwMethod = prnDevice?.javaClass?.getMethod("getFirmwareVersion")
-                    val firmwareVersion = getFwMethod?.invoke(prnDevice) as? String
-
-                    // Create our wrapper status object using ACTUAL PrinterStatus properties
-                    val status = CustomPrinterStatus(
-                        noPaper = printerStatus.stsNOPAPER,         // Actual property from demo
-                        paperRolling = printerStatus.stsPAPERROLLING, // Actual property from demo
-                        lfPressed = printerStatus.stsLFPRESSED,     // Actual property from demo
-                        printerName = printerName,
-                        printerInfo = printerInfo,
-                        firmwareVersion = firmwareVersion,
-                        isReady = !printerStatus.stsNOPAPER  // Simple ready logic
-                    )
-
-                    _printerStatus.value = status
-                    Result.success(status)
-
-                } catch (e: CustomException) {
-                    Log.e(TAG, "Status check failed: ${e.message}", e)
-                    Result.failure(e)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Status check error", e)
-                    Result.failure(e)
-                }
-            }
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Status operation failed", e)
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Start background status monitoring like in the demo code
-     *
-     * This replicates the Handler-based status checking from your demo
-     */
     private fun startStatusMonitoring() {
         statusHandler = Handler(Looper.getMainLooper())
-
         statusRunnable = object : Runnable {
             override fun run() {
-                // Run status check in background thread
                 driverScope.launch {
                     try {
-                        if (_connectionState.value == ConnectionState.CONNECTED) {
-                            getCurrentStatus()
-                        }
+                        checkCurrentStatus()
                     } catch (e: Exception) {
-                        Log.e(TAG, "Background status check failed", e)
+                        Log.w(TAG, "Background status check failed", e)
                     }
 
-                    // Schedule next status check
                     statusRunnable?.let { r ->
                         statusHandler?.postDelayed(r, STATUS_CHECK_INTERVAL)
                     }
@@ -474,173 +685,103 @@ class CustomTG2480HIIIDriver(
             }
         }
 
-        // Start the status monitoring
         statusRunnable?.let { r ->
             statusHandler?.post(r)
         }
     }
 
-    private fun handleCustomException(e: CustomException) {
-        when (e.GetErrorCode()) { // Note: GetErrorCode() with capital G
-            CustomException.ERR_UNSUPPORTEDFUNCTION.toLong() -> {
-                Log.w(TAG, "Unsupported function called")
-            }
-            else -> {
-                Log.e(TAG, "Custom API error ${e.GetErrorCode()}: ${e.message}")
-                if (enableAutoReconnect) {
-                    scheduleReconnect()
+    private suspend fun checkCurrentStatus() {
+        printerMutex.withLock {
+            try {
+                val status = when (activeProtocol) {
+                    ConnectionProtocol.CUSTOM_USB_API -> getStatusViaCustomAPI()
+                    ConnectionProtocol.RS232_SERIAL -> getStatusViaRS232()
+                    ConnectionProtocol.SIMULATION -> createSimulatedStatus()
+                    else -> null
                 }
+
+                _printerStatus.value = status
+
+            } catch (e: Exception) {
+                Log.w(TAG, "Status check failed for protocol $activeProtocol", e)
             }
         }
     }
 
-    /**
-     * Schedule automatic reconnection attempt
-     */
-    private fun scheduleReconnect() {
-        if (reconnectJob?.isActive == true) return
+    private fun getStatusViaCustomAPI(): CustomPrinterStatus? {
+        return try {
+            val printerStatus = customPrnDevice?.javaClass?.getMethod("getPrinterStatus")?.invoke(customPrnDevice) as? PrinterStatus
 
-        _connectionState.value = ConnectionState.RECONNECTING
-        reconnectAttempts++
+            if (printerStatus != null) {
+                val printerName = customPrnDevice?.javaClass?.getMethod("getPrinterName")?.invoke(customPrnDevice) as? String
+                val printerInfo = customPrnDevice?.javaClass?.getMethod("getPrinterInfo")?.invoke(customPrnDevice) as? String
+                val firmwareVersion = customPrnDevice?.javaClass?.getMethod("getFirmwareVersion")?.invoke(customPrnDevice) as? String
 
-        Log.i(TAG, "Scheduling reconnection attempt $reconnectAttempts/$MAX_RECONNECT_ATTEMPTS")
+                CustomPrinterStatus(
+                    noPaper = printerStatus.javaClass.getField("stsNOPAPER").getBoolean(printerStatus),
+                    paperRolling = printerStatus.javaClass.getField("stsPAPERROLLING").getBoolean(printerStatus),
+                    lfPressed = printerStatus.javaClass.getField("stsLFPRESSED").getBoolean(printerStatus),
+                    printerName = printerName,
+                    printerInfo = printerInfo,
+                    firmwareVersion = firmwareVersion,
+                    isReady = true,
+                    protocol = ConnectionProtocol.CUSTOM_USB_API
+                )
+            } else null
 
-        reconnectJob = driverScope.launch {
-            delay(RECONNECT_DELAY)
-
-            if (reconnectAttempts <= MAX_RECONNECT_ATTEMPTS) {
-                try {
-                    // FIXED: Close printer safely without synchronized block
-                    printerMutex.withLock {
-                        prnDevice?.javaClass?.getMethod("close")?.invoke(prnDevice)
-                        prnDevice = null
-                    }
-                    delay(1000)
-                    detectAndConnectPrinter()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Reconnection attempt failed", e)
-                    _connectionState.value = ConnectionState.ERROR
-                }
-            } else {
-                Log.e(TAG, "Max reconnection attempts reached")
-                _connectionState.value = ConnectionState.ERROR
-            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to get Custom API status", e)
+            null
         }
     }
 
-    /**
-     * Ensure printer is connected before operations
-     */
-    private suspend fun ensureConnected() {
-        if (_connectionState.value != ConnectionState.CONNECTED) {
-            throw Exception("Printer not connected (state: ${_connectionState.value})")
-        }
-        if (prnDevice == null) {
-            throw Exception("Printer device not initialized")
-        }
-    }
-
-    /**
-     * Create simulated status for testing
-     */
-    private fun createSimulatedStatus(): CustomPrinterStatus {
+    private fun getStatusViaRS232(): CustomPrinterStatus {
         return CustomPrinterStatus(
-            noPaper = false,
+            noPaper = false, // RS232 doesn't provide real-time status easily
             paperRolling = false,
             lfPressed = false,
-            printerName = "Simulated TG2480HIII",
-            printerInfo = "Simulation Mode",
-            firmwareVersion = "SIM_1.0",
-            isReady = true
+            printerName = "TG2480HIII via RS232",
+            printerInfo = "RS232 Serial Connection",
+            firmwareVersion = "Unknown (RS232)",
+            isReady = serialPort != null,
+            protocol = ConnectionProtocol.RS232_SERIAL
         )
     }
 
-    /**
-     * Format receipt line with proper spacing
-     */
-    private fun formatReceiptLine(name: String, price: String, totalWidth: Int): String {
-        val maxNameWidth = totalWidth - price.length - 1
-        val trimmedName = if (name.length > maxNameWidth) {
-            name.substring(0, maxNameWidth - 3) + "..."
-        } else {
-            name
-        }
-
-        val spacesNeeded = totalWidth - trimmedName.length - price.length
-        return trimmedName + " ".repeat(spacesNeeded.coerceAtLeast(1)) + price + "\n"
-    }
-
-    /**
-     * String repetition operator
-     */
-    private operator fun String.times(count: Int): String = this.repeat(count)
-
-    /**
-     * Acquire wake lock for reliable operation on Android 7.1.2
-     */
     private fun acquireWakeLock() {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
-            "PudoKiosk::PrinterWakeLock"
-        ).apply {
-            acquire(TimeUnit.HOURS.toMillis(1))
-        }
-        Log.d(TAG, "Wake lock acquired for printer operations")
+            "PudoKiosk:PrinterDriver"
+        )
+        wakeLock?.acquire(10 * 60 * 1000L) // 10 minutes
     }
 
-    fun shutdown() {
-        Log.i(TAG, "Shutting down Custom TG2480HIII driver")
-
+    fun cleanup() {
         try {
-            // Stop status monitoring
-            statusRunnable?.let { r ->
-                statusHandler?.removeCallbacks(r)
-            }
-            statusHandler = null
-            statusRunnable = null
-
-            // Cancel background operations
             reconnectJob?.cancel()
-            driverScope.cancel()
+            statusRunnable = null
+            statusHandler = null
 
-            // Unregister USB receiver
-            try {
-                context.unregisterReceiver(usbReceiver)
-            } catch (e: IllegalArgumentException) {
-                // Receiver wasn't registered, ignore
-            }
-
-            // FIXED: Close printer safely using blocking operation in shutdown
             runBlocking {
                 printerMutex.withLock {
-                    try {
-                        prnDevice?.javaClass?.getMethod("close")?.invoke(prnDevice)
-                    } catch (e: CustomException) {
-                        Log.w(TAG, "Error closing printer: ${e.message}")
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Error during printer close", e)
-                    }
-                    prnDevice = null
+                    customPrnDevice?.javaClass?.getMethod("close")?.invoke(customPrnDevice)
+                    customPrnDevice = null
+
+                    serialPort?.close()
+                    serialPort = null
                 }
             }
 
-            customAPI = null
-
-            // Release wake lock
-            wakeLock?.let { wl ->
-                if (wl.isHeld) {
-                    wl.release()
-                    Log.d(TAG, "Wake lock released")
-                }
-            }
-            wakeLock = null
+            context.unregisterReceiver(usbReceiver)
+            wakeLock?.release()
 
             _connectionState.value = ConnectionState.DISCONNECTED
-            _printerStatus.value = null
+            _activeProtocolFlow.value = ConnectionProtocol.NONE
+            activeProtocol = ConnectionProtocol.NONE
 
         } catch (e: Exception) {
-            Log.w(TAG, "Error during shutdown", e)
+            Log.w(TAG, "Cleanup error", e)
         }
     }
 }

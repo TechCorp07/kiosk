@@ -99,6 +99,34 @@
                     android:background="#2196F3"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp" />
+
+                <Button
+                    android:id="@+id/btnDebugConnection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔍 Run Debug Session"
+                    android:background="#9C27B0"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="8dp" />
+
+                <Button
+                    android:id="@+id/btnProtocolSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔄 Test Protocols"
+                    android:background="#607D8B"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tvProtocolInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔗 Protocol: Detecting..."
+                    android:textSize="12sp"
+                    android:padding="8dp"
+                    android:background="#E3F2FD"
+                    android:layout_marginTop="8dp" />
             </LinearLayout>
 
             <!-- Advanced Test Buttons -->
