@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(files("libs/customandroidapi.aar"))
 
     // QR code generator for labels
     implementation(libs.core)
@@ -88,7 +89,6 @@ dependencies {
 
     // USB-Serial (for later phases)
     implementation(libs.usb.serial.for1.android)
-    implementation("com.github.mik3y:usb-serial-for-android:3.5.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

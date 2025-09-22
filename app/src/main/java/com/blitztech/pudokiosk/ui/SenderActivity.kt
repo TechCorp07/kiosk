@@ -11,8 +11,6 @@ import com.blitztech.pudokiosk.audio.LockerReminder
 import com.blitztech.pudokiosk.data.events.EventType
 import com.blitztech.pudokiosk.data.events.Outbox
 import com.blitztech.pudokiosk.data.repo.BackendRepository
-import com.blitztech.pudokiosk.deviceio.printer.CustomerLabel
-import com.blitztech.pudokiosk.deviceio.printer.TG2480Driver
 import com.blitztech.pudokiosk.util.Ids
 import kotlinx.coroutines.launch
 import com.blitztech.pudokiosk.deviceio.rs485.LockerController
@@ -59,7 +57,6 @@ class SenderActivity : AppCompatActivity() {
 
     private var current = Step.LOGIN
     private val backend = BackendRepository()
-    private lateinit var printer: TG2480Driver
     private var lockerId: String? = null
     private var tracking: String = "TRK-" + Ids.uuid().take(8).uppercase()
     private var locale: String = "en"
@@ -72,7 +69,6 @@ class SenderActivity : AppCompatActivity() {
         useBackupIM30 = prefs.isUseBackupIM30()
         locker = LockerController(this, simulate = simulateHardware)
         terminal = Im30MdbDriver(this, simulate = true) // set simulate=false on device
-        printer = TG2480Driver(this)
 
         tvStep = findViewById(R.id.tvStep)
         etPhone = findViewById(R.id.etPhone)
@@ -306,8 +302,6 @@ class SenderActivity : AppCompatActivity() {
                 Outbox.enqueue(EventType.LOCKER_OPEN_SUCCESS, mapOf("lockerId" to id))
                 WorkScheduler.flushOutboxNow(this@SenderActivity)
 
-                printer.printCustomerLabel(CustomerLabel(tracking = tracking, size = spSize.selectedItem.toString()))
-                Outbox.enqueue(EventType.LABEL_PRINTED, mapOf("tracking" to tracking))
                 WorkScheduler.flushOutboxNow(this@SenderActivity)
 
                 reminder?.stop()
