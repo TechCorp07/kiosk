@@ -314,7 +314,7 @@
 
         </LinearLayout>
 
-        <!-- ===== BARCODE SCANNER SECTION ===== -->
+        <!-- ===== BARCODE SCANNER SECTION (ENHANCED) ===== -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -336,30 +336,155 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="USB HID mode - Focus the text area below and scan barcodes"
+                android:text="15-pin SUB-D to RS232 converter cable → Direct RS232 connection"
                 android:textSize="12sp"
                 android:textColor="#666666"
                 android:layout_marginBottom="12dp" />
 
-            <Button
-                android:id="@+id/btnScannerFocus"
+            <!-- Scanner Status Display -->
+            <TextView
+                android:id="@+id/tvScannerStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Focus Scanner Input Area"
-                android:background="#FF9800"
-                android:textColor="#FFFFFF"
+                android:text="⚪ Scanner status: Initializing..."
+                android:textSize="12sp"
+                android:textColor="#FF9800"
+                android:background="#FFF8E1"
+                android:padding="8dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Control Buttons Row -->
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp">
+
+                <Button
+                    android:id="@+id/btnScannerFocus"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Focus Input"
+                    android:background="#FF9800"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnTriggerScan"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="📸 Trigger Scan"
+                    android:background="#4CAF50"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginStart="4dp"
+                    android:enabled="false" />
+
+            </LinearLayout>
+
+            <!-- Additional Control Buttons Row -->
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp">
+
+                <Button
+                    android:id="@+id/btnTestConnection"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Test Connection"
+                    android:background="#2196F3"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnClearScans"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Clear Results"
+                    android:background="#9E9E9E"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <!-- Diagnostic and Help Buttons Row -->
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <Button
+                    android:id="@+id/btnRunDiagnostics"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="🔍 Run RS232 Diagnostics"
+                    android:background="#9C27B0"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnHardwareHelp"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="📋 Hardware Help"
+                    android:background="#607D8B"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <!-- Instructions -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📋 Instructions:\n• Press 'Trigger Scan' to activate scanner via RS232\n• Point scanner at barcode and pull physical trigger\n• Results appear below with timestamp\n• Run diagnostics if connection fails"
+                android:textSize="11sp"
+                android:textColor="#757575"
+                android:background="#F5F5F5"
+                android:padding="8dp"
                 android:layout_marginBottom="8dp" />
+
+            <!-- Scanned Results Display -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📸 Scanned Results:"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#1976D2"
+                android:layout_marginBottom="4dp" />
 
             <EditText
                 android:id="@+id/etScannerSink"
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
+                android:layout_height="150dp"
                 android:gravity="top"
-                android:hint="Scanned barcodes will appear here..."
+                android:hint="Scanned barcodes will appear here with timestamps...\n\nClick 'Trigger Scan' to start scanning.\n\nIf connection fails, run 'RS232 Diagnostics' for troubleshooting."
                 android:inputType="textMultiLine"
                 android:background="#F8F8F8"
                 android:padding="12dp"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:scrollbars="vertical"
+                android:fontFamily="monospace" />
+
+            <!-- Connection Info (Optional Debug Info) -->
+            <TextView
+                android:id="@+id/tvConnectionInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔌 Connection: Checking USB devices..."
+                android:textSize="10sp"
+                android:textColor="#9E9E9E"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 

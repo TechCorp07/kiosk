@@ -17,7 +17,7 @@ class Prefs(ctx: Context) {
     fun isUseBackupIM30(): Boolean = p.getBoolean("use_im30", false)
     fun setUseBackupIM30(v: Boolean) { p.edit().putBoolean("use_im30", v).apply() }
 
-    // Scanner baud (default Honeywell often 9600)
-    fun getScannerBaud(): Int = p.getInt("scanner_baud", 9600)
+    // Scanner baud (default Honeywell often 115200)
+    fun getScannerBaud(): Int = p.getInt("scanner_baud", 115200)
     fun setScannerBaud(v: Int) { p.edit().putInt("scanner_baud", v).apply() }
 }

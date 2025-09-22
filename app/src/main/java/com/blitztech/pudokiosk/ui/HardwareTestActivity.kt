@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.data.AuditLogger
+import com.blitztech.pudokiosk.prefs.Prefs
 
 // Enhanced driver imports
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
@@ -18,7 +19,11 @@ import com.hoho.android.usbserial.driver.UsbSerialProber
 // Custom API imports
 import it.custom.printer.api.android.CustomAndroidAPI
 
+// Barcode scanner imports
+import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner1900
+import com.blitztech.pudokiosk.deviceio.rs232.RS232DiagnosticUtility
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,11 +33,11 @@ class HardwareTestActivity : AppCompatActivity() {
         private const val TAG = "HardwareTestActivity"
     }
 
-    // === Enhanced Printer Components ===
+    // === Printer Components ===
     private lateinit var enhancedPrinter: CustomTG2480HIIIDriver
     private val debugger = PrinterConnectionDebugger()
 
-    // === UI Components ===
+    // === Printer UI Components ===
     private lateinit var btnPrintTest: Button
     private lateinit var btnPrinterStatus: Button
     private lateinit var btnPrintReceipt: Button
@@ -43,64 +48,119 @@ class HardwareTestActivity : AppCompatActivity() {
     private lateinit var tvPrinterDetails: TextView
     private lateinit var tvProtocolInfo: TextView
 
+    // === Barcode Scanner Components ===
+    private lateinit var btnScannerFocus: Button
+    private lateinit var etScannerSink: EditText
+    private lateinit var btnTriggerScan: Button
+    private lateinit var tvScannerStatus: TextView
+    private lateinit var btnTestConnection: Button
+    private lateinit var btnClearScans: Button
+    private lateinit var btnRunDiagnostics: Button
+    private lateinit var btnHardwareHelp: Button
+    private lateinit var tvConnectionInfo: TextView
+
+    private lateinit var barcodeScanner: BarcodeScanner1900
+    private lateinit var diagnostic: RS232DiagnosticUtility
+    private lateinit var prefs: Prefs
+
     // === Hardware Initialization State ===
     private var printerInitialized = false
+    private var scannerInitialized = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hardware_test)
 
         Log.i(TAG, "=== Hardware Test Activity Started ===")
-        AuditLogger.log("INFO", "HARDWARE_TEST_ACTIVITY_START", "Enhanced printer driver version")
+        AuditLogger.log("INFO", "HARDWARE_TEST_ACTIVITY_START", "Enhanced printer and RS232 scanner")
+
+        // Initialize preferences
+        prefs = Prefs(this)
 
         // Set up UI elements
         setupUI()
 
-        // Initialize enhanced printer driver with comprehensive debugging
+        // Initialize all hardware components
         initializeEnhancedPrinter()
+        setupBarcodeScanner()
     }
 
     private fun setupUI() {
-        // Initialize UI components
+        // Initialize printer UI components
         btnPrintTest = findViewById(R.id.btnPrintTest)
         btnPrinterStatus = findViewById(R.id.btnPrinterStatus)
         btnPrintReceipt = findViewById(R.id.btnPrintReceipt)
         btnPrintBarcode = findViewById(R.id.btnPrintBarcode)
 
-        // Add new debug buttons (you may need to add these to your layout)
         try {
             btnDebugConnection = findViewById(R.id.btnDebugConnection)
             btnProtocolSwitch = findViewById(R.id.btnProtocolSwitch)
             tvProtocolInfo = findViewById(R.id.tvProtocolInfo)
         } catch (e: Exception) {
-            Log.w(TAG, "Some debug UI elements not found in layout, that's okay")
+            Log.w(TAG, "Some printer debug UI elements not found in layout")
         }
 
         tvPrinterStatus = findViewById(R.id.tvPrinterStatus)
         tvPrinterDetails = findViewById(R.id.tvPrinterDetails)
 
-        // Set up button click handlers
+        // Initialize barcode scanner UI components
+        btnScannerFocus = findViewById(R.id.btnScannerFocus)
+        etScannerSink = findViewById(R.id.etScannerSink)
+        tvScannerStatus = findViewById(R.id.tvScannerStatus)
+
+        try {
+            btnTriggerScan = findViewById(R.id.btnTriggerScan)
+            btnTestConnection = findViewById(R.id.btnTestConnection)
+            btnClearScans = findViewById(R.id.btnClearScans)
+            btnRunDiagnostics = findViewById(R.id.btnRunDiagnostics)
+            btnHardwareHelp = findViewById(R.id.btnHardwareHelp)
+            tvConnectionInfo = findViewById(R.id.tvConnectionInfo)
+        } catch (e: Exception) {
+            Log.w(TAG, "Some barcode scanner UI elements not found in layout")
+        }
+
+        // Set up printer button click handlers
         btnPrintTest.setOnClickListener { testBasicPrinting() }
         btnPrinterStatus.setOnClickListener { checkPrinterStatus() }
         btnPrintReceipt.setOnClickListener { testReceiptPrinting() }
         btnPrintBarcode.setOnClickListener { testBarcodePrinting() }
 
-        // Debug button handlers (if available)
         try {
             btnDebugConnection?.setOnClickListener { runComprehensiveDebug() }
             btnProtocolSwitch?.setOnClickListener { testProtocolSwitching() }
         } catch (e: Exception) {
-            // Debug buttons not in layout, that's fine
+            Log.w(TAG, "Debug buttons not available")
         }
 
-        // Initially disable buttons until printer is ready
+        // Set up barcode scanner button click handlers
+        btnScannerFocus.setOnClickListener {
+            focusScannerInput()
+            triggerScan() // Also trigger scan when focus button is pressed
+        }
+
+        btnTriggerScan?.setOnClickListener { triggerScan() }
+        btnTestConnection?.setOnClickListener { testScannerConnection() }
+        btnClearScans?.setOnClickListener { clearScanResults() }
+        btnRunDiagnostics?.setOnClickListener { runRS232Diagnostics() }
+        btnHardwareHelp?.setOnClickListener { showHardwareSetupHelp() }
+
+        // Clear scanned data when EditText is clicked
+        etScannerSink.setOnClickListener {
+            clearScanResults()
+        }
+
+        // Long click for debug info
+        etScannerSink.setOnLongClickListener {
+            showScannerDebugInfo()
+            true
+        }
+
+        // Initially disable buttons until hardware is ready
         setButtonsEnabled(false)
     }
 
-    /**
-     * Initialize Enhanced TG2480HIII Driver with comprehensive debugging
-     * This replaces your old initialization method and provides much better debugging
-     */
+    // === PRINTER METHODS ===
+
     private fun initializeEnhancedPrinter() {
         showPrinterStatus("🔍 Starting comprehensive printer initialization...")
 
@@ -111,11 +171,7 @@ class HardwareTestActivity : AppCompatActivity() {
 
                 // Monitor connection state changes
                 monitorConnectionState()
-
-                // Monitor active protocol changes
                 monitorProtocolChanges()
-
-                // Monitor detailed printer status
                 monitorPrinterStatus()
 
                 printerInitialized = true
@@ -182,7 +238,6 @@ class HardwareTestActivity : AppCompatActivity() {
                     try {
                         tvProtocolInfo?.text = protocolMessage
                     } catch (e: Exception) {
-                        // Protocol info view not in layout
                         Log.d(TAG, "Protocol: $protocol")
                     }
                 }
@@ -204,6 +259,417 @@ class HardwareTestActivity : AppCompatActivity() {
             }
         }
     }
+
+    // === BARCODE SCANNER METHODS ===
+
+    private fun setupBarcodeScanner() {
+        // Initialize diagnostic utility
+        diagnostic = RS232DiagnosticUtility(this)
+
+        // Get scanner baud rate from preferences
+        val scannerBaud = try {
+            prefs.getScannerBaud()
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not get scanner baud from prefs, using default 9600")
+            9600
+        }
+
+        barcodeScanner = BarcodeScanner1900(
+            ctx = this,
+            preferredBaud = scannerBaud,
+            simulateIfNoHardware = false // Enable simulation if hardware fails
+        )
+
+        // Initialize scanner
+        initializeBarcodeScanner()
+        configureScannerForSoftwareTrigger()
+    }
+
+    private fun configureScannerForSoftwareTrigger() {
+        lifecycleScope.launch {
+            try {
+                showScannerStatus("🔧 Configuring scanner for software triggers...")
+
+                // Send multiple configuration attempts
+                barcodeScanner.configureSoftwareTrigger()
+
+                delay(1000)
+                showScannerStatus("✅ Scanner configuration attempted")
+                showToast("📋 Scanner configured - try trigger scan now")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Scanner configuration failed", e)
+                showScannerStatus("❌ Configuration failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun initializeBarcodeScanner() {
+        showScannerStatus("🔍 Initializing barcode scanner...")
+
+        lifecycleScope.launch {
+            try {
+                barcodeScanner.start()
+
+                // Monitor connection state
+                monitorScannerConnection()
+                monitorScannedData()
+                monitorScannerStatus()
+
+                scannerInitialized = true
+                Log.i(TAG, "✅ Barcode scanner initialization completed")
+
+                // If connection fails after timeout, suggest diagnostics
+                delay(3000)
+                if (barcodeScanner.connectionState.value == BarcodeScanner1900.ConnectionState.ERROR) {
+                    runOnUiThread {
+                        showScannerStatus("❌ Connection failed - Try running diagnostics")
+                        showToast("💡 Try running RS232 diagnostics to troubleshoot")
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Barcode scanner initialization failed", e)
+                showScannerStatus("❌ Scanner init failed: ${e.message}")
+                showToast("❌ Scanner failed - Run diagnostics to troubleshoot")
+            }
+        }
+    }
+
+    private fun monitorScannerConnection() {
+        lifecycleScope.launch {
+            barcodeScanner.connectionState.collectLatest { state ->
+                val statusMessage = when (state) {
+                    BarcodeScanner1900.ConnectionState.DISCONNECTED -> "⚪ Scanner disconnected"
+                    BarcodeScanner1900.ConnectionState.CONNECTING -> "🔄 Scanner connecting..."
+                    BarcodeScanner1900.ConnectionState.CONNECTED -> "✅ Scanner connected - Ready to scan!"
+                    BarcodeScanner1900.ConnectionState.ERROR -> "❌ Scanner connection error - Check RS232"
+                }
+
+                runOnUiThread {
+                    showScannerStatus(statusMessage)
+
+                    // Enable/disable buttons based on connection state
+                    val isConnected = (state == BarcodeScanner1900.ConnectionState.CONNECTED)
+                    btnTriggerScan?.isEnabled = isConnected
+                    btnTestConnection?.isEnabled = scannerInitialized
+                    btnScannerFocus.isEnabled = true // Always enabled
+                    btnClearScans?.isEnabled = true // Always enabled
+
+                    // Update status background color
+                    val backgroundColor = when (state) {
+                        BarcodeScanner1900.ConnectionState.CONNECTED -> "#C8E6C9" // Light green
+                        BarcodeScanner1900.ConnectionState.CONNECTING -> "#FFF3E0" // Light orange
+                        BarcodeScanner1900.ConnectionState.ERROR -> "#FFCDD2" // Light red
+                        BarcodeScanner1900.ConnectionState.DISCONNECTED -> "#F5F5F5" // Light gray
+                    }
+
+                    try {
+                        tvScannerStatus.setBackgroundColor(android.graphics.Color.parseColor(backgroundColor))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Could not set status background color")
+                    }
+                }
+
+                Log.i(TAG, "Scanner connection state: $state")
+
+                if (state == BarcodeScanner1900.ConnectionState.CONNECTED) {
+                    showToast("✅ Barcode scanner ready!")
+
+                    // Show connection details briefly
+                    val connectionInfo = barcodeScanner.getConnectionInfo()
+                    runOnUiThread {
+                        tvConnectionInfo?.apply {
+                            text = "✅ $connectionInfo"
+                            visibility = android.view.View.VISIBLE
+                        }
+                    }
+
+                    // Auto-hide after 5 seconds
+                    lifecycleScope.launch {
+                        delay(5000)
+                        runOnUiThread {
+                            tvConnectionInfo?.visibility = android.view.View.GONE
+                        }
+                    }
+                } else if (state == BarcodeScanner1900.ConnectionState.ERROR) {
+                    showToast("❌ Scanner connection error!")
+                }
+            }
+        }
+    }
+
+    private fun monitorScannedData() {
+        lifecycleScope.launch {
+            barcodeScanner.scans.collectLatest { scannedCode ->
+                Log.i(TAG, "📸 Received scan: '$scannedCode'")
+
+                runOnUiThread {
+                    // Format the scanned data nicely
+                    val currentText = etScannerSink.text.toString()
+                    val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                        .format(Date())
+
+                    // Analyze barcode type
+                    val barcodeType = detectBarcodeType(scannedCode)
+
+                    val formattedScan = "[$timestamp] $barcodeType: $scannedCode"
+
+                    val newText = if (currentText.isEmpty()) {
+                        formattedScan
+                    } else {
+                        "$currentText\n$formattedScan"
+                    }
+
+                    etScannerSink.setText(newText)
+
+                    // Scroll to bottom
+                    etScannerSink.setSelection(etScannerSink.text.length)
+
+                    // Show toast notification
+                    showToast("📸 $barcodeType: $scannedCode")
+
+                    // Update status
+                    showScannerStatus("✅ Last scan: $barcodeType")
+
+                    // Log for audit
+                    AuditLogger.log("INFO", "BARCODE_SCAN_SUCCESS", "type=$barcodeType;code=$scannedCode")
+                }
+            }
+        }
+    }
+
+    private fun monitorScannerStatus() {
+        lifecycleScope.launch {
+            barcodeScanner.statusMessages.collectLatest { message ->
+                Log.d(TAG, "Scanner status: $message")
+                runOnUiThread {
+                    showScannerStatus(message)
+                }
+            }
+        }
+    }
+
+    private fun triggerScan() {
+        if (!scannerInitialized) {
+            showToast("⚠️ Scanner not initialized yet")
+            return
+        }
+
+        showScannerStatus("📸 Triggering scan...")
+
+        try {
+            barcodeScanner.activateSerialTrigger()
+
+            // Auto stop after 4s if no decode
+            lifecycleScope.launch {
+                delay(4000)
+                barcodeScanner.deactivateSerialTrigger()
+            }
+
+            AuditLogger.log("INFO", "BARCODE_SCAN_TRIGGERED", "user_action=button_press")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to trigger scan", e)
+            showScannerStatus("❌ Failed to trigger scan")
+            showToast("❌ Scan trigger failed!")
+        }
+    }
+
+    private fun focusScannerInput() {
+        etScannerSink.requestFocus()
+        showScannerStatus("📱 Input area focused - Ready for scans")
+        Log.d(TAG, "Scanner input area focused")
+    }
+
+    private fun clearScanResults() {
+        etScannerSink.setText("")
+        showScannerStatus("🗑️ Scan results cleared")
+        showToast("🗑️ Results cleared")
+        Log.d(TAG, "Scan results cleared by user")
+    }
+
+    private fun testScannerConnection() {
+        if (!scannerInitialized) {
+            showToast("⚠️ Scanner not initialized")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                showScannerStatus("🔍 Testing scanner connection...")
+                showToast("🔍 Testing connection...")
+
+                val connectionInfo = barcodeScanner.getConnectionInfo()
+                showScannerStatus("🔍 Connection test completed")
+
+                tvConnectionInfo?.apply {
+                    text = connectionInfo
+                    visibility = android.view.View.VISIBLE
+                }
+
+                Log.i(TAG, "Scanner connection test: $connectionInfo")
+                showToast("✅ Connection test completed")
+
+                // Hide connection info after 10 seconds
+                lifecycleScope.launch {
+                    delay(10000)
+                    tvConnectionInfo?.visibility = android.view.View.GONE
+                }
+
+            } catch (e: Exception) {
+                showScannerStatus("❌ Connection test failed: ${e.message}")
+                showToast("❌ Connection test failed!")
+                Log.e(TAG, "Connection test failed", e)
+            }
+        }
+    }
+
+    private fun runRS232Diagnostics() {
+        showToast("🔍 Running RS232 diagnostics...")
+        showScannerStatus("🔍 Running comprehensive diagnostics...")
+
+        lifecycleScope.launch {
+            try {
+                val result = diagnostic.runDiagnostics()
+                val report = diagnostic.generateReport(result)
+
+                runOnUiThread {
+                    etScannerSink.setText(report)
+                    showScannerStatus("✅ Diagnostics complete - check results above")
+                    showToast("✅ Diagnostics complete!")
+                }
+
+                Log.i(TAG, "=== FULL DIAGNOSTIC REPORT ===")
+                Log.i(TAG, report)
+                Log.i(TAG, "===============================")
+
+                val summary = generateDiagnosticSummary(result)
+                runOnUiThread {
+                    tvConnectionInfo?.apply {
+                        text = summary
+                        visibility = android.view.View.VISIBLE
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Diagnostic failed", e)
+                runOnUiThread {
+                    showScannerStatus("❌ Diagnostic failed: ${e.message}")
+                    showToast("❌ Diagnostic failed!")
+                }
+            }
+        }
+    }
+
+    private fun showHardwareSetupHelp() {
+        val helpText = """
+📋 HARDWARE SETUP GUIDE
+
+Your Configuration:
+• Honeywell Xenon 1900 (15-pin SUB-D)
+• SUB-D to RS232 converter cable  
+• Direct RS232 connection to Android box
+
+Required Connections:
+• Pin 3 (Scanner TX) → Pin 2 (Android RX)
+• Pin 4 (Scanner RX) → Pin 3 (Android TX)
+• Ground connections
+
+Troubleshooting Steps:
+1. Run RS232 Diagnostics
+2. Check cable connections
+3. Verify power to scanner
+4. Test with different baud rates
+
+If direct RS232 fails:
+• Use USB-to-RS232 adapter instead
+• Try simulation mode for testing UI
+• Consider Arduino/microcontroller bridge
+
+Press 'Run Diagnostics' for detailed analysis.
+        """.trimIndent()
+
+        etScannerSink.setText(helpText)
+        showScannerStatus("📋 Hardware setup help displayed")
+    }
+
+    private fun showScannerDebugInfo() {
+        if (!scannerInitialized) {
+            showToast("⚠️ Scanner not initialized")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                val debugInfo = buildString {
+                    appendLine("🔍 BARCODE SCANNER DEBUG INFO")
+                    appendLine("============================")
+                    appendLine("Connection: ${barcodeScanner.connectionState.value}")
+                    appendLine("Info: ${barcodeScanner.getConnectionInfo()}")
+                    appendLine("Initialized: $scannerInitialized")
+                    appendLine("Current Time: ${Date()}")
+                    appendLine("============================")
+                }
+
+                Log.i(TAG, debugInfo)
+
+                val currentText = etScannerSink.text.toString()
+                etScannerSink.setText("$debugInfo\n$currentText")
+
+                showToast("🔍 Debug info added to results")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to show debug info", e)
+                showToast("❌ Debug info failed")
+            }
+        }
+    }
+
+    private fun generateDiagnosticSummary(result: RS232DiagnosticUtility.DiagnosticResult): String {
+        val accessiblePorts = result.portTests.count { it.canOpen && it.canRead && it.canWrite }
+
+        return buildString {
+            appendLine("📊 DIAGNOSTIC SUMMARY")
+            appendLine("Device: ${result.deviceInfo.manufacturer} ${result.deviceInfo.model}")
+            appendLine("Android: ${result.deviceInfo.androidVersion}")
+            appendLine("Root: ${if (result.deviceInfo.isRooted) "✅ Yes" else "❌ No"}")
+            appendLine("Accessible Ports: $accessiblePorts/${result.availablePorts.size}")
+
+            if (accessiblePorts > 0) {
+                appendLine("✅ RS232 connection possible")
+                result.portTests.filter { it.canOpen && it.canRead && it.canWrite }
+                    .take(2).forEach {
+                        appendLine("  Recommended: ${it.port.path}")
+                    }
+            } else {
+                appendLine("❌ No accessible RS232 ports")
+                if (!result.deviceInfo.isRooted) {
+                    appendLine("💡 Root access may be required")
+                }
+            }
+        }
+    }
+
+    // Simple barcode type detection
+    private fun detectBarcodeType(code: String): String {
+        return when {
+            code.length == 13 && code.all { it.isDigit() } -> "EAN-13"
+            code.length == 8 && code.all { it.isDigit() } -> "EAN-8"
+            code.length == 12 && code.all { it.isDigit() } -> "UPC-A"
+            code.all { it.isDigit() || it.isUpperCase() || it == ' ' || it == '-' || it == '.' } -> "Code 39"
+            code.length >= 6 -> "Code 128"
+            else -> "Unknown"
+        }
+    }
+
+    private fun showScannerStatus(message: String) {
+        runOnUiThread {
+            tvScannerStatus.text = message
+            Log.d(TAG, "Scanner Status: $message")
+        }
+    }
+
+    // === PRINTER TEST METHODS ===
 
     private fun testBasicPrinting() {
         if (!printerInitialized) {
@@ -418,12 +884,8 @@ class HardwareTestActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 showPrinterStatus("🔍 Running comprehensive debug...")
-
-                // Re-run the full debug suite
                 debugger.debugPrinterConnection(this@HardwareTestActivity)
-
                 showToast("🔍 Debug completed - check logs!")
-
             } catch (e: Exception) {
                 showToast("❌ Debug failed: ${e.message}")
             }
@@ -434,23 +896,20 @@ class HardwareTestActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 showPrinterStatus("🔄 Testing protocol capabilities...")
-
                 val currentProtocol = enhancedPrinter.currentProtocol.value
-
                 showToast("Current protocol: $currentProtocol")
                 Log.i(TAG, "Protocol switching test - Current: $currentProtocol")
-
-                // Note: In a production environment, you might want to implement
-                // actual protocol switching logic here
-
             } catch (e: Exception) {
                 showToast("❌ Protocol test failed: ${e.message}")
             }
         }
     }
 
+    // === UTILITY METHODS ===
+
     private fun setButtonsEnabled(enabled: Boolean) {
         runOnUiThread {
+            // Printer buttons
             btnPrintTest.isEnabled = enabled
             btnPrinterStatus.isEnabled = enabled
             btnPrintReceipt.isEnabled = enabled
@@ -465,25 +924,19 @@ class HardwareTestActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Update printer status display in real-time
-     */
     private fun showPrinterStatus(message: String) {
         runOnUiThread {
             tvPrinterStatus.text = message
-            Log.d(TAG, "Status: $message")
+            Log.d(TAG, "Printer Status: $message")
         }
     }
 
-    /**
-     * Update detailed printer information display
-     */
     private fun updatePrinterDetails(status: CustomTG2480HIIIDriver.CustomPrinterStatus) {
         val details = buildString {
-            append("Ready: ${if (status.isReady) "✓" else "✗"} | ")
-            append("Paper: ${if (!status.noPaper) "✓" else "✗"} | ")
+            append("Ready: ${if (status.isReady) "✔" else "✗"} | ")
+            append("Paper: ${if (!status.noPaper) "✔" else "✗"} | ")
             append("Rolling: ${if (status.paperRolling) "↻" else "○"} | ")
-            append("LF: ${if (status.lfPressed) "✓" else "✗"} | ")
+            append("LF: ${if (status.lfPressed) "✔" else "✗"} | ")
             append("Protocol: ${status.protocol.name}")
 
             if (!status.isOperational) append(" | ⚠️ CHECK REQUIRED")
@@ -494,25 +947,16 @@ class HardwareTestActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Display toast messages safely on main thread
-     */
     private fun showToast(message: String) {
         runOnUiThread {
             Toast.makeText(this@HardwareTestActivity, message, Toast.LENGTH_LONG).show()
         }
     }
 
-    /**
-     * String repetition operator for formatting
-     */
     private operator fun String.times(count: Int): String {
         return this.repeat(count)
     }
 
-    /**
-     * Clean up all resources when activity is destroyed
-     */
     override fun onDestroy() {
         super.onDestroy()
 
@@ -526,12 +970,20 @@ class HardwareTestActivity : AppCompatActivity() {
             Log.w(TAG, "Printer cleanup error", e)
         }
 
-        AuditLogger.log("INFO", "HARDWARE_TEST_ACTIVITY_DESTROYED", "Enhanced driver cleaned up")
+        try {
+            if (scannerInitialized) {
+                barcodeScanner.stop()
+                Log.i(TAG, "Barcode scanner stopped")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error stopping barcode scanner: ${e.message}")
+        }
+
+        AuditLogger.log("INFO", "HARDWARE_TEST_ACTIVITY_DESTROYED", "All hardware cleaned up")
     }
 
     /**
      * Enhanced Printer Connection Debugger Class
-     * This provides comprehensive debugging of all connection methods
      */
     inner class PrinterConnectionDebugger {
 
@@ -540,23 +992,15 @@ class HardwareTestActivity : AppCompatActivity() {
         suspend fun debugPrinterConnection(context: Context): CustomTG2480HIIIDriver {
             Log.i(debugTag, "🔍 ========== COMPREHENSIVE PRINTER DEBUG SESSION ==========")
 
-            // Step 1: Check Android Manifest USB configuration
             debugUSBManifestConfiguration(context)
-
-            // Step 2: Enumerate all USB devices
             debugAllUSBDevices(context)
-
-            // Step 3: Check Custom API availability
             debugCustomAPIAvailability()
-
-            // Step 4: Check serial port availability
             debugSerialPortAvailability(context)
 
-            // Step 5: Initialize enhanced driver with full logging
             Log.i(debugTag, "🚀 Initializing Enhanced TG2480HIII Driver...")
             val enhancedDriver = CustomTG2480HIIIDriver(
                 context = context,
-                simulate = false, // Set to true for testing without hardware
+                simulate = false,
                 enableAutoReconnect = true,
                 enableRS232Fallback = true
             )
@@ -586,7 +1030,6 @@ class HardwareTestActivity : AppCompatActivity() {
                 Log.d(debugTag, "Package: ${packageInfo.packageName}")
                 Log.d(debugTag, "Target SDK: ${packageInfo.applicationInfo?.targetSdkVersion}")
 
-                // Check if USB permissions are declared
                 val requestedPermissions = packageInfo.requestedPermissions
                 val hasUSBPermission = requestedPermissions?.contains("android.permission.USB_PERMISSION") == true
                 Log.d(debugTag, "USB Permission declared: $hasUSBPermission")
@@ -618,10 +1061,9 @@ class HardwareTestActivity : AppCompatActivity() {
                     Log.d(debugTag, "  Device Class: ${device.deviceClass}")
                     Log.d(debugTag, "  Has Permission: ${usbManager.hasPermission(device)}")
 
-                    // Check if this is our Custom printer
                     if (device.vendorId == 3540) {
                         Log.i(debugTag, "  🎯 THIS IS THE CUSTOM TG2480HIII PRINTER!")
-                        Log.i(debugTag, "  📋 Printer Details:")
+                        Log.i(debugTag, "  🔋 Printer Details:")
                         Log.i(debugTag, "    - Expected Vendor ID: 3540 ✅")
                         Log.i(debugTag, "    - Permission Status: ${if (usbManager.hasPermission(device)) "✅ GRANTED" else "❌ NOT GRANTED"}")
                     }
@@ -679,7 +1121,6 @@ class HardwareTestActivity : AppCompatActivity() {
             Log.i(debugTag, "🧪 TESTING PRINTER FUNCTIONALITY")
 
             try {
-                // Wait for connection
                 var attempts = 0
                 while (driver.connectionState.value != CustomTG2480HIIIDriver.ConnectionState.CONNECTED && attempts < 10) {
                     Log.d(debugTag, "Waiting for connection... (attempt ${attempts + 1})")
@@ -695,7 +1136,6 @@ class HardwareTestActivity : AppCompatActivity() {
                 val activeProtocol = driver.currentProtocol.value
                 Log.i(debugTag, "🔗 Testing print via: $activeProtocol")
 
-                // Test basic text printing
                 val testResult = driver.printText(
                     text = "=== ENHANCED DRIVER TEST ===\n" +
                             "Protocol: $activeProtocol\n" +
