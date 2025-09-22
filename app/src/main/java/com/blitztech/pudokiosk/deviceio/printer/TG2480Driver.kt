@@ -526,7 +526,7 @@ class CustomTG2480HIIIDriver(
                     }
                 }
 
-                //if (bold) setEmphasis(true)
+                if (bold) setEmphasized(true)
 
                 if (centered) {
                     setJustification(PrinterFont.FONT_JUSTIFICATION_CENTER)
@@ -536,8 +536,18 @@ class CustomTG2480HIIIDriver(
             }
 
             // Print using Custom API
-            customPrnDevice?.javaClass?.getMethod("printText", String::class.java, Int::class.java, Int::class.java, PrinterFont::class.java)
-                ?.invoke(customPrnDevice, text, 104, 510, printerFont)
+            customPrnDevice?.javaClass?.getMethod("printText", String::class.java, PrinterFont::class.java)
+                ?.invoke(customPrnDevice, text, printerFont)
+
+            // Feed, cut, and present the ticket
+            customPrnDevice?.javaClass?.getMethod("feed", Int::class.java)
+                ?.invoke(customPrnDevice, 6)
+
+            customPrnDevice?.javaClass?.getMethod("cut", Int::class.java)
+                ?.invoke(customPrnDevice, 0)
+
+            customPrnDevice?.javaClass?.getMethod("present", Int::class.java)
+                ?.invoke(customPrnDevice, 80)
 
             Log.d(TAG, "✓ Custom API print successful")
             return Result.success(true)
@@ -710,7 +720,7 @@ class CustomTG2480HIIIDriver(
 
     private fun getStatusViaCustomAPI(): CustomPrinterStatus? {
         return try {
-            val printerStatus = customPrnDevice?.javaClass?.getMethod("getPrinterStatus")?.invoke(customPrnDevice) as? PrinterStatus
+            val printerStatus = customPrnDevice?.javaClass?.getMethod("getPrinterFullStatus")?.invoke(customPrnDevice) as? PrinterStatus
 
             if (printerStatus != null) {
                 val printerName = customPrnDevice?.javaClass?.getMethod("getPrinterName")?.invoke(customPrnDevice) as? String
