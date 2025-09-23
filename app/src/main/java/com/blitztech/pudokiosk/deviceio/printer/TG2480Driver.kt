@@ -19,10 +19,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-
 // Custom Android API imports
 import it.custom.printer.api.android.CustomAndroidAPI
 import it.custom.printer.api.android.PrinterFont
+
+// ZXing imports for barcode generation
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+
+// Android graphics imports
+import android.graphics.Bitmap
+import android.graphics.Color
 
 /**
  * Production TG2480HIII printer driver using Custom API
@@ -50,34 +60,18 @@ class CustomTG2480HIIIDriver(
         DEVICE_NOT_FOUND
     }
 
-    enum class BarcodeType(val escPosCode: Int, val displayName: String) {
-        EAN13(2, "EAN-13"),
-        CODE128(8, "Code 128"),
-        GS1_128(9, "GS1-128"),
-        QR_CODE(15, "QR Code")
+    enum class BarcodeType(val displayName: String) {
+        EAN13("EAN-13"),
+        CODE128("Code 128"),
+        GS1_128("GS1-128"),
+        QR_CODE("QR Code")
     }
 
     data class BarcodeConfig(
         val type: BarcodeType,
         val data: String,
-        val height: Int = 162, // Height in dots (default ~20mm at 203 DPI)
-        val width: Int = 3, // Module width (1-6, default 3)
-        val hriPosition: HRIPosition = HRIPosition.BELOW,
-        val hriFont: HRIFont = HRIFont.FONT_A,
         val centered: Boolean = true
     )
-
-    enum class HRIPosition(val code: Int) {
-        NONE(0),    // No HRI printing
-        ABOVE(1),   // HRI above barcode
-        BELOW(2),   // HRI below barcode
-        BOTH(3)     // HRI above and below
-    }
-
-    enum class HRIFont(val code: Int) {
-        FONT_A(0),  // 12×24 dots
-        FONT_B(1)   // 9×17 dots
-    }
 
     data class PrinterStatus(
         val noPaper: Boolean,
@@ -349,7 +343,7 @@ class CustomTG2480HIIIDriver(
     }
 
     /**
-     * Print barcode using ESC/POS commands via Custom API
+     * Print barcode using bitmap generation + Custom API printImage
      */
     suspend fun printBarcode(config: BarcodeConfig): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
@@ -358,20 +352,34 @@ class CustomTG2480HIIIDriver(
             printerMutex.withLock {
                 val device = customPrnDevice ?: throw Exception("Printer not initialized")
 
-                Log.d(TAG, "Printing ${config.type.displayName} barcode: '${config.data}'")
+                Log.d(TAG, "Generating ${config.type.displayName} barcode bitmap: '${config.data}'")
 
                 // Validate and clean barcode data
                 val validatedData = validateBarcodeData(config.type, config.data)
 
-                // Build ESC/POS barcode commands
-                val commands = buildBarcodeCommands(config.copy(data = validatedData))
-                val commandArray = commands.toByteArray()
+                // Generate barcode bitmap using ZXing
+                val barcodeBitmap = generateBarcodeBitmap(config.copy(data = validatedData))
+                    ?: throw Exception("Failed to generate barcode bitmap")
 
-                // Send commands via Custom API writeBytes method
-                val writeMethod = device.javaClass.getMethod("writeBytes", ByteArray::class.java)
-                writeMethod.invoke(device, commandArray)
+                Log.d(TAG, "Generated barcode bitmap: ${barcodeBitmap.width}x${barcodeBitmap.height}")
 
-                Log.d(TAG, "Barcode printed successfully (${commandArray.size} bytes)")
+                // Print bitmap using Custom API
+                val printImageMethod = device.javaClass.getMethod(
+                    "printImage",
+                    Bitmap::class.java,
+                    Int::class.java,
+                    Int::class.java,
+                    Int::class.java
+                )
+
+                // Calculate margins and width for centering
+                val leftMargin = if (config.centered) 30 else 0 // Center the barcode
+                val targetWidth = 200 // Reduced from 350 to make barcodes smaller
+                val scaleMode = 1 // IMAGE_SCALE_TO_WIDTH (from Custom API docs)
+
+                printImageMethod.invoke(device, barcodeBitmap, leftMargin, scaleMode, targetWidth)
+
+                Log.d(TAG, "Barcode printed successfully via printImage")
                 return@withContext Result.success(true)
             }
 
@@ -382,113 +390,111 @@ class CustomTG2480HIIIDriver(
     }
 
     /**
-     * Build ESC/POS barcode command sequence
+     * Generate barcode bitmap using ZXing
      */
-    private fun buildBarcodeCommands(config: BarcodeConfig): List<Byte> {
-        val commands = mutableListOf<Byte>()
-
-        // Initialize printer
-        commands.addAll(byteArrayOf(0x1B, 0x40).toList()) // ESC @ (Initialize)
-
-        // Set alignment
-        if (config.centered) {
-            commands.addAll(byteArrayOf(0x1B, 0x61, 0x01).toList()) // ESC a 1 (Center)
-        }
-
-        // Set barcode height: GS h n
-        val heightByte = config.height.coerceIn(1, 255).toByte()
-        commands.addAll(byteArrayOf(0x1D, 0x68, heightByte).toList())
-
-        // Set barcode width: GS w n
-        val widthByte = config.width.coerceIn(1, 6).toByte()
-        commands.addAll(byteArrayOf(0x1D, 0x77, widthByte).toList())
-
-        // Set HRI character position: GS H n
-        commands.addAll(byteArrayOf(0x1D, 0x48, config.hriPosition.code.toByte()).toList())
-
-        // Set HRI character font: GS f n
-        commands.addAll(byteArrayOf(0x1D, 0x66, config.hriFont.code.toByte()).toList())
-
-        // Generate barcode-specific commands
-        when (config.type) {
-            BarcodeType.QR_CODE -> {
-                commands.addAll(generateQRCodeCommands(config.data))
+    private fun generateBarcodeBitmap(config: BarcodeConfig): Bitmap? {
+        return try {
+            when (config.type) {
+                BarcodeType.QR_CODE -> generateQRCodeBitmap(config.data)
+                BarcodeType.CODE128 -> generateLinearBarcode(config.data, BarcodeFormat.CODE_128)
+                BarcodeType.EAN13 -> generateLinearBarcode(config.data, BarcodeFormat.EAN_13)
+                BarcodeType.GS1_128 -> generateLinearBarcode(config.data, BarcodeFormat.CODE_128)
             }
-            else -> {
-                // Standard linear barcodes: GS k m data NUL
-                commands.addAll(byteArrayOf(0x1D, 0x6B, config.type.escPosCode.toByte()).toList())
-                commands.addAll(config.data.toByteArray(Charsets.UTF_8).toList())
-                commands.add(0x00) // NUL terminator
-            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to generate ${config.type.displayName} bitmap", e)
+            null
         }
-
-        // Line feeds and reset alignment
-        commands.addAll(byteArrayOf(0x0A, 0x0A).toList()) // Two line feeds
-        if (config.centered) {
-            commands.addAll(byteArrayOf(0x1B, 0x61, 0x00).toList()) // ESC a 0 (Left align)
-        }
-
-        return commands
     }
 
     /**
-     * Generate QR Code ESC/POS commands
+     * Generate QR Code bitmap
      */
-    private fun generateQRCodeCommands(data: String): List<Byte> {
-        val commands = mutableListOf<Byte>()
-        val dataBytes = data.toByteArray(Charsets.UTF_8)
+    private fun generateQRCodeBitmap(data: String): Bitmap? {
+        return try {
+            val writer = MultiFormatWriter()
+            val hints = hashMapOf<EncodeHintType, Any>()
+            hints[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.M
+            hints[EncodeHintType.MARGIN] = 1 // Reduced margin
 
-        // QR Code: Model setting - GS ( k pL pH cn fn n
-        commands.addAll(byteArrayOf(0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00).toList())
+            // Smaller QR code - reduced from 200x200 to 150x150
+            val bitMatrix: BitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, 150, 150, hints)
+            val width = bitMatrix.width
+            val height = bitMatrix.height
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
 
-        // QR Code: Size setting - GS ( k pL pH cn fn n (n=1-16, we use 8)
-        commands.addAll(byteArrayOf(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x08).toList())
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
 
-        // QR Code: Error correction level - GS ( k pL pH cn fn n (49=M level)
-        commands.addAll(byteArrayOf(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x31).toList())
+            bitmap
+        } catch (e: Exception) {
+            Log.e(TAG, "QR code generation failed", e)
+            null
+        }
+    }
 
-        // QR Code: Store data - GS ( k pL pH cn fn m [data]
-        val dataLength = dataBytes.size + 3
-        val pL = (dataLength and 0xFF).toByte()
-        val pH = ((dataLength shr 8) and 0xFF).toByte()
+    /**
+     * Generate linear barcode bitmap (Code 128, EAN-13, etc.)
+     */
+    private fun generateLinearBarcode(data: String, format: BarcodeFormat): Bitmap? {
+        return try {
+            val writer = MultiFormatWriter()
+            val hints = hashMapOf<EncodeHintType, Any>()
+            hints[EncodeHintType.MARGIN] = 5 // Reduced margin
 
-        commands.addAll(byteArrayOf(0x1D, 0x28, 0x6B).toList())
-        commands.add(pL)
-        commands.add(pH)
-        commands.addAll(byteArrayOf(0x31, 0x50, 0x30).toList())
-        commands.addAll(dataBytes.toList())
+            // Smaller linear barcodes - reduced widths and height
+            val width = when (format) {
+                BarcodeFormat.EAN_13 -> 200      // Reduced from 300
+                BarcodeFormat.CODE_128 -> 250    // Reduced from 350
+                else -> 200
+            }
+            val height = 80 // Reduced from 100
 
-        // QR Code: Print - GS ( k pL pH cn fn m
-        commands.addAll(byteArrayOf(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30).toList())
+            val bitMatrix: BitMatrix = writer.encode(data, format, width, height, hints)
+            val bitmapWidth = bitMatrix.width
+            val bitmapHeight = bitMatrix.height
+            val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.RGB_565)
 
-        return commands
+            for (x in 0 until bitmapWidth) {
+                for (y in 0 until bitmapHeight) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
+
+            bitmap
+        } catch (e: Exception) {
+            Log.e(TAG, "Linear barcode generation failed for format $format", e)
+            null
+        }
     }
 
     /**
      * Convenience methods for specific barcode types
      */
-    suspend fun printCode128(data: String, height: Int = 162): Result<Boolean> {
-        return printBarcode(BarcodeConfig(BarcodeType.CODE128, data, height))
+    suspend fun printCode128(data: String, centered: Boolean = true): Result<Boolean> {
+        return printBarcode(BarcodeConfig(BarcodeType.CODE128, data, centered))
     }
 
-    suspend fun printEAN13(data: String, height: Int = 162): Result<Boolean> {
-        return printBarcode(BarcodeConfig(BarcodeType.EAN13, data, height))
+    suspend fun printEAN13(data: String, centered: Boolean = true): Result<Boolean> {
+        return printBarcode(BarcodeConfig(BarcodeType.EAN13, data, centered))
     }
 
     suspend fun printQRCode(data: String, centered: Boolean = true): Result<Boolean> {
-        return printBarcode(BarcodeConfig(BarcodeType.QR_CODE, data, centered = centered))
+        return printBarcode(BarcodeConfig(BarcodeType.QR_CODE, data, centered))
     }
 
-    suspend fun printGS1128(data: String, height: Int = 162): Result<Boolean> {
-        return printBarcode(BarcodeConfig(BarcodeType.GS1_128, data, height))
+    suspend fun printGS1128(data: String, centered: Boolean = true): Result<Boolean> {
+        return printBarcode(BarcodeConfig(BarcodeType.GS1_128, data, centered))
     }
 
     /**
-     * Print comprehensive barcode test
+     * Print comprehensive barcode test using bitmap generation
      */
     suspend fun printBarcodeTest(): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Starting barcode test")
+            Log.d(TAG, "Starting barcode test with bitmap generation")
 
             // Header
             printText("=== BARCODE TEST ===\n", fontSize = 2, bold = true, centered = true)
@@ -498,9 +504,11 @@ class CustomTG2480HIIIDriver(
 
             // Test Code 128
             try {
+                printText("Testing Code 128...\n", centered = true)
+                delay(200)
                 val result = printCode128("123456789012")
                 testResults.add("Code 128" to result.isSuccess)
-                printText("Code 128: 123456789012\n", centered = true)
+                Log.d(TAG, "Code 128 test: ${if (result.isSuccess) "PASS" else "FAIL"}")
                 delay(1000)
             } catch (e: Exception) {
                 testResults.add("Code 128" to false)
@@ -509,9 +517,11 @@ class CustomTG2480HIIIDriver(
 
             // Test EAN-13
             try {
+                printText("Testing EAN-13...\n", centered = true)
+                delay(200)
                 val result = printEAN13("1234567890123")
                 testResults.add("EAN-13" to result.isSuccess)
-                printText("EAN-13: 1234567890123\n", centered = true)
+                Log.d(TAG, "EAN-13 test: ${if (result.isSuccess) "PASS" else "FAIL"}")
                 delay(1000)
             } catch (e: Exception) {
                 testResults.add("EAN-13" to false)
@@ -520,9 +530,11 @@ class CustomTG2480HIIIDriver(
 
             // Test QR Code
             try {
+                printText("Testing QR Code...\n", centered = true)
+                delay(200)
                 val result = printQRCode("PUDO-KIOSK-TEST")
                 testResults.add("QR Code" to result.isSuccess)
-                printText("QR Code: PUDO-KIOSK-TEST\n", centered = true)
+                Log.d(TAG, "QR Code test: ${if (result.isSuccess) "PASS" else "FAIL"}")
                 delay(1000)
             } catch (e: Exception) {
                 testResults.add("QR Code" to false)
@@ -531,9 +543,11 @@ class CustomTG2480HIIIDriver(
 
             // Test GS1-128
             try {
+                printText("Testing GS1-128...\n", centered = true)
+                delay(200)
                 val result = printGS1128("123456789012")
                 testResults.add("GS1-128" to result.isSuccess)
-                printText("GS1-128: 123456789012\n", centered = true)
+                Log.d(TAG, "GS1-128 test: ${if (result.isSuccess) "PASS" else "FAIL"}")
                 delay(1000)
             } catch (e: Exception) {
                 testResults.add("GS1-128" to false)
@@ -553,6 +567,13 @@ class CustomTG2480HIIIDriver(
             val successCount = testResults.count { it.second }
 
             Log.d(TAG, "Barcode test completed: $successCount/${testResults.size} passed")
+
+            if (allSuccessful) {
+                printText("ALL TESTS PASSED!\n", fontSize = 2, bold = true, centered = true)
+            } else {
+                printText("Some tests failed. Check logs.\n", bold = true, centered = true)
+            }
+
             return@withContext Result.success(allSuccessful)
 
         } catch (e: Exception) {

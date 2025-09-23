@@ -608,6 +608,7 @@ class HardwareTestActivity : AppCompatActivity() {
                 val result = printerDriver.printText(testText, fontSize = 1, centered = false)
 
                 if (result.isSuccess) {
+                    printerDriver.feedAndCut()
                     updatePrinterStatus("✅ Print test successful")
                     showToast("Print test completed!")
                 } else {
@@ -656,6 +657,7 @@ class HardwareTestActivity : AppCompatActivity() {
                 val result = printerDriver.printText(receiptText, fontSize = 1, centered = false)
 
                 if (result.isSuccess) {
+                    printerDriver.feedAndCut()
                     updatePrinterStatus("✅ Receipt printed successfully")
                     showToast("Receipt printed!")
                 } else {
@@ -683,6 +685,7 @@ class HardwareTestActivity : AppCompatActivity() {
                 val result = printerDriver.printBarcodeTest()
 
                 if (result.isSuccess) {
+                    printerDriver.feedAndCut()
                     updatePrinterStatus("✅ All barcode tests completed successfully!")
                     showToast("All barcodes printed!")
                 } else {
