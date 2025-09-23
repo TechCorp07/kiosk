@@ -1,10 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PudoKiosk</string>
-    <string name="pudo_kiosk">PUDO Kiosk</string>
+    <string name="app_name">ZIMPUDO Kiosk</string>
+
+    <!-- Branding -->
+    <string name="zimpudo_tagline">Smart. Reliable. Efficient.</string>
+    <string name="zimpudo_welcome">Where cutting-edge technology meets seamless delivery for your ultimate convenience.</string>
+
+    <!-- Language Selection -->
+    <string name="select_language">Select Your Language</string>
+    <string name="language_subtitle">Choose your preferred language for the app</string>
+    <string name="language_english">English</string>
+    <string name="language_shona">Shona</string>
+    <string name="language_ndebele">Ndebele</string>
+    <string name="continue_button">Continue</string>
+
+    <!-- Onboarding -->
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="back">Back</string>
+    <string name="get_started">Get Started</string>
+
+    <!-- Onboarding Slides -->
+    <string name="onboarding_welcome_title">Welcome to Convenience</string>
+    <string name="onboarding_welcome_subtitle">Send or receive parcels securely, nationwide with our fast delivery service.</string>
+
+    <string name="onboarding_secure_title">Secure Delivery</string>
+    <string name="onboarding_secure_subtitle">Your parcels are handled with care and delivered securely to their destination.</string>
+
+    <string name="onboarding_tracking_title">Real-time Tracking</string>
+    <string name="onboarding_tracking_subtitle">Track your parcels in real-time and know exactly when they will arrive.</string>
+
+    <string name="onboarding_support_title">Customer Support</string>
+    <string name="onboarding_support_subtitle">We are here to help you 24/7 with any questions or concerns you may have.</string>
+
+    <!-- User Type Selection -->
+    <string name="select_user_type">Select User Type</string>
+    <string name="user_type_subtitle">Choose your role to continue</string>
+    <string name="user_type_customer">Customer</string>
+    <string name="user_type_customer_desc">Send or collect packages</string>
+    <string name="user_type_courier">Courier</string>
+    <string name="user_type_courier_desc">Deliver packages to customers</string>
+
+    <!-- Authentication -->
+    <string name="welcome_back">Welcome Back</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="create_account">Create Account</string>
+    <string name="sign_in_subtitle">Sign in to continue</string>
+    <string name="sign_up_subtitle">Sign up to get started</string>
+
+    <!-- Login Form -->
+    <string name="mobile_number">Mobile Number</string>
+    <string name="mobile_placeholder">+2637XXXXXXXX</string>
+    <string name="pin">PIN</string>
+    <string name="pin_placeholder">Enter your PIN</string>
+    <string name="forgot_pin">Forgot PIN?</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="already_have_account">Already have an account?</string>
+
+    <!-- Registration Form -->
+    <string name="personal_information">Personal Information</string>
+    <string name="name">Name</string>
+    <string name="surname">Surname</string>
+    <string name="email">Email</string>
+    <string name="email_optional">Email (Optional)</string>
+    <string name="national_id">National ID Number</string>
+    <string name="national_id_format">Format: XX-XXXXXXX A XX</string>
+    <string name="mobile_number_format">Format: +2637XXXXXXXX</string>
+
+    <!-- Address Information -->
+    <string name="address_information">Address Information</string>
+    <string name="house_number">House Number</string>
+    <string name="street">Street</string>
+    <string name="suburb">Suburb</string>
+    <string name="city">City</string>
+
+    <!-- OTP Verification -->
+    <string name="verify_otp">Verify OTP</string>
+    <string name="otp_sent">We\'ve sent a verification code to your mobile number</string>
+    <string name="enter_otp">Enter OTP</string>
+    <string name="otp_placeholder">Enter 6-digit code</string>
+    <string name="resend_otp">Resend OTP</string>
+    <string name="verify">Verify</string>
+
+    <!-- PIN Change -->
+    <string name="change_pin">Change PIN</string>
+    <string name="create_new_pin">Create New PIN</string>
+    <string name="pin_change_subtitle">Create a secure PIN for your account</string>
+    <string name="old_pin">Current PIN</string>
+    <string name="new_pin">New PIN</string>
+    <string name="confirm_pin">Confirm PIN</string>
+    <string name="pin_requirements">PIN must be 4–6 digits</string>
+    <string name="pins_dont_match">PINs don\'t match</string>
+    <string name="save_pin">Save PIN</string>
+
+    <!-- KYC Upload -->
+    <string name="kyc_upload">Document Verification</string>
+    <string name="kyc_subtitle">We need to verify your identity to complete registration</string>
+    <string name="kyc_national_id">National ID Document</string>
+    <string name="kyc_upload_success">Document uploaded successfully</string>
+    <string name="upload_document">Upload Document</string>
+
+    <!-- Privacy Policy & Terms -->
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_conditions">Terms and Conditions</string>
+    <string name="accept_continue">Accept and Continue</string>
+    <string name="effective_date">Effective Date: 01 July 2025</string>
+
+    <!-- Error Messages -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_invalid_phone">Please enter a valid phone number</string>
+    <string name="error_invalid_pin">PIN must be 4–6 digits</string>
+    <string name="error_invalid_otp">Please enter a valid OTP</string>
+    <string name="error_required_field">This field is required</string>
+    <string name="error_registration_failed">Registration failed. Please try again.</string>
+    <string name="error_login_failed">Login failed. Please check your credentials.</string>
+    <string name="error_otp_expired">OTP has expired. Please request a new one.</string>
+
+    <!-- Success Messages -->
+    <string name="success_registration">Account created successfully!</string>
+    <string name="success_otp_sent">OTP sent successfully</string>
+    <string name="success_login">Login successful</string>
+    <string name="success_pin_changed">PIN changed successfully</string>
+
+    <!-- Loading Messages -->
+    <string name="loading">Loading…</string>
+    <string name="signing_in">Signing in…</string>
+    <string name="creating_account">Creating account…</string>
+    <string name="verifying_otp">Verifying OTP…</string>
+    <string name="sending_otp">Sending OTP…</string>
+    <string name="uploading_document">Uploading document…</string>
+
+    <!-- Common Actions -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="retry">Retry</string>
+    <string name="close">Close</string>
+
+    <!-- Existing strings for main app functionality -->
     <string name="send_a_package">Send a package</string>
     <string name="collect_a_package">Collect a package</string>
     <string name="courier">Courier</string>
     <string name="admin_dev_mode">Admin / Dev Mode</string>
+    <string name="pudo_kiosk">PUDO Kiosk</string>
     <string name="notif_channel_name">Device Service</string>
     <string name="notif_channel_desc">Keeps device I/O and sync running</string>
     <string name="notif_running">PUDO device service is running</string>

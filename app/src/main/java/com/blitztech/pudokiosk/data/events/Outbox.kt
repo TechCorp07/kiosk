@@ -4,7 +4,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.blitztech.pudokiosk.data.ServiceLocator
 import com.blitztech.pudokiosk.data.db.OutboxEventEntity
-import com.blitztech.pudokiosk.util.Ids
+import com.blitztech.pudokiosk.utils.Ids
 
 object Outbox {
     private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()

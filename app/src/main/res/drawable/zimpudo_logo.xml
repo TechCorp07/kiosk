@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="40dp"
+    android:viewportWidth="120"
+    android:viewportHeight="40">
+    <!-- Background -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M0,0h120v40h-120z" />
+    <!-- Logo shape (placeholder - replace with actual ZIMPUDO logo) -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M10,8h20v24h-20z" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M12,10h16v20h-16z" />
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M14,12h12v16h-12z" />
+    <!-- Text placeholder -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M40,12h65v6h-65z" />
+    <path
+        android:fillColor="@color/gray_dark"
+        android:pathData="M40,22h50v3h-50z" />
+</vector>

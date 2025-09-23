@@ -3,21 +3,20 @@ package com.blitztech.pudokiosk.data
 import android.content.Context
 import androidx.room.Room
 import com.blitztech.pudokiosk.data.db.AppDatabase
-import com.blitztech.pudokiosk.data.net.ApiService
-import com.blitztech.pudokiosk.data.repo.OutboxRepository
+import ApiService
+import com.blitztech.pudokiosk.data.repository.OutboxRepository
 import com.blitztech.pudokiosk.secure.SecretStore
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import net.sqlcipher.database.SupportFactory
 
 object ServiceLocator {
     lateinit var db: AppDatabase; private set
     lateinit var api: ApiService; private set
     lateinit var outbox: OutboxRepository; private set
-    lateinit var config: com.blitztech.pudokiosk.data.repo.ConfigRepository; private set
+    lateinit var config: com.blitztech.pudokiosk.data.repository.ConfigRepository; private set
 
     fun init(ctx: Context) {
         // 1) Encrypted Room
@@ -44,7 +43,7 @@ object ServiceLocator {
             }
         }
 
-        config = com.blitztech.pudokiosk.data.repo.ConfigRepository(db.config())
+        config = com.blitztech.pudokiosk.data.repository.ConfigRepository(db.config())
 
         // 2) OkHttp + TLS pinning (replace host + pin with your values)
         val logger = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }

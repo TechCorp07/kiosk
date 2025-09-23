@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="250dp"
+    android:viewportWidth="300"
+    android:viewportHeight="250">
+    <!-- Welcome illustration placeholder -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M50,50h200v150h-200z"
+        android:fillAlpha="0.3" />
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M100,75h100v100h-100z" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M120,95h60v60h-60z" />
+    <!-- Package icon -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M130,105h40v40h-40z" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M140,115h20v20h-20z" />
+</vector>

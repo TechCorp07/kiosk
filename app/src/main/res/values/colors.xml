@@ -1,5 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- ZIMPUDO Brand Colors - Extracted from screenshots -->
+    <color name="zimpudo_primary">#1DB584</color>
+    <color name="zimpudo_primary_dark">#16A073</color>
+    <color name="zimpudo_primary_light">#4FC49A</color>
+
+    <!-- Secondary Colors -->
+    <color name="zimpudo_accent">#FF6B6B</color>
+    <color name="zimpudo_secondary">#34495E</color>
+
+    <!-- Neutral Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray_light">#F8F9FA</color>
+    <color name="gray_medium">#6C757D</color>
+    <color name="gray_dark">#343A40</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#212529</color>
+    <color name="text_secondary">#6C757D</color>
+    <color name="text_hint">#ADB5BD</color>
+    <color name="text_white">#FFFFFF</color>
+
+    <!-- Background Colors -->
+    <color name="background_primary">#FFFFFF</color>
+    <color name="background_secondary">#F8F9FA</color>
+    <color name="background_gradient_start">#1DB584</color>
+    <color name="background_gradient_end">#4FC49A</color>
+
+    <!-- Button Colors -->
+    <color name="button_primary">#1DB584</color>
+    <color name="button_primary_pressed">#16A073</color>
+    <color name="button_secondary">#FFFFFF</color>
+    <color name="button_secondary_border">#1DB584</color>
+
+    <!-- Input Field Colors -->
+    <color name="input_background">#F8F9FA</color>
+    <color name="input_border">#DEE2E6</color>
+    <color name="input_border_focused">#1DB584</color>
+
+    <!-- Status Colors -->
+    <color name="success">#28A745</color>
+    <color name="error">#DC3545</color>
+    <color name="warning">#FFC107</color>
+    <color name="info">#17A2B8</color>
 </resources>

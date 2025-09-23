@@ -42,7 +42,7 @@
         </activity>
 
         <activity
-            android:name=".ui.KioskActivity" android:exported="true" android:launchMode="singleTask">
+            android:name=".ui.main.KioskActivity" android:exported="true" android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -54,9 +54,9 @@
 
         <!-- Optional: screens -->
         <activity android:name=".ui.DevModeActivity" android:exported="false" />
-        <activity android:name=".ui.SenderActivity" android:exported="false"/>
-        <activity android:name=".ui.RecipientActivity" android:exported="false"/>
-        <activity android:name=".ui.CourierActivity" android:exported="false"/>
+        <activity android:name=".ui.main.SenderActivity" android:exported="false"/>
+        <activity android:name=".ui.main.RecipientActivity" android:exported="false"/>
+        <activity android:name=".ui.main.CourierActivity" android:exported="false"/>
 
         <!-- Foreground device service -->
         <service

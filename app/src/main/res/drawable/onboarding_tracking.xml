@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="250dp"
+    android:viewportWidth="300"
+    android:viewportHeight="250">
+    <!-- Tracking illustration placeholder -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M50,50h200v150h-200z"
+        android:fillAlpha="0.3" />
+    <!-- Phone screen -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M110,70h80v120h-80z" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M120,80h60v100h-60z" />
+    <!-- Map lines -->
+    <path
+        android:strokeColor="@color/zimpudo_primary"
+        android:strokeWidth="2"
+        android:pathData="M125,90h50M130,105h40M135,120h30M125,135h45M140,150h25M130,165h35" />
+    <!-- Location pins -->
+    <path
+        android:fillColor="@color/zimpudo_accent"
+        android:pathData="M140,100m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+    <path
+        android:fillColor="@color/success"
+        android:pathData="M160,140m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+</vector>

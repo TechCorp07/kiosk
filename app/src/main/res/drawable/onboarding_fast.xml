@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="250dp"
+    android:viewportWidth="300"
+    android:viewportHeight="250">
+    <!-- Fast delivery illustration placeholder -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M50,50h200v150h-200z"
+        android:fillAlpha="0.3" />
+    <!-- Motorcycle silhouette -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M100,120h120v40h-120z" />
+    <!-- Wheels -->
+    <path
+        android:fillColor="@color/gray_dark"
+        android:pathData="M110,150m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0" />
+    <path
+        android:fillColor="@color/gray_dark"
+        android:pathData="M200,150m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0" />
+    <!-- Rider -->
+    <path
+        android:fillColor="@color/zimpudo_primary_dark"
+        android:pathData="M140,90h30v40h-30z" />
+    <!-- Speed lines -->
+    <path
+        android:strokeColor="@color/zimpudo_accent"
+        android:strokeWidth="3"
+        android:pathData="M50,110h30M60,130h25M70,150h20" />
+</vector>

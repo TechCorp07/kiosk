@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZIMPUDO Kiosk</string>
+    <string name="select_language">Khetha Ulimi</string>
+    <string name="language_subtitle">Khetha ulimi olufunayo ukusebenzisa</string>
+    <string name="continue_button">Qhubeka</string>
+    <string name="sign_in">Ngena</string>
+    <string name="sign_up">Zibhalise</string>
+    <string name="mobile_number">Inombolo Yeselfoni</string>
+    <string name="pin">PIN</string>
+    <!-- Add more Ndebele translations as needed -->
+</resources>

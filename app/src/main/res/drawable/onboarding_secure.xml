@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="250dp"
+    android:viewportWidth="300"
+    android:viewportHeight="250">
+    <!-- Secure delivery illustration placeholder -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M50,50h200v150h-200z"
+        android:fillAlpha="0.3" />
+    <!-- Delivery person silhouette -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M120,70h60v120h-60z" />
+    <!-- Helmet -->
+    <path
+        android:fillColor="@color/zimpudo_primary_dark"
+        android:pathData="M130,60h40v20h-40z" />
+    <!-- Package -->
+    <path
+        android:fillColor="@color/zimpudo_accent"
+        android:pathData="M185,90h30v30h-30z" />
+    <!-- Motion lines -->
+    <path
+        android:strokeColor="@color/gray_medium"
+        android:strokeWidth="2"
+        android:pathData="M80,80h20M80,100h25M80,120h15" />
+</vector>
