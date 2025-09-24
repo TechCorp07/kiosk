@@ -27,6 +27,9 @@
     <string name="onboarding_secure_title">Secure Delivery</string>
     <string name="onboarding_secure_subtitle">Your parcels are handled with care and delivered securely to their destination.</string>
 
+    <string name="onboarding_fast_title">Fast Delivery</string>
+    <string name="onboarding_fast_subtitle">Send or receive parcels securely, nationwide with our fast delivery service.</string>
+
     <string name="onboarding_tracking_title">Real-time Tracking</string>
     <string name="onboarding_tracking_subtitle">Track your parcels in real-time and know exactly when they will arrive.</string>
 
@@ -45,21 +48,22 @@
     <string name="welcome_back">Welcome Back</string>
     <string name="sign_in">Sign In</string>
     <string name="sign_up">Sign Up</string>
-    <string name="create_account">Create Account</string>
     <string name="sign_in_subtitle">Sign in to continue</string>
+    <string name="customer_signin">Customer Sign In</string>
+    <string name="courier_signin">Courier Sign In</string>
+    <string name="create_account">Create an Account</string>
     <string name="sign_up_subtitle">Sign up to get started</string>
-
-    <!-- Login Form -->
+    <string name="password">Password</string>
+    <string name="forgot_pin">Forgot PIN?</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="already_have_account">Already have an account?</string>
     <string name="mobile_number">Mobile Number</string>
     <string name="mobile_placeholder">+2637XXXXXXXX</string>
     <string name="pin">PIN</string>
     <string name="pin_placeholder">Enter your PIN</string>
-    <string name="forgot_pin">Forgot PIN?</string>
-    <string name="dont_have_account">Don\'t have an account?</string>
-    <string name="already_have_account">Already have an account?</string>
 
     <!-- Registration Form -->
-    <string name="personal_information">Personal Information</string>
+    <string name="personal_information" translatable="false">Personal Information</string>
     <string name="name">Name</string>
     <string name="surname">Surname</string>
     <string name="email">Email</string>
@@ -81,7 +85,10 @@
     <string name="enter_otp">Enter OTP</string>
     <string name="otp_placeholder">Enter 6-digit code</string>
     <string name="resend_otp">Resend OTP</string>
+    <string name="resend_in">Resend in %1$ss</string>
     <string name="verify">Verify</string>
+    <string name="verifying">Verifying…</string>
+    <string name="otp_resent">OTP has been resent</string>
 
     <!-- PIN Change -->
     <string name="change_pin">Change PIN</string>
@@ -107,35 +114,108 @@
     <string name="accept_continue">Accept and Continue</string>
     <string name="effective_date">Effective Date: 01 July 2025</string>
 
+    <!-- Main Menu - Customer -->
+    <string name="welcome_customer">Welcome, Customer!</string>
+    <string name="customer_subtitle">What would you like to do today?</string>
+    <string name="send_package">Send Package</string>
+    <string name="send_description">Send packages nationwide with secure delivery</string>
+    <string name="collect_package">Collect Package</string>
+    <string name="collect_description">Collect packages waiting for you at this location</string>
+    <string name="track_delivery">Track Delivery</string>
+    <string name="track_description">Track your packages in real-time</string>
+    <string name="my_account">My Account</string>
+    <string name="account_description">Manage your profile and delivery history</string>
+
+    <!-- Main Menu - Courier -->
+    <string name="welcome_courier">Welcome, Courier!</string>
+    <string name="courier_subtitle">Ready to make deliveries?</string>
+    <string name="pickup_packages">Pickup Packages</string>
+    <string name="pickup_description">Collect packages from this kiosk location</string>
+    <string name="deliver_packages">Deliver Packages</string>
+    <string name="deliver_description">Drop off packages at this kiosk location</string>
+    <string name="view_route">View My Route</string>
+    <string name="route_description">See your assigned delivery route and schedule</string>
+    <string name="update_status">Update Status</string>
+    <string name="status_description">Update delivery status and add notes</string>
+    <string name="courier_profile">My Profile</string>
+    <string name="profile_description">Manage your courier profile and performance</string>
+
+    <!-- General Actions -->
+    <string name="logout">Logout</string>
+    <string name="logout_confirmation">Are you sure you want to logout?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="please_wait">Please wait…</string>
+    <string name="close">Close</string>
+
     <!-- Error Messages -->
     <string name="error_network">Network error. Please check your connection.</string>
     <string name="error_invalid_phone">Please enter a valid phone number</string>
     <string name="error_invalid_pin">PIN must be 4–6 digits</string>
-    <string name="error_invalid_otp">Please enter a valid OTP</string>
+    <string name="error_invalid_otp">Please enter a valid 6-digit OTP</string>
     <string name="error_required_field">This field is required</string>
+    <string name="error_mobile_required">Please enter your mobile number</string>
+    <string name="error_pin_required">Please enter your PIN</string>
+    <string name="error_otp_required">Please enter the OTP</string>
     <string name="error_registration_failed">Registration failed. Please try again.</string>
     <string name="error_login_failed">Login failed. Please check your credentials.</string>
     <string name="error_otp_expired">OTP has expired. Please request a new one.</string>
+    <string name="error_session_expired">Your session has expired. Please login again.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
 
     <!-- Success Messages -->
-    <string name="success_registration">Account created successfully!</string>
-    <string name="success_otp_sent">OTP sent successfully</string>
-    <string name="success_login">Login successful</string>
-    <string name="success_pin_changed">PIN changed successfully</string>
+    <string name="registration_success">Account created successfully!</string>
+    <string name="login_success">Welcome back!</string>
+    <string name="pin_changed_success">PIN changed successfully</string>
+    <string name="logout_success">Logged out successfully</string>
 
     <!-- Loading Messages -->
-    <string name="loading">Loading…</string>
     <string name="signing_in">Signing in…</string>
     <string name="creating_account">Creating account…</string>
     <string name="verifying_otp">Verifying OTP…</string>
     <string name="sending_otp">Sending OTP…</string>
     <string name="uploading_document">Uploading document…</string>
 
-    <!-- Common Actions -->
-    <string name="ok">OK</string>
-    <string name="cancel">Cancel</string>
-    <string name="retry">Retry</string>
-    <string name="close">Close</string>
+    <!-- Technician Access -->
+    <string name="technician_access">Technician Access</string>
+    <string name="technician_subtitle">Enter technician credentials to access diagnostic tools</string>
+    <string name="username">Username</string>
+    <string name="access_diagnostics">Access Diagnostics</string>
+
+    <!-- Hardware Test Activity -->
+    <string name="hardware_test">Hardware Test</string>
+    <string name="test_printer">Test Printer</string>
+    <string name="test_scanner">Test Scanner</string>
+    <string name="test_locker">Test Locker</string>
+    <string name="test_payment">Test Payment Terminal</string>
+
+    <!-- Notification Strings -->
+    <string name="notif_channel_name">Device Service</string>
+    <string name="notif_channel_desc">Background device monitoring and sync</string>
+    <string name="notif_running">ZIMPUDO Kiosk is running</string>
+
+    <!-- Validation Messages -->
+    <string name="invalid_email">Please enter a valid email address</string>
+    <string name="invalid_national_id">Please enter a valid National ID</string>
+    <string name="field_required">This field is required</string>
+
+    <!-- Accessibility -->
+    <string name="content_description_logo">ZIMPUDO Logo</string>
+    <string name="content_description_back_button">Go back</string>
+    <string name="content_description_menu">Menu</string>
+
+    <!-- Development -->
+    <string name="dev_mode">Developer Mode</string>
+    <string name="dev_settings">Developer Settings</string>
+    <string name="system_logs">System Logs</string>
+    <string name="network_diagnostics">Network Diagnostics</string>
+    <string name="clear_data">Clear Data</string>
+    <string name="remote_support">Remote Support</string>
+    <string name="system_info">System Information</string>
 
     <!-- Existing strings for main app functionality -->
     <string name="send_a_package">Send a package</string>
@@ -143,9 +223,6 @@
     <string name="courier">Courier</string>
     <string name="admin_dev_mode">Admin / Dev Mode</string>
     <string name="pudo_kiosk">PUDO Kiosk</string>
-    <string name="notif_channel_name">Device Service</string>
-    <string name="notif_channel_desc">Keeps device I/O and sync running</string>
-    <string name="notif_running">PUDO device service is running</string>
     <string name="recipient_details">Recipient details</string>
     <string name="package_size_measure_with_locker_ruler">Package size (measure with locker ruler)</string>
     <string name="i_confirm_this_package_meets_pudo_postal_restrictions">I confirm this package meets PUDO/postal restrictions</string>

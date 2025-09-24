@@ -14,7 +14,7 @@ import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityPinChangeBinding
 import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
-import com.blitztech.pudokiosk.ui.main.KioskActivity
+import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
@@ -210,7 +210,7 @@ class PinChangeActivity : AppCompatActivity() {
             prefs.setUserType(userType.name)
         }
 
-        val intent = Intent(this, KioskActivity::class.java).apply {
+        val intent = Intent(this, CustomerMainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         startActivity(intent)

@@ -73,6 +73,16 @@
                 android:textSize="14sp"
                 android:gravity="center" />
 
+            <TextView
+                android:id="@+id/tvTermsContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:text="@string/effective_date"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:gravity="center" />
+
             <!-- Privacy Policy Content -->
             <ScrollView
                 android:layout_width="match_parent"

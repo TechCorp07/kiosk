@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg"
+            android:paddingBottom="@dimen/spacing_xl">
+
+            <!-- Header with logout -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/zimpudo_logo"
+                    android:contentDescription="@string/app_name" />
+
+                <ImageButton
+                    android:id="@+id/btnLogout"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="end"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_logout"
+                    android:contentDescription="Logout"
+                    app:tint="@color/white" />
+            </FrameLayout>
+
+            <!-- Welcome message -->
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_sm"
+                android:gravity="center"
+                android:text="Welcome, Customer!"
+                android:textColor="@color/text_white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="What would you like to do today?"
+                android:textColor="@color/text_white"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- Main Actions Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_white_rounded_top"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <!-- Send Package Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardSendPackage"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/kiosk_card_height"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardCornerRadius="@dimen/corner_radius_lg"
+                app:cardElevation="@dimen/elevation_md">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/spacing_lg">
+
+                    <ImageView
+                        android:layout_width="@dimen/kiosk_icon_size"
+                        android:layout_height="@dimen/kiosk_icon_size"
+                        android:layout_gravity="center"
+                        android:layout_marginEnd="@dimen/spacing_lg"
+                        android:src="@drawable/ic_send_package"
+                        app:tint="@color/zimpudo_primary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvSendPackage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="@dimen/spacing_sm"
+                            android:text="Send Package"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvSendDescription"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Send packages nationwide with secure delivery"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_arrow_forward"
+                        app:tint="@color/text_hint" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Collect Package Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardCollectPackage"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/kiosk_card_height"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardCornerRadius="@dimen/corner_radius_lg"
+                app:cardElevation="@dimen/elevation_md">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/spacing_lg">
+
+                    <ImageView
+                        android:layout_width="@dimen/kiosk_icon_size"
+                        android:layout_height="@dimen/kiosk_icon_size"
+                        android:layout_gravity="center"
+                        android:layout_marginEnd="@dimen/spacing_lg"
+                        android:src="@drawable/ic_collect_package"
+                        app:tint="@color/success" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvCollectPackage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="@dimen/spacing_sm"
+                            android:text="Collect Package"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvCollectDescription"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Collect packages waiting for you at this location"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_arrow_forward"
+                        app:tint="@color/text_hint" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Track Delivery Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardTrackDelivery"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/kiosk_card_height"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardCornerRadius="@dimen/corner_radius_lg"
+                app:cardElevation="@dimen/elevation_md">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/spacing_lg">
+
+                    <ImageView
+                        android:layout_width="@dimen/kiosk_icon_size"
+                        android:layout_height="@dimen/kiosk_icon_size"
+                        android:layout_gravity="center"
+                        android:layout_marginEnd="@dimen/spacing_lg"
+                        android:src="@drawable/ic_track"
+                        app:tint="@color/info" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvTrackDelivery"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="@dimen/spacing_sm"
+                            android:text="Track Delivery"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTrackDescription"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Track your packages in real-time"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_arrow_forward"
+                        app:tint="@color/text_hint" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- My Account Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardMyAccount"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/kiosk_card_height"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardCornerRadius="@dimen/corner_radius_lg"
+                app:cardElevation="@dimen/elevation_md">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/spacing_lg">
+
+                    <ImageView
+                        android:layout_width="@dimen/kiosk_icon_size"
+                        android:layout_height="@dimen/kiosk_icon_size"
+                        android:layout_gravity="center"
+                        android:layout_marginEnd="@dimen/spacing_lg"
+                        android:src="@drawable/ic_account"
+                        app:tint="@color/zimpudo_secondary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvMyAccount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="@dimen/spacing_sm"
+                            android:text="My Account"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvAccountDescription"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Manage your profile and delivery history"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_arrow_forward"
+                        app:tint="@color/text_hint" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

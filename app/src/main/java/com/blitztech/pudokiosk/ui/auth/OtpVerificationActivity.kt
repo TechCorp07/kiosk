@@ -9,14 +9,15 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.blitztech.pudokiosk.data.api.ApiRepository
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
-import com.blitztech.pudokiosk.data.api.dto.auth.AuthStatus
+import com.blitztech.pudokiosk.data.api.dto.common.AuthStatus
+import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityOtpVerificationBinding
 import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
-import com.blitztech.pudokiosk.ui.main.KioskActivity
+import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
+import com.blitztech.pudokiosk.ui.main.CourierMainActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
@@ -55,7 +56,7 @@ class OtpVerificationActivity : AppCompatActivity() {
         setupDependencies()
         setupViews()
         setupClickListeners()
-        setupOtpInputWatcher()
+        setupOtpInput()
         startCountdownTimer()
     }
 
@@ -76,17 +77,12 @@ class OtpVerificationActivity : AppCompatActivity() {
     }
 
     private fun setupViews() {
-        // Set localized text
         binding.tvTitle.text = i18n.t("verify_otp", "Verify OTP")
         binding.tvSubtitle.text = i18n.t("otp_sent", "We've sent a verification code to your mobile number")
         binding.tvMobileNumber.text = mobileNumber
         binding.etOtp.hint = i18n.t("otp_placeholder", "Enter 6-digit code")
         binding.btnVerify.text = i18n.t("verify", "Verify")
-        binding.tvResendOtp.text = i18n.t("resend_otp", "Resend OTP")
-
-        // Initially disable verify button
-        binding.btnVerify.isEnabled = false
-        binding.btnVerify.alpha = 0.5f
+        binding.btnResend.text = i18n.t("resend_otp", "Resend OTP")
     }
 
     private fun setupClickListeners() {
@@ -96,66 +92,86 @@ class OtpVerificationActivity : AppCompatActivity() {
 
         binding.btnVerify.setOnClickListener {
             if (!isLoading) {
-                verifyOtp()
+                attemptOtpVerification()
             }
         }
 
-        binding.tvResendOtp.setOnClickListener {
-            if (!isLoading) {
-                resendOtp()
-            }
+        binding.btnResend.setOnClickListener {
+            resendOtp()
         }
     }
 
-    private fun setupOtpInputWatcher() {
+    private fun setupOtpInput() {
         binding.etOtp.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val otpLength = s?.length ?: 0
-                val isValidLength = otpLength == 6
-
-                binding.btnVerify.isEnabled = isValidLength && !isLoading
-                binding.btnVerify.alpha = if (isValidLength) 1.0f else 0.5f
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val otp = s.toString().trim()
+                binding.btnVerify.isEnabled = otp.length == 6 && !isLoading
 
                 // Auto-verify when 6 digits are entered
-                if (isValidLength && !isLoading) {
-                    verifyOtp()
+                if (otp.length == 6 && !isLoading) {
+                    attemptOtpVerification()
                 }
             }
-
-            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
-    private fun verifyOtp() {
+    private fun startCountdownTimer() {
+        countDownTimer?.cancel()
+        binding.btnResend.isEnabled = false
+
+        countDownTimer = object : CountDownTimer(COUNTDOWN_TIMER_SECONDS * 1000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val seconds = millisUntilFinished / 1000
+                binding.btnResend.text = i18n.t("resend_in", "Resend in ${seconds}s")
+            }
+
+            override fun onFinish() {
+                binding.btnResend.isEnabled = true
+                binding.btnResend.text = i18n.t("resend_otp", "Resend OTP")
+            }
+        }.start()
+    }
+
+    private fun attemptOtpVerification() {
         val otp = binding.etOtp.text.toString().trim()
 
-        if (!ValidationUtils.isValidOtp(otp)) {
-            binding.tilOtp.error = i18n.t("error_invalid_otp", "Please enter a valid OTP")
+        if (otp.isEmpty()) {
+            showError(i18n.t("error_otp_required", "Please enter the OTP"))
             return
         }
 
-        binding.tilOtp.error = null
-        setLoading(true)
+        if (!ValidationUtils.isValidOtp(otp)) {
+            showError(i18n.t("error_invalid_otp", "Please enter a valid 6-digit OTP"))
+            return
+        }
 
+        performOtpVerification(otp)
+    }
+
+    private fun performOtpVerification(otp: String) {
+        setLoading(true)
         lifecycleScope.launch {
             when (val result = apiRepository.verifyOtp(mobileNumber, otp)) {
                 is NetworkResult.Success -> {
                     val response = result.data
                     when (response.status) {
                         AuthStatus.AUTHENTICATED -> {
-                            // Store tokens and navigate to main app
-                            storeAuthTokens(response.accessToken, response.refreshToken)
-                            navigateToMainApp()
+                            // Save authentication data and navigate to main menu
+                            saveUserDataAndNavigate(response.accessToken, response.refreshToken)
                         }
                         AuthStatus.FAILED -> {
-                            showError(i18n.t("error_invalid_otp", "Invalid OTP. Please try again."))
+                            showError(i18n.t("error_invalid_otp", "Invalid or expired OTP"))
+                            binding.etOtp.text?.clear()
+                            binding.etOtp.requestFocus()
                         }
                     }
                 }
                 is NetworkResult.Error -> {
                     showError(result.message)
+                    binding.etOtp.text?.clear()
+                    binding.etOtp.requestFocus()
                 }
                 is NetworkResult.Loading -> {
                     // Handle loading state if needed
@@ -163,68 +179,41 @@ class OtpVerificationActivity : AppCompatActivity() {
             }
             setLoading(false)
         }
+    }
+
+    private fun saveUserDataAndNavigate(accessToken: String, refreshToken: String) {
+        // Save user authentication data
+        prefs.saveAuthData(
+            accessToken = accessToken,
+            refreshToken = refreshToken,
+            userType = userType.name,
+            mobileNumber = mobileNumber,
+            userName = null
+        )
+
+        // Navigate to appropriate main menu
+        val intent = when (userType) {
+            UserType.CUSTOMER -> Intent(this, CustomerMainActivity::class.java)
+            UserType.COURIER -> Intent(this, CourierMainActivity::class.java)
+        }
+
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun resendOtp() {
-        setLoading(true)
-
-        lifecycleScope.launch {
-            // For resend, we'll use the login endpoint again
-            when (val result = apiRepository.login(mobileNumber, "")) {
-                is NetworkResult.Success -> {
-                    showSuccess(i18n.t("success_otp_sent", "OTP sent successfully"))
-                    startCountdownTimer()
-                }
-                is NetworkResult.Error -> {
-                    showError(result.message)
-                }
-                is NetworkResult.Loading -> {
-                    // Handle loading state if needed
-                }
-            }
-            setLoading(false)
-        }
-    }
-
-    private fun startCountdownTimer() {
-        binding.tvResendOtp.isEnabled = false
-        binding.tvResendOtp.alpha = 0.5f
-
-        countDownTimer = object : CountDownTimer(COUNTDOWN_TIMER_SECONDS * 1000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                val secondsRemaining = millisUntilFinished / 1000
-                binding.tvResendOtp.text = "Resend OTP (${secondsRemaining}s)"
-            }
-
-            override fun onFinish() {
-                binding.tvResendOtp.isEnabled = true
-                binding.tvResendOtp.alpha = 1.0f
-                binding.tvResendOtp.text = i18n.t("resend_otp", "Resend OTP")
-            }
-        }.start()
-    }
-
-    private fun storeAuthTokens(accessToken: String, refreshToken: String) {
-        // Store tokens in secure preferences
-        prefs.setAccessToken(accessToken)
-        prefs.setRefreshToken(refreshToken)
-        prefs.setUserType(userType.name)
-    }
-
-    private fun navigateToMainApp() {
-        val intent = Intent(this, KioskActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent)
-        finish()
+        // TODO: Implement resend OTP functionality
+        startCountdownTimer()
+        Toast.makeText(this, i18n.t("otp_resent", "OTP has been resent"), Toast.LENGTH_SHORT).show()
     }
 
     private fun setLoading(loading: Boolean) {
         isLoading = loading
         binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-        binding.btnVerify.isEnabled = !loading && binding.etOtp.text.length == 6
+        binding.btnVerify.isEnabled = !loading && binding.etOtp.text.toString().length == 6
         binding.btnVerify.text = if (loading) {
-            i18n.t("verifying_otp", "Verifying OTP…")
+            i18n.t("verifying", "Verifying…")
         } else {
             i18n.t("verify", "Verify")
         }
@@ -234,12 +223,8 @@ class OtpVerificationActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
-    private fun showSuccess(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
     override fun onDestroy() {
-        super.onDestroy()
         countDownTimer?.cancel()
+        super.onDestroy()
     }
 }

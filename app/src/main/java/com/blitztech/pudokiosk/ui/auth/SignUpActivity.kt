@@ -8,9 +8,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.blitztech.pudokiosk.data.api.ApiRepository
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
+import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivitySignUpBinding
 import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs

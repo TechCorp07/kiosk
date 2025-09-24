@@ -6,15 +6,16 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.blitztech.pudokiosk.data.api.ApiRepository
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.config.ApiConfig
-import com.blitztech.pudokiosk.data.api.dto.auth.AuthStatus
+import com.blitztech.pudokiosk.data.api.dto.common.AuthStatus
+import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivitySignInBinding
 import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
-import com.blitztech.pudokiosk.ui.main.KioskActivity
+import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
+import com.blitztech.pudokiosk.ui.main.CourierMainActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
@@ -74,23 +75,23 @@ class SignInActivity : AppCompatActivity() {
         binding.tvDontHaveAccount.text = i18n.t("dont_have_account", "Don't have an account?")
         binding.tvSignUp.text = i18n.t("sign_up", "Sign Up")
 
-        // Update title based on user type
-        val titleText = when (userType) {
-            UserType.CUSTOMER -> i18n.t("welcome_back", "Welcome Back")
-            UserType.COURIER -> i18n.t("welcome_back", "Courier Sign In")
+        // Set user type specific title
+        val userTypeTitle = if (userType == UserType.CUSTOMER) {
+            i18n.t("customer_signin", "Customer Sign In")
+        } else {
+            i18n.t("courier_signin", "Courier Sign In")
         }
-        binding.tvWelcomeBack.text = titleText
-
-        // For couriers, hide sign up option
-        if (userType == UserType.COURIER) {
-            binding.layoutSignUp.visibility = View.GONE
-        }
+        binding.tvWelcomeBack.text = userTypeTitle
     }
 
     private fun setupClickListeners() {
+        binding.btnBack.setOnClickListener {
+            onBackPressed()
+        }
+
         binding.btnSignIn.setOnClickListener {
             if (!isLoading) {
-                validateAndSignIn()
+                attemptLogin()
             }
         }
 
@@ -101,70 +102,60 @@ class SignInActivity : AppCompatActivity() {
         binding.tvSignUp.setOnClickListener {
             navigateToSignUp()
         }
-
-        binding.btnBack.setOnClickListener {
-            onBackPressed()
-        }
     }
 
-    private fun validateAndSignIn() {
+    private fun attemptLogin() {
         val mobileNumber = binding.etMobileNumber.text.toString().trim()
         val pin = binding.etPin.text.toString().trim()
 
-        // Clear previous errors
-        binding.tilMobileNumber.error = null
-        binding.tilPin.error = null
-
-        var hasError = false
-
-        // Validate mobile number
+        // Validation
         if (mobileNumber.isEmpty()) {
-            binding.tilMobileNumber.error = i18n.t("error_required_field", "This field is required")
-            hasError = true
-        } else if (!ValidationUtils.isValidPhoneNumber(mobileNumber)) {
-            binding.tilMobileNumber.error = i18n.t("error_invalid_phone", "Please enter a valid phone number")
-            hasError = true
+            showError(i18n.t("error_mobile_required", "Please enter your mobile number"))
+            return
         }
 
-        // Validate PIN
         if (pin.isEmpty()) {
-            binding.tilPin.error = i18n.t("error_required_field", "This field is required")
-            hasError = true
-        } else if (!ValidationUtils.isValidPin(pin)) {
-            binding.tilPin.error = i18n.t("error_invalid_pin", "PIN must be 4-6 digits")
-            hasError = true
+            showError(i18n.t("error_pin_required", "Please enter your PIN"))
+            return
         }
 
-        if (!hasError) {
-            performSignIn(mobileNumber, pin)
+        val formattedPhone = ValidationUtils.formatPhoneNumber(mobileNumber)
+        if (!ValidationUtils.isValidPhoneNumber(formattedPhone)) {
+            showError(i18n.t("error_invalid_phone", "Please enter a valid phone number"))
+            return
         }
+
+        if (!ValidationUtils.isValidPin(pin)) {
+            showError(i18n.t("error_invalid_pin", "PIN must be 4-6 digits"))
+            return
+        }
+
+        performLogin(formattedPhone, pin)
     }
 
-    private fun performSignIn(mobileNumber: String, pin: String) {
+    private fun performLogin(mobileNumber: String, pin: String) {
         setLoading(true)
-
         lifecycleScope.launch {
             when (val result = apiRepository.login(mobileNumber, pin)) {
-                is NetworkResult.Success -> {
+                is NetworkResult.Success<*> -> {
                     val response = result.data
                     when (response.status) {
                         AuthStatus.PENDING_OTP -> {
-                            // Navigate to OTP verification
                             navigateToOtpVerification(mobileNumber, response.accessToken)
                         }
                         AuthStatus.AUTHENTICATED -> {
-                            // First time user - navigate to PIN change
+                            // First-time user - needs to change PIN
                             navigateToFirstTimePinChange(response.accessToken)
                         }
                         AuthStatus.FAILED -> {
-                            showError(i18n.t("error_login_failed", "Login failed. Please check your credentials."))
+                            showError(i18n.t("error_login_failed", "Please check your credentials."))
                         }
                     }
                 }
-                is NetworkResult.Error -> {
+                is NetworkResult.Error<*> -> {
                     showError(result.message)
                 }
-                is NetworkResult.Loading -> {
+                is NetworkResult.Loading<*> -> {
                     // Handle loading state if needed
                 }
             }
@@ -202,6 +193,26 @@ class SignInActivity : AppCompatActivity() {
             putExtra(SignUpActivity.EXTRA_USER_TYPE, userType.name)
         }
         startActivity(intent)
+    }
+
+    private fun navigateToMainMenu() {
+        // Save user authentication data
+        prefs.saveAuthData(
+            accessToken = "dummy_token", // Replace with actual token
+            refreshToken = "dummy_refresh",
+            userType = userType.name,
+            mobileNumber = binding.etMobileNumber.text.toString().trim(),
+            userName = null
+        )
+
+        val intent = when (userType) {
+            UserType.CUSTOMER -> Intent(this, CustomerMainActivity::class.java)
+            UserType.COURIER -> Intent(this, CourierMainActivity::class.java)
+        }
+
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun setLoading(loading: Boolean) {

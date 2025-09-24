@@ -4,51 +4,37 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="@dimen/spacing_lg">
-
-    <!-- Logo -->
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:layout_marginBottom="@dimen/spacing_xl"
-        android:src="@drawable/zimpudo_logo"
-        android:contentDescription="@string/app_name" />
+    android:padding="@dimen/spacing_xl">
 
     <!-- Slide Image -->
     <ImageView
         android:id="@+id/ivSlideImage"
-        android:layout_width="300dp"
-        android:layout_height="250dp"
+        android:layout_width="@dimen/onboarding_image_size"
+        android:layout_height="@dimen/onboarding_image_size"
         android:layout_marginBottom="@dimen/spacing_xl"
-        android:scaleType="centerCrop"
-        android:contentDescription="Onboarding illustration" />
+        android:contentDescription="Onboarding illustration"
+        android:scaleType="centerCrop" />
 
-    <!-- Content Container -->
-    <LinearLayout
+    <!-- Slide Title -->
+    <TextView
+        android:id="@+id/tvSlideTitle"
+        style="@style/Text.Title.Large"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_white_rounded_full"
-        android:orientation="vertical"
-        android:padding="@dimen/spacing_xl"
-        android:layout_marginHorizontal="@dimen/spacing_md">
+        android:layout_marginBottom="@dimen/spacing_lg"
+        android:textColor="@color/text_white"
+        android:gravity="center"
+        android:text="Slide Title" />
 
-        <!-- Title -->
-        <TextView
-            android:id="@+id/tvSlideTitle"
-            style="@style/Text.Title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_md"
-            android:textSize="20sp" />
-
-        <!-- Subtitle -->
-        <TextView
-            android:id="@+id/tvSlideSubtitle"
-            style="@style/Text.Subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="14sp" />
-
-    </LinearLayout>
+    <!-- Slide Subtitle -->
+    <TextView
+        android:id="@+id/tvSlideSubtitle"
+        style="@style/Text.Subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_white"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.4"
+        android:text="Slide subtitle text goes here with detailed description of the feature" />
 
 </LinearLayout>

@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2zM21,9V7L15,7V9C15,11.8 12.8,14 10,14V16H6V14C6,11.8 8.2,9.5 11,9.5C14.9,9.5 18,12.1 18,15.5V22H4V20C4,16.7 6.3,14 9.2,14H10C7.2,14 5,11.8 5,9V7H3V9C3,13.4 6.6,17 11,17H13C17.4,17 21,13.4 21,9Z"/>
+</vector>

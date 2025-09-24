@@ -3,19 +3,13 @@
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/gray_light" />
-            <stroke
-                android:width="2dp"
-                android:color="@color/button_secondary_border" />
-            <corners android:radius="@dimen/corner_radius_md" />
+            <corners android:radius="@dimen/corner_radius_lg" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/button_secondary" />
-            <stroke
-                android:width="2dp"
-                android:color="@color/button_secondary_border" />
-            <corners android:radius="@dimen/corner_radius_md" />
+            <corners android:radius="@dimen/corner_radius_lg" />
         </shape>
     </item>
 </selector>

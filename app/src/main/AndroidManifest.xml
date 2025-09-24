@@ -24,39 +24,136 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PudoKiosk">
+        android:theme="@style/Theme.ZimpudoKiosk">
 
+        <!-- Main launcher activity - New flow entry point -->
         <activity
-            android:name=".ui.HardwareTestActivity"
+            android:name=".ui.main.MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait" >
-
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
-
-            <meta-data
-                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
-                android:resource="@xml/device_filter"/>
-        </activity>
-
-        <activity
-            android:name=".ui.main.KioskActivity" android:exported="true" android:launchMode="singleTask">
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.DevSettingsActivity"
-            android:exported="false"/>
+        <!-- Hardware Test Activity with USB device attached support -->
+        <activity
+            android:name=".ui.HardwareTestActivity"
+            android:exported="true"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter"/>
+        </activity>
 
-        <!-- Optional: screens -->
-        <activity android:name=".ui.DevModeActivity" android:exported="false" />
-        <activity android:name=".ui.main.SenderActivity" android:exported="false"/>
-        <activity android:name=".ui.main.RecipientActivity" android:exported="false"/>
-        <activity android:name=".ui.main.CourierActivity" android:exported="false"/>
+        <!-- Onboarding Flow Activities -->
+        <activity android:name=".ui.onboarding.LanguageSelectionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.onboarding.UserTypeSelectionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Authentication Activities -->
+        <activity android:name=".ui.auth.SignInActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.auth.SignUpActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.auth.OtpVerificationActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.auth.PinChangeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.auth.ForgotPinActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.auth.PrivacyPolicyActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.auth.TermsConditionsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.auth.RegistrationProcessActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Main Menu Activities -->
+        <activity android:name=".ui.main.CustomerMainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.main.CourierMainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Technician Access Activities -->
+        <activity android:name=".ui.TechnicianAccessActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.TechnicianMenuActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Diagnostic Activities
+        <activity android:name=".ui.SystemLogsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.NetworkDiagnosticsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.SystemInfoActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.DataManagementActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.RemoteSupportActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        -->
+        <!-- Legacy Activities (for reference/reuse) -->
+        <activity android:name=".ui.DevModeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.DevSettingsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Optional: Legacy screens for parts reuse -->
+        <activity android:name=".ui.main.SenderActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.main.RecipientActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <!-- Foreground device service -->
         <service

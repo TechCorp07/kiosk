@@ -1,12 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ZIMPUDO Kiosk</string>
+    <string name="zimpudo_welcome">Iko kune yekucheka-kumucheto tekinoroji inosangana isina musono kuendesa kune yako yekupedzisira nyore.</string>
     <string name="select_language">Sarudza Mutauro</string>
     <string name="language_subtitle">Sarudza mutauro waunoda kushandisa</string>
+    <string name="language_ndebele">Ndebele</string>
     <string name="continue_button">Enderera</string>
     <string name="sign_in">Pinda</string>
     <string name="sign_up">Nyoresa</string>
     <string name="mobile_number">Nhamba yeNharembozha</string>
     <string name="pin">PIN</string>
+    <string name="language_english">Chirungu</string>
+    <string name="language_shona">Shona</string>
+    <string name="zimpudo_tagline">Hungwaru. Kuvimbika. Nekuchimbidza</string>
+    <string name="skip">Darikira</string>
+    <string name="next">Enda Kumberi</string>
+    <string name="back">Dzokera shure</string>
+    <string name="get_started">Tanga</string>
+    <string name="onboarding_welcome_title">Tikugashirei kune Runyoro</string>
+    <string name="onboarding_welcome_subtitle">Tumira kana kugashira mapasuru zvakachengeteka, munyika yese nesevhisi yedu yekutumira inokurumidza.</string>
+    <string name="onboarding_secure_title">Kuendesa Zvakachengetedzeka</string>
+    <string name="onboarding_secure_subtitle">Mapasuru ako anobatwa zvine hungwaru uye anounzwa zvakachengeteka kunzvimbo yaanoenda.</string>
+    <string name="onboarding_fast_title">Kuendesa Nekukasika</string>
+    <string name="onboarding_fast_subtitle">Tumira kana kugashira mapasuru zvakachengeteka, munyika yese nesevhisi yedu yekutumira inokurumidza.</string>
+    <string name="onboarding_tracking_title">Tevera uzive paneChinhu chako</string>
+    <string name="onboarding_tracking_subtitle">Tevera mapasuru ako munguva chaiyo uye ziva chaizvo paachasvika.</string>
+    <string name="onboarding_support_title">"Tsigiro yeVatengi "</string>
+    <string name="onboarding_support_subtitle">Isu tiri pano kuti tikubatsire iwe 24/7 nechero mibvunzo kana zvinokunetsa zvaungave nazvo.</string>
+    <string name="select_user_type">Sarudza Mushandisi Rudzi</string>
     <!-- Add more Shona translations as needed -->
 </resources>
