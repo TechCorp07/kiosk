@@ -56,11 +56,6 @@ class TechnicianMenuActivity : AppCompatActivity() {
             startActivity(Intent(this, NetworkDiagnosticsActivity::class.java))
         }
 
-        // Developer Mode
-        binding.cardDevMode.setOnClickListener {
-            startActivity(Intent(this, DevModeActivity::class.java))
-        }
-
         // System Info
         binding.cardSystemInfo.setOnClickListener {
             startActivity(Intent(this, SystemInfoActivity::class.java))

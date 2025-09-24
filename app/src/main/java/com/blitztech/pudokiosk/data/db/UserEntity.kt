@@ -8,7 +8,7 @@ data class UserEntity(
     @PrimaryKey val id: String,
     val phone: String,
     val email: String?,
-    val role: String,            // SENDER | RECIPIENT | COURIER
+    val role: String,            // USER | COURIER | TECHNICIAN
     val kycStatus: String,       // PENDING | VERIFIED
     val pinSet: Boolean,
     val updatedAt: Long

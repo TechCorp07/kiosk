@@ -7,8 +7,8 @@ import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.blitztech.pudokiosk.databinding.ActivityMainBinding
-import com.blitztech.pudokiosk.ui.onboarding.LanguageSelectionActivity
 import com.blitztech.pudokiosk.ui.TechnicianAccessActivity
+import com.blitztech.pudokiosk.ui.onboarding.LanguageSelectionActivity
 
 /**
  * Main entry point for ZIMPUDO Kiosk
@@ -44,27 +44,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupTechnicianAccess() {
-        gestureDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onSingleTapUp(e: MotionEvent): Boolean {
-                val currentTime = System.currentTimeMillis()
+        gestureDetector =
+            GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
+                override fun onSingleTapUp(e: MotionEvent): Boolean {
+                    val currentTime = System.currentTimeMillis()
 
-                // Reset tap count if too much time passed
-                if (currentTime - lastTapTime > tapTimeoutMs) {
-                    tapCount = 0
+                    // Reset tap count if too much time passed
+                    if (currentTime - lastTapTime > tapTimeoutMs) {
+                        tapCount = 0
+                    }
+
+                    tapCount++
+                    lastTapTime = currentTime
+
+                    // Check if we reached the tech access tap count
+                    if (tapCount >= techAccessTapCount) {
+                        navigateToTechnicianAccess()
+                        return true
+                    }
+
+                    return false
                 }
-
-                tapCount++
-                lastTapTime = currentTime
-
-                // Check if we reached the tech access tap count
-                if (tapCount >= techAccessTapCount) {
-                    navigateToTechnicianAccess()
-                    return true
-                }
-
-                return false
-            }
-        })
+            })
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

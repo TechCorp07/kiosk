@@ -16,7 +16,7 @@
         android:required="false"/>
 
     <application
-        android:name=".KioskApp"
+        android:name=".ZimpudoApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -116,7 +116,7 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <!-- Diagnostic Activities
+        <!-- Diagnostic Activities -->
         <activity android:name=".ui.SystemLogsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
@@ -136,40 +136,11 @@
         <activity android:name=".ui.RemoteSupportActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-        -->
-        <!-- Legacy Activities (for reference/reuse) -->
-        <activity android:name=".ui.DevModeActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
 
+        <!-- Legacy Activities (for reference/reuse) -->
         <activity android:name=".ui.DevSettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-
-        <!-- Optional: Legacy screens for parts reuse -->
-        <activity android:name=".ui.main.SenderActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <activity android:name=".ui.main.RecipientActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <!-- Foreground device service -->
-        <service
-            android:name=".service.DeviceService"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice|dataSync" />
-
-        <!-- Start on boot -->
-        <receiver
-            android:name=".boot.BootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
 
     </application>
 
