@@ -3,7 +3,6 @@ package com.blitztech.pudokiosk.data
 import com.blitztech.pudokiosk.data.db.AuditLogEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 object AuditLogger {
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -14,6 +13,5 @@ object AuditLogger {
             event = event,
             details = details
         )
-        scope.launch { ServiceLocator.db.audit().insert(row) }
     }
 }
