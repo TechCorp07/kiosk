@@ -2,16 +2,25 @@ package com.blitztech.pudokiosk.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import java.util.concurrent.TimeUnit
+import kotlin.system.measureTimeMillis
 
 /**
- * Secure preferences manager using EncryptedSharedPreferences
+ * Secure preferences manager using EncryptedSharedPreferences with fallback support
+ * Falls back to regular SharedPreferences if encrypted version fails (common in emulators)
  */
 class Prefs(context: Context) {
 
     companion object {
+        private const val TAG = "Prefs"
         private const val PREFS_NAME = "zimpudo_kiosk_prefs"
+        private const val PREFS_NAME_FALLBACK = "zimpudo_kiosk_prefs_fallback"
+        private const val ENCRYPTED_INIT_TIMEOUT_MS = 5000L // 5 seconds max
+
+        // Keys
         private const val KEY_LOCALE = "locale"
         private const val KEY_FIRST_LAUNCH = "first_launch"
         private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
@@ -23,16 +32,58 @@ class Prefs(context: Context) {
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_LAST_LOGIN = "last_login"
         private const val KEY_BAUD_RATE = "scanner_baud"
+        private const val KEY_USING_ENCRYPTED = "using_encrypted_prefs"
     }
 
     private val prefs: SharedPreferences
+    private val isEncrypted: Boolean
 
     init {
+        var encryptedPrefs: SharedPreferences? = null
+        var encrypted = false
+
+        // Try to initialize encrypted preferences with timeout
+        try {
+            Log.d(TAG, "Attempting to initialize EncryptedSharedPreferences...")
+
+            val initTime = measureTimeMillis {
+                encryptedPrefs = createEncryptedPreferences(context)
+            }
+
+            Log.d(TAG, "EncryptedSharedPreferences initialized in ${initTime}ms")
+            encrypted = true
+
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to initialize EncryptedSharedPreferences, falling back to regular SharedPreferences", e)
+            encryptedPrefs = null
+            encrypted = false
+        }
+
+        // Use encrypted prefs if available, otherwise fallback
+        if (encryptedPrefs != null) {
+            prefs = encryptedPrefs
+            isEncrypted = true
+            Log.i(TAG, "Using EncryptedSharedPreferences")
+        } else {
+            prefs = context.getSharedPreferences(PREFS_NAME_FALLBACK, Context.MODE_PRIVATE)
+            isEncrypted = false
+            Log.w(TAG, "Using regular SharedPreferences as fallback")
+        }
+
+        // Store which type we're using for debugging
+        try {
+            prefs.edit().putBoolean(KEY_USING_ENCRYPTED, isEncrypted).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to store encryption status", e)
+        }
+    }
+
+    private fun createEncryptedPreferences(context: Context): SharedPreferences {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
 
-        prefs = EncryptedSharedPreferences.create(
+        return EncryptedSharedPreferences.create(
             context,
             PREFS_NAME,
             masterKey,
@@ -41,172 +92,169 @@ class Prefs(context: Context) {
         )
     }
 
+    // Safe getter wrapper
+    private fun <T> safeGet(key: String, defaultValue: T, getter: () -> T): T {
+        return try {
+            getter()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to get value for key: $key, using default", e)
+            defaultValue
+        }
+    }
+
+    // Safe setter wrapper
+    private fun safeSet(key: String, setter: (SharedPreferences.Editor) -> SharedPreferences.Editor) {
+        try {
+            val editor = prefs.edit()
+            setter(editor).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set value for key: $key", e)
+        }
+    }
+
     // Language/Locale preferences
     fun setLocale(locale: String) {
-        prefs.edit().putString(KEY_LOCALE, locale).apply()
+        safeSet(KEY_LOCALE) { editor ->
+            editor.putString(KEY_LOCALE, locale)
+        }
     }
 
     fun getLocale(): String {
-        return prefs.getString(KEY_LOCALE, "en") ?: "en"
+        return safeGet(KEY_LOCALE, "en") {
+            prefs.getString(KEY_LOCALE, "en") ?: "en"
+        }
     }
 
     // Scanner baud (default Honeywell often 115200)
-    fun getScannerBaud(): Int = prefs.getInt(KEY_BAUD_RATE, 115200)
-    fun setScannerBaud(v: Int) {
-        prefs.edit().putInt(KEY_BAUD_RATE, v).apply()
+    fun getScannerBaud(): Int {
+        return safeGet(KEY_BAUD_RATE, 115200) {
+            prefs.getInt(KEY_BAUD_RATE, 115200)
+        }
+    }
+
+    fun setScannerBaud(value: Int) {
+        safeSet(KEY_BAUD_RATE) { editor ->
+            editor.putInt(KEY_BAUD_RATE, value)
+        }
     }
 
     // First launch tracking
     fun isFirstLaunch(): Boolean {
-        return prefs.getBoolean(KEY_FIRST_LAUNCH, true)
+        return safeGet(KEY_FIRST_LAUNCH, true) {
+            prefs.getBoolean(KEY_FIRST_LAUNCH, true)
+        }
     }
 
     fun setFirstLaunchCompleted() {
-        prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
+        safeSet(KEY_FIRST_LAUNCH) { editor ->
+            editor.putBoolean(KEY_FIRST_LAUNCH, false)
+        }
     }
 
     // Onboarding completion
     fun isOnboardingCompleted(): Boolean {
-        return prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
-    }
-
-    fun setOnboardingCompleted() {
-        prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, true).apply()
-    }
-
-    // Authentication data
-    fun saveAuthData(accessToken: String, refreshToken: String, userType: String, mobileNumber: String, userName: String? = null) {
-        prefs.edit()
-            .putString(KEY_ACCESS_TOKEN, accessToken)
-            .putString(KEY_REFRESH_TOKEN, refreshToken)
-            .putString(KEY_USER_TYPE, userType)
-            .putString(KEY_USER_MOBILE, mobileNumber)
-            .putString(KEY_USER_NAME, userName)
-            .putBoolean(KEY_IS_LOGGED_IN, true)
-            .putLong(KEY_LAST_LOGIN, System.currentTimeMillis())
-            .apply()
-    }
-
-    fun getAccessToken(): String? {
-        return prefs.getString(KEY_ACCESS_TOKEN, null)
-    }
-
-    fun getRefreshToken(): String? {
-        return prefs.getString(KEY_REFRESH_TOKEN, null)
-    }
-
-    fun getUserType(): String? {
-        return prefs.getString(KEY_USER_TYPE, null)
-    }
-
-    fun getUserMobile(): String? {
-        return prefs.getString(KEY_USER_MOBILE, null)
-    }
-
-    fun getUserName(): String? {
-        return prefs.getString(KEY_USER_NAME, null)
-    }
-
-    fun isLoggedIn(): Boolean {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-    }
-
-    fun getLastLogin(): Long {
-        return prefs.getLong(KEY_LAST_LOGIN, 0)
-    }
-
-    fun clearAuthData() {
-        prefs.edit()
-            .remove(KEY_ACCESS_TOKEN)
-            .remove(KEY_REFRESH_TOKEN)
-            .remove(KEY_USER_TYPE)
-            .remove(KEY_USER_MOBILE)
-            .remove(KEY_USER_NAME)
-            .remove(KEY_IS_LOGGED_IN)
-            .remove(KEY_LAST_LOGIN)
-            .apply()
-    }
-
-    // Session management
-    fun isSessionValid(): Boolean {
-        if (!isLoggedIn()) return false
-
-        val lastLogin = getLastLogin()
-        val sessionTimeout = 24 * 60 * 60 * 1000L // 24 hours
-
-        return (System.currentTimeMillis() - lastLogin) < sessionTimeout
-    }
-
-    fun extendSession() {
-        if (isLoggedIn()) {
-            prefs.edit().putLong(KEY_LAST_LOGIN, System.currentTimeMillis()).apply()
+        return safeGet(KEY_ONBOARDING_COMPLETED, false) {
+            prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
         }
     }
 
-    // General utility methods
-    fun clear() {
-        prefs.edit().clear().apply()
+    fun setOnboardingCompleted() {
+        safeSet(KEY_ONBOARDING_COMPLETED) { editor ->
+            editor.putBoolean(KEY_ONBOARDING_COMPLETED, true)
+        }
+    }
+
+    // Authentication data
+    fun saveAuthData(accessToken: String, refreshToken: String, userType: String, mobileNumber: String, userName: String?) {
+        try {
+            val editor = prefs.edit()
+            editor.putString(KEY_ACCESS_TOKEN, accessToken)
+            editor.putString(KEY_REFRESH_TOKEN, refreshToken)
+            editor.putString(KEY_USER_TYPE, userType)
+            editor.putString(KEY_USER_MOBILE, mobileNumber)
+            editor.putString(KEY_USER_NAME, userName)
+            editor.putBoolean(KEY_IS_LOGGED_IN, true)
+            editor.putLong(KEY_LAST_LOGIN, System.currentTimeMillis())
+            editor.apply()
+
+            Log.d(TAG, "Auth data saved successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save auth data", e)
+        }
+    }
+
+    fun getAccessToken(): String? {
+        return safeGet(KEY_ACCESS_TOKEN, null) {
+            prefs.getString(KEY_ACCESS_TOKEN, null)
+        }
+    }
+
+    fun getRefreshToken(): String? {
+        return safeGet(KEY_REFRESH_TOKEN, null) {
+            prefs.getString(KEY_REFRESH_TOKEN, null)
+        }
+    }
+
+    fun getUserType(): String? {
+        return safeGet(KEY_USER_TYPE, null) {
+            prefs.getString(KEY_USER_TYPE, null)
+        }
+    }
+
+    fun getUserMobile(): String? {
+        return safeGet(KEY_USER_MOBILE, null) {
+            prefs.getString(KEY_USER_MOBILE, null)
+        }
+    }
+
+    fun getUserName(): String? {
+        return safeGet(KEY_USER_NAME, null) {
+            prefs.getString(KEY_USER_NAME, null)
+        }
+    }
+
+    fun isLoggedIn(): Boolean {
+        return safeGet(KEY_IS_LOGGED_IN, false) {
+            prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+        }
+    }
+
+    fun getLastLogin(): Long {
+        return safeGet(KEY_LAST_LOGIN, 0L) {
+            prefs.getLong(KEY_LAST_LOGIN, 0L)
+        }
+    }
+
+    fun clearAuthData() {
+        try {
+            val editor = prefs.edit()
+            editor.remove(KEY_ACCESS_TOKEN)
+            editor.remove(KEY_REFRESH_TOKEN)
+            editor.remove(KEY_USER_TYPE)
+            editor.remove(KEY_USER_MOBILE)
+            editor.remove(KEY_USER_NAME)
+            editor.putBoolean(KEY_IS_LOGGED_IN, false)
+            editor.remove(KEY_LAST_LOGIN)
+            editor.apply()
+
+            Log.d(TAG, "Auth data cleared successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clear auth data", e)
+        }
     }
 
     fun clearAll() {
-        clear()
+        try {
+            prefs.edit().clear().apply()
+            Log.d(TAG, "All preferences cleared")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clear all preferences", e)
+        }
     }
 
-    // Custom preference methods for specific values
-    fun putString(key: String, value: String) {
-        prefs.edit().putString(key, value).apply()
-    }
-
-    fun getString(key: String, defaultValue: String = ""): String {
-        return prefs.getString(key, defaultValue) ?: defaultValue
-    }
-
-    fun putBoolean(key: String, value: Boolean) {
-        prefs.edit().putBoolean(key, value).apply()
-    }
-
-    fun getBoolean(key: String, defaultValue: Boolean = false): Boolean {
-        return prefs.getBoolean(key, defaultValue)
-    }
-
-    fun putInt(key: String, value: Int) {
-        prefs.edit().putInt(key, value).apply()
-    }
-
-    fun getInt(key: String, defaultValue: Int = 0): Int {
-        return prefs.getInt(key, defaultValue)
-    }
-
-    fun putLong(key: String, value: Long) {
-        prefs.edit().putLong(key, value).apply()
-    }
-
-    fun getLong(key: String, defaultValue: Long = 0L): Long {
-        return prefs.getLong(key, defaultValue)
-    }
-
-    // Kiosk-specific settings
-    fun setKioskMode(enabled: Boolean) {
-        putBoolean("kiosk_mode", enabled)
-    }
-
-    fun isKioskMode(): Boolean {
-        return getBoolean("kiosk_mode", true) // Default to true for kiosk app
-    }
-
-    fun setDeviceName(name: String) {
-        putString("device_name", name)
-    }
-
-    fun getDeviceName(): String {
-        return getString("device_name", "ZIMPUDO Kiosk")
-    }
-
-    fun setLocationId(locationId: String) {
-        putString("location_id", locationId)
-    }
-
-    fun getLocationId(): String {
-        return getString("location_id", "")
+    // Debug information
+    fun getPrefsInfo(): String {
+        return "Encryption: ${if (isEncrypted) "Enabled" else "Disabled (Fallback)"}, " +
+                "Keys: ${try { prefs.all.size } catch (e: Exception) { "Unknown" }}"
     }
 }

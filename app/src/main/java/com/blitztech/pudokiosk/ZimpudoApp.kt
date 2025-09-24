@@ -18,14 +18,29 @@ class ZimpudoApp : Application() {
         lateinit var instance: ZimpudoApp
             private set
 
-        // Application-wide singletons
-        val prefs: Prefs by lazy { Prefs(instance) }
+        // Application-wide singletons - Initialize safely
+        val prefs: Prefs by lazy {
+            try {
+                Log.d(TAG, "Initializing Prefs...")
+                Prefs(instance)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize Prefs", e)
+                throw e
+            }
+        }
+
         val apiRepository: ApiRepository by lazy {
-            val okHttpClient = NetworkModule.provideOkHttpClient()
-            val moshi = NetworkModule.provideMoshi()
-            val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
-            val apiService = NetworkModule.provideApiService(retrofit)
-            NetworkModule.provideApiRepository(apiService, instance)
+            try {
+                Log.d(TAG, "Initializing API Repository...")
+                val okHttpClient = NetworkModule.provideOkHttpClient()
+                val moshi = NetworkModule.provideMoshi()
+                val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
+                val apiService = NetworkModule.provideApiService(retrofit)
+                NetworkModule.provideApiRepository(apiService, instance)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize API Repository", e)
+                throw e
+            }
         }
     }
 
@@ -34,55 +49,94 @@ class ZimpudoApp : Application() {
         instance = this
 
         Log.d(TAG, "ZIMPUDO Kiosk Application starting...")
+        Log.d(TAG, "Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
+        Log.d(TAG, "Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
 
         try {
-            initializeGlobalSettings()
+            // Initialize in safe order with timeouts
             initializeErrorHandling()
+            initializeGlobalSettings()
 
             Log.d(TAG, "Application initialization completed successfully")
 
         } catch (e: Exception) {
             Log.e(TAG, "Error during application initialization", e)
+            // Don't rethrow - allow app to continue with defaults
+            initializeDefaults()
         }
     }
 
     private fun initializeGlobalSettings() {
-        // Load saved locale and apply globally
-        val savedLocale = prefs.getLocale()
-        applyLocale(savedLocale)
+        try {
+            Log.d(TAG, "Loading global settings...")
 
-        Log.d(TAG, "Global settings initialized - Locale: $savedLocale")
+            // Load saved locale with timeout protection
+            val savedLocale = try {
+                prefs.getLocale()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load saved locale, using default", e)
+                "en" // Default fallback
+            }
+
+            applyLocale(savedLocale)
+            Log.d(TAG, "Global settings initialized - Locale: $savedLocale")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize global settings", e)
+            // Apply default locale
+            applyLocale("en")
+        }
+    }
+
+    private fun initializeDefaults() {
+        Log.w(TAG, "Initializing with default settings due to initialization failure")
+        try {
+            applyLocale("en")
+            Log.d(TAG, "Default settings applied successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Even default initialization failed", e)
+        }
     }
 
     private fun applyLocale(localeCode: String) {
-        val locale = when (localeCode) {
-            "sn" -> Locale("sn", "ZW") // Shona
-            "nd" -> Locale("nd", "ZW") // Ndebele
-            else -> Locale("en", "ZW") // English default
+        try {
+            val locale = when (localeCode) {
+                "sn" -> Locale("sn", "ZW") // Shona
+                "nd" -> Locale("nd", "ZW") // Ndebele
+                else -> Locale("en", "ZW") // English default
+            }
+
+            Locale.setDefault(locale)
+
+            val config = Configuration(resources.configuration)
+            config.setLocale(locale)
+            resources.updateConfiguration(config, resources.displayMetrics)
+
+            Log.d(TAG, "Locale applied successfully: $localeCode")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to apply locale: $localeCode", e)
         }
-
-        Locale.setDefault(locale)
-
-        val config = Configuration(resources.configuration)
-        config.setLocale(locale)
-        resources.updateConfiguration(config, resources.displayMetrics)
     }
 
     private fun initializeErrorHandling() {
-        // Set up global uncaught exception handler
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        try {
+            // Set up global uncaught exception handler
+            val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
 
-        Thread.setDefaultUncaughtExceptionHandler { thread, exception ->
-            Log.e(TAG, "Uncaught exception in thread ${thread.name}", exception)
+            Thread.setDefaultUncaughtExceptionHandler { thread, exception ->
+                Log.e(TAG, "Uncaught exception in thread ${thread.name}", exception)
 
-            // Log critical error for diagnosis
-            logCriticalError(exception)
+                // Log critical error for diagnosis
+                logCriticalError(exception)
 
-            // Call the default handler to maintain normal crash behavior
-            defaultHandler?.uncaughtException(thread, exception)
+                // Call the default handler to maintain normal crash behavior
+                defaultHandler?.uncaughtException(thread, exception)
+            }
+
+            Log.d(TAG, "Global error handling initialized")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize error handling", e)
         }
-
-        Log.d(TAG, "Global error handling initialized")
     }
 
     private fun logCriticalError(exception: Throwable) {
