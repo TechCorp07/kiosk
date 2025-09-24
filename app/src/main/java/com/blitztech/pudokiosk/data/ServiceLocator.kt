@@ -2,8 +2,8 @@ package com.blitztech.pudokiosk.data
 
 import android.content.Context
 import androidx.room.Room
+import com.blitztech.pudokiosk.data.api.ApiService
 import com.blitztech.pudokiosk.data.db.AppDatabase
-import ApiService
 import com.blitztech.pudokiosk.data.repository.OutboxRepository
 import com.blitztech.pudokiosk.secure.SecretStore
 import okhttp3.CertificatePinner

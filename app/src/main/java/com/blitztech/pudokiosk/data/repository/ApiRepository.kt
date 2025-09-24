@@ -135,7 +135,7 @@ class ApiRepository(
                         "Failed to parse error response"
                     }
 
-                    NetworkResult.Error(errorMessage, response.code())
+                    NetworkResult.Error(errorMessage)
                 }
             } catch (e: IOException) {
                 Log.e(TAG, "Network error", e)

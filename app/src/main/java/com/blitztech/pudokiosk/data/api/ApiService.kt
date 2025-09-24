@@ -14,7 +14,7 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     @POST(ApiEndpoints.AUTH_OTP_VERIFY)
-    suspend fun verifyOtp(@Body request: OtpVerifyRequest): Response<OtpVerifyResponse>
+    suspend fun verifyOtp(@Body request: OtpVerifyRequest): Response<OtpVerifyResponse>  // Make sure this line is correct
 
     @GET(ApiEndpoints.FORGOT_PIN)
     suspend fun forgotPin(@Query("mobileNumber") mobileNumber: String,

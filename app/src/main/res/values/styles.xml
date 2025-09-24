@@ -147,6 +147,11 @@
     </style>
 
     <!-- AppBar Styles -->
+    <style name="AppBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/app_bar_height</item>
+    </style>
+
     <style name="Progress">
         <item name="android:layout_width">@dimen/progress_size</item>
         <item name="android:layout_height">@dimen/progress_size</item>

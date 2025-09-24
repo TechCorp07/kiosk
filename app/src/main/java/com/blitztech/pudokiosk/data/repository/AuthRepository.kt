@@ -1,9 +1,7 @@
 package com.blitztech.pudokiosk.data.repository
 
 import com.blitztech.pudokiosk.data.ServiceLocator
-import OtpRequest
-import OtpVerifyRequest
-import OtpVerifyResponse
+import com.blitztech.pudokiosk.data.api.dto.auth.OtpVerifyResponse
 import kotlinx.coroutines.delay
 
 class AuthRepository(private val useStub: Boolean = false) {
