@@ -6,6 +6,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.data.api.NetworkModule
@@ -15,6 +16,7 @@ import com.blitztech.pudokiosk.databinding.ActivityPinChangeBinding
 import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
+import com.blitztech.pudokiosk.ui.main.CourierMainActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
@@ -42,6 +44,7 @@ class PinChangeActivity : AppCompatActivity() {
         binding = ActivityPinChangeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        fun setupBackPressHandling() { onBackPressedDispatcher.addCallback(this) { finish() } }
         // Get data from intent
         accessToken = intent.getStringExtra(EXTRA_ACCESS_TOKEN) ?: ""
         isFirstTime = intent.getBooleanExtra(EXTRA_IS_FIRST_TIME, false)
@@ -52,6 +55,7 @@ class PinChangeActivity : AppCompatActivity() {
         setupViews()
         setupClickListeners()
         setupFormValidation()
+        setupBackPressHandling()
     }
 
     private fun setupDependencies() {
@@ -94,7 +98,7 @@ class PinChangeActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            onBackPressed()
+            finish()
         }
 
         binding.btnSavePin.setOnClickListener {
@@ -184,48 +188,68 @@ class PinChangeActivity : AppCompatActivity() {
         setLoading(true)
 
         lifecycleScope.launch {
-            // For first time users, use a placeholder old PIN since they don't have one
-            val oldPinToUse = if (isFirstTime) "0000" else oldPin
+            try {
+                // For first time users, use a placeholder old PIN since they don't have one
+                val oldPinToUse = if (isFirstTime) "0000" else oldPin
 
-            when (val result = apiRepository.changePin(oldPinToUse, newPin, accessToken)) {
-                is NetworkResult.Success -> {
-                    showSuccess(i18n.t("success_pin_changed", "PIN changed successfully"))
-                    navigateToMainApp()
+                when (val result = apiRepository.changePin(oldPinToUse, newPin, accessToken)) {
+                    is NetworkResult.Success -> {
+                        showSuccess(i18n.t("pin_changed_success", "PIN changed successfully"))
+                        navigateToMainApp()
+                    }
+                    is NetworkResult.Error -> {
+                        showError(result.message)
+                    }
+                    is NetworkResult.Loading -> {
+                        // Handle loading state if needed
+                    }
                 }
-                is NetworkResult.Error -> {
-                    showError(result.message)
-                }
-                is NetworkResult.Loading -> {
-                    // Handle loading state if needed
-                }
+            } catch (e: Exception) {
+                showError("Error changing PIN: ${e.message}")
+            } finally {
+                setLoading(false)
             }
-            setLoading(false)
         }
     }
 
     private fun navigateToMainApp() {
-        // Store tokens if this was from first time login
+        // Store user data after successful PIN change
         if (isFirstTime) {
-            prefs.setAccessToken(accessToken)
-            prefs.setUserType(userType.name)
+            prefs.saveAuthData(
+                accessToken = accessToken,
+                refreshToken = "", // Will be updated when available
+                userType = userType.name,
+                mobileNumber = "", // Will be populated from previous screen
+                userName = null
+            )
         }
 
-        val intent = Intent(this, CustomerMainActivity::class.java).apply {
+        // Navigate to appropriate main activity based on user type
+        val intent = when (userType) {
+            UserType.CUSTOMER -> Intent(this, CustomerMainActivity::class.java)
+            UserType.COURIER -> Intent(this, CourierMainActivity::class.java)
+        }.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+
         startActivity(intent)
         finish()
     }
 
     private fun setLoading(loading: Boolean) {
         isLoading = loading
-        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+        binding.progressBar?.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnSavePin.isEnabled = !loading
         binding.btnSavePin.text = if (loading) {
             i18n.t("loading", "Loading…")
         } else {
             i18n.t("save_pin", "Save PIN")
         }
+
+        // Disable form fields during loading
+        binding.etOldPin.isEnabled = !loading
+        binding.etNewPin.isEnabled = !loading
+        binding.etConfirmPin.isEnabled = !loading
     }
 
     private fun showError(message: String) {
@@ -235,4 +259,5 @@ class PinChangeActivity : AppCompatActivity() {
     private fun showSuccess(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
+
 }

@@ -2,9 +2,9 @@ package com.blitztech.pudokiosk.ui.main
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.blitztech.pudokiosk.ui.main.MainActivity
 import com.blitztech.pudokiosk.databinding.ActivityCustomerMainBinding
 import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
@@ -24,9 +24,15 @@ class CustomerMainActivity : AppCompatActivity() {
         binding = ActivityCustomerMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        fun setupBackPressHandling() {
+            onBackPressedDispatcher.addCallback(this) {
+                finish()
+            }
+        }
         setupDependencies()
         setupViews()
         setupClickListeners()
+        setupBackPressHandling()
     }
 
     private fun setupDependencies() {
@@ -59,16 +65,17 @@ class CustomerMainActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         binding.btnLogout.setOnClickListener {
             showLogoutDialog()
+            finish()
         }
 
         binding.cardSendPackage.setOnClickListener {
             // TODO: Navigate to send package flow
-            startActivity(Intent(this, SenderActivity::class.java))
+            //startActivity(Intent(this, SenderActivity::class.java))
         }
 
         binding.cardCollectPackage.setOnClickListener {
             // TODO: Navigate to collect package flow
-            startActivity(Intent(this, RecipientActivity::class.java))
+            //startActivity(Intent(this, RecipientActivity::class.java))
         }
 
         binding.cardTrackDelivery.setOnClickListener {
@@ -102,9 +109,5 @@ class CustomerMainActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
-    }
-
-    override fun onBackPressed() {
-        showLogoutDialog()
     }
 }

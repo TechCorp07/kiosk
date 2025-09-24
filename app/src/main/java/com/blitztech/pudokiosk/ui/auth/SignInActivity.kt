@@ -86,7 +86,7 @@ class SignInActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            onBackPressed()
+            finish()
         }
 
         binding.btnSignIn.setOnClickListener {
@@ -137,7 +137,7 @@ class SignInActivity : AppCompatActivity() {
         setLoading(true)
         lifecycleScope.launch {
             when (val result = apiRepository.login(mobileNumber, pin)) {
-                is NetworkResult.Success<*> -> {
+                is NetworkResult.Success -> {
                     val response = result.data
                     when (response.status) {
                         AuthStatus.PENDING_OTP -> {
@@ -152,10 +152,10 @@ class SignInActivity : AppCompatActivity() {
                         }
                     }
                 }
-                is NetworkResult.Error<*> -> {
+                is NetworkResult.Error -> {
                     showError(result.message)
                 }
-                is NetworkResult.Loading<*> -> {
+                is NetworkResult.Loading -> {
                     // Handle loading state if needed
                 }
             }

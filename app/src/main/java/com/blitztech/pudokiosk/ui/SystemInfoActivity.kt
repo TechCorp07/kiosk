@@ -8,7 +8,11 @@ import android.os.Environment
 import android.os.StatFs
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.databinding.ActivitySystemInfoBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.FileReader
 import java.text.SimpleDateFormat
@@ -22,6 +26,7 @@ class SystemInfoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySystemInfoBinding
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    private var isLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +50,9 @@ class SystemInfoActivity : AppCompatActivity() {
         }
 
         binding.btnRefresh.setOnClickListener {
-            refreshSystemInfo()
+            if (!isLoading) {
+                refreshSystemInfo()
+            }
         }
 
         binding.btnExport.setOnClickListener {
@@ -56,31 +63,42 @@ class SystemInfoActivity : AppCompatActivity() {
     private fun loadSystemInfo() {
         setLoading(true)
 
-        try {
-            val systemInfo = StringBuilder()
+        lifecycleScope.launch {
+            try {
+                val systemInfo = withContext(Dispatchers.IO) {
+                    buildSystemInfoString()
+                }
 
-            systemInfo.append(getDeviceInfo())
-            systemInfo.append("\n")
-            systemInfo.append(getAndroidInfo())
-            systemInfo.append("\n")
-            systemInfo.append(getApplicationInfo())
-            systemInfo.append("\n")
-            systemInfo.append(getHardwareInfo())
-            systemInfo.append("\n")
-            systemInfo.append(getMemoryInfo())
-            systemInfo.append("\n")
-            systemInfo.append(getStorageInfo())
-            systemInfo.append("\n")
-            systemInfo.append(getCpuInfo())
+                binding.tvSystemInfoContent.text = systemInfo
+                binding.tvLastUpdated.text = "Last updated: ${dateFormatter.format(Date())}"
 
-            binding.tvSystemInfoContent.text = systemInfo.toString()
-
-        } catch (e: Exception) {
-            binding.tvSystemInfoContent.text = "Error loading system info: ${e.message}"
-            showToast("Error: ${e.message}")
-        } finally {
-            setLoading(false)
+            } catch (e: Exception) {
+                binding.tvSystemInfoContent.text = "Error loading system info: ${e.message}"
+                showToast("Error: ${e.message}")
+            } finally {
+                setLoading(false)
+            }
         }
+    }
+
+    private fun buildSystemInfoString(): String {
+        val systemInfo = StringBuilder()
+
+        systemInfo.append(getDeviceInfo())
+        systemInfo.append("\n\n")
+        systemInfo.append(getAndroidInfo())
+        systemInfo.append("\n\n")
+        systemInfo.append(getAppInfo()) // RENAMED - was getApplicationInfo()
+        systemInfo.append("\n\n")
+        systemInfo.append(getHardwareInfo())
+        systemInfo.append("\n\n")
+        systemInfo.append(getMemoryInfo())
+        systemInfo.append("\n\n")
+        systemInfo.append(getStorageInfo())
+        systemInfo.append("\n\n")
+        systemInfo.append(getCpuInfo())
+
+        return systemInfo.toString()
     }
 
     private fun getDeviceInfo(): String {
@@ -110,7 +128,8 @@ Fingerprint: ${Build.FINGERPRINT}
         """.trimIndent()
     }
 
-    override fun getApplicationInfo(): String {
+    // RENAMED METHOD - was getApplicationInfo() which conflicted with Android's built-in method
+    private fun getAppInfo(): String {
         return try {
             val packageInfo = packageManager.getPackageInfo(packageName, 0)
             """
@@ -153,13 +172,16 @@ Architecture: ${Build.CPU_ABI}
 
             """
 === MEMORY INFORMATION ===
-App Memory Usage: ${formatBytes(usedMemory)}
-App Memory Available: ${formatBytes(maxMemory)}
-App Memory Total: ${formatBytes(totalMemory)}
-System Available: ${formatBytes(memInfo.availMem)}
-System Total: ${formatBytes(memInfo.totalMem)}
+Available RAM: ${formatBytes(memInfo.availMem)}
+Total RAM: ${formatBytes(memInfo.totalMem)}
+Low Memory Threshold: ${formatBytes(memInfo.threshold)}
 Low Memory: ${memInfo.lowMemory}
-Memory Threshold: ${formatBytes(memInfo.threshold)}
+
+App Memory Usage:
+- Used: ${formatBytes(usedMemory)}
+- Free: ${formatBytes(runtime.freeMemory())}
+- Total: ${formatBytes(totalMemory)}
+- Max Available: ${formatBytes(maxMemory)}
             """.trimIndent()
         } catch (e: Exception) {
             "=== MEMORY INFORMATION ===\nError retrieving memory info: ${e.message}"
@@ -170,28 +192,24 @@ Memory Threshold: ${formatBytes(memInfo.threshold)}
         return try {
             val internalPath = Environment.getDataDirectory()
             val internalStat = StatFs(internalPath.path)
-            val internalTotal = internalStat.blockCountLong * internalStat.blockSizeLong
-            val internalAvailable = internalStat.availableBlocksLong * internalStat.blockSizeLong
-            val internalUsed = internalTotal - internalAvailable
+            val internalBlockSize = internalStat.blockSizeLong
+            val internalTotalBlocks = internalStat.blockCountLong
+            val internalAvailableBlocks = internalStat.availableBlocksLong
 
-            val externalPath = Environment.getExternalStorageDirectory()
-            val externalStat = StatFs(externalPath.path)
-            val externalTotal = externalStat.blockCountLong * externalStat.blockSizeLong
-            val externalAvailable = externalStat.availableBlocksLong * externalStat.blockSizeLong
-            val externalUsed = externalTotal - externalAvailable
+            val internalTotal = internalTotalBlocks * internalBlockSize
+            val internalAvailable = internalAvailableBlocks * internalBlockSize
+            val internalUsed = internalTotal - internalAvailable
 
             """
 === STORAGE INFORMATION ===
 Internal Storage:
-  Total: ${formatBytes(internalTotal)}
-  Used: ${formatBytes(internalUsed)}
-  Available: ${formatBytes(internalAvailable)}
-  
-External Storage:
-  Total: ${formatBytes(externalTotal)}
-  Used: ${formatBytes(externalUsed)}
-  Available: ${formatBytes(externalAvailable)}
-  State: ${Environment.getExternalStorageState()}
+- Total: ${formatBytes(internalTotal)}
+- Used: ${formatBytes(internalUsed)}
+- Available: ${formatBytes(internalAvailable)}
+- Usage: ${String.format("%.1f", (internalUsed * 100.0 / internalTotal))}%
+
+App Data Directory: ${filesDir.absolutePath}
+Cache Directory: ${cacheDir.absolutePath}
             """.trimIndent()
         } catch (e: Exception) {
             "=== STORAGE INFORMATION ===\nError retrieving storage info: ${e.message}"
@@ -202,93 +220,75 @@ External Storage:
         return try {
             val cpuInfo = StringBuilder()
             cpuInfo.append("=== CPU INFORMATION ===\n")
+            cpuInfo.append("Processor Count: ${Runtime.getRuntime().availableProcessors()}\n")
+            cpuInfo.append("Architecture: ${Build.CPU_ABI}\n")
+            cpuInfo.append("Supported ABIs: ${Build.SUPPORTED_ABIS.joinToString(", ")}\n\n")
 
-            // Try to read CPU info from /proc/cpuinfo
-            val reader = BufferedReader(FileReader("/proc/cpuinfo"))
-            reader.useLines { lines ->
-                lines.take(20).forEach { line ->
-                    if (line.contains("processor") ||
-                        line.contains("model name") ||
-                        line.contains("cpu MHz") ||
-                        line.contains("cache size") ||
-                        line.contains("bogomips") ||
-                        line.contains("Hardware") ||
-                        line.contains("Revision")) {
+            try {
+                val reader = BufferedReader(FileReader("/proc/cpuinfo"))
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    if (line!!.startsWith("processor") ||
+                        line!!.startsWith("model name") ||
+                        line!!.startsWith("cpu MHz") ||
+                        line!!.startsWith("Features") ||
+                        line!!.startsWith("Hardware")) {
                         cpuInfo.append("$line\n")
                     }
                 }
-            }
-
-            if (cpuInfo.length <= 30) { // Only header was added
-                cpuInfo.append("CPU info not available from /proc/cpuinfo\n")
-                cpuInfo.append("Cores: ${Runtime.getRuntime().availableProcessors()}\n")
-                cpuInfo.append("Architecture: ${Build.CPU_ABI}\n")
+                reader.close()
+            } catch (e: Exception) {
+                cpuInfo.append("CPU Details: Unable to read /proc/cpuinfo (${e.message})")
             }
 
             cpuInfo.toString()
         } catch (e: Exception) {
-            """
-=== CPU INFORMATION ===
-Error reading CPU info: ${e.message}
-Available Processors: ${Runtime.getRuntime().availableProcessors()}
-CPU Architecture: ${Build.CPU_ABI}
-            """.trimIndent()
+            "=== CPU INFORMATION ===\nError retrieving CPU info: ${e.message}"
         }
     }
 
     private fun formatBytes(bytes: Long): String {
         val unit = 1024
         if (bytes < unit) return "$bytes B"
+
         val exp = (Math.log(bytes.toDouble()) / Math.log(unit.toDouble())).toInt()
         val pre = "KMGTPE"[exp - 1]
         return String.format("%.1f %sB", bytes / Math.pow(unit.toDouble(), exp.toDouble()), pre)
     }
 
     private fun refreshSystemInfo() {
-        binding.tvLastUpdated.text = "Refreshing..."
         loadSystemInfo()
-        binding.tvLastUpdated.text = "Last updated: ${dateFormatter.format(Date())}"
     }
 
     private fun exportSystemInfo() {
-        val systemInfo = binding.tvSystemInfoContent.text.toString()
-
-        if (systemInfo.isEmpty()) {
-            showToast("No system info to export")
-            return
-        }
-
         try {
-            // For API 25 compatibility, show export options
-            showToast("Export: System info ready (${systemInfo.length} characters)")
+            val systemInfo = binding.tvSystemInfoContent.text.toString()
 
-            // In a real implementation, you would:
-            // 1. Save to external storage
-            // 2. Share via intent
-            // 3. Copy to clipboard
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, "ZIMPUDO Kiosk System Information")
+                putExtra(Intent.EXTRA_TEXT, systemInfo)
+            }
+
+            startActivity(Intent.createChooser(shareIntent, "Export System Info"))
 
         } catch (e: Exception) {
-            showToast("Export failed: ${e.message}")
+            showToast("Error exporting system info: ${e.message}")
         }
-    }
-
-    private fun setLoading(loading: Boolean) {
-        binding.progressBar.visibility = if (loading) android.view.View.VISIBLE else android.view.View.GONE
-        binding.btnRefresh.isEnabled = !loading
-        binding.btnExport.isEnabled = !loading
     }
 
     private fun returnToTechMenu() {
-        val intent = Intent(this, TechnicianMenuActivity::class.java)
-        startActivity(intent)
         finish()
+    }
+
+    private fun setLoading(loading: Boolean) {
+        isLoading = loading
+        binding.progressBar?.visibility = if (loading) android.view.View.VISIBLE else android.view.View.GONE
+        binding.btnRefresh.isEnabled = !loading
+        binding.btnExport.isEnabled = !loading && binding.tvSystemInfoContent.text.isNotEmpty()
     }
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onBackPressed() {
-        returnToTechMenu()
     }
 }
