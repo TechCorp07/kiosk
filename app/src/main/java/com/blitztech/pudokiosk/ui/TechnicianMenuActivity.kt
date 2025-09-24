@@ -78,7 +78,7 @@ class TechnicianMenuActivity : AppCompatActivity() {
         finish()
     }
 
-    fun OnBackPressedDispatcher() {
+    override fun onBackPressed() {
         returnToMainApp()
     }
 }
