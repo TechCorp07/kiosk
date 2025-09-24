@@ -110,7 +110,7 @@ Fingerprint: ${Build.FINGERPRINT}
         """.trimIndent()
     }
 
-    private fun getApplicationInfo(): String {
+    override fun getApplicationInfo(): String {
         return try {
             val packageInfo = packageManager.getPackageInfo(packageName, 0)
             """
@@ -118,8 +118,8 @@ Fingerprint: ${Build.FINGERPRINT}
 Package Name: ${packageInfo.packageName}
 Version Name: ${packageInfo.versionName}
 Version Code: ${packageInfo.versionCode}
-Target SDK: ${packageInfo.applicationInfo.targetSdkVersion}
-Min SDK: ${packageInfo.applicationInfo.targetSdkVersion}
+Target SDK: ${packageInfo.applicationInfo?.targetSdkVersion}
+Min SDK: ${packageInfo.applicationInfo?.targetSdkVersion}
 Install Time: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(packageInfo.firstInstallTime))}
 Update Time: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(packageInfo.lastUpdateTime))}
             """.trimIndent()

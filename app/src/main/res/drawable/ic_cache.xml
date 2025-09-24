@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Cache/Storage icon -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M12,2l-5.5,9h11L12,2z" />
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M17.5,13h-11l5.5,9L17.5,13z" />
+    <!-- Cache indicator dots -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M9,7.5m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M12,6m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M15,7.5m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M9,16.5m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M12,18m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M15,16.5m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+</vector>

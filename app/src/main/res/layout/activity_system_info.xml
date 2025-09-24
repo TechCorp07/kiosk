@@ -156,7 +156,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Memory &\nStorage"
+                        android:text="Memory &amp;\nStorage"
                         android:textColor="@color/text_primary"
                         android:textSize="10sp"
                         android:textStyle="bold" />
@@ -189,7 +189,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="CPU &\nHardware"
+                        android:text="CPU &amp;\nHardware"
                         android:textColor="@color/text_primary"
                         android:textSize="10sp"
                         android:textStyle="bold" />

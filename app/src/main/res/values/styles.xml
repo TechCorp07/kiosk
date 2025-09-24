@@ -88,6 +88,17 @@
         <item name="android:background">@drawable/bg_button_outlined</item>
     </style>
 
+    <!-- Small Outlined Button Style -->
+    <style name="Button.Outlined.Small" parent="Button.Outlined">
+        <item name="android:layout_height">36dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:minWidth">80dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+    </style>
+
     <!-- Small Button Style -->
     <style name="Button.Small" parent="Button.Primary">
         <item name="android:layout_height">@dimen/button_height_sm</item>

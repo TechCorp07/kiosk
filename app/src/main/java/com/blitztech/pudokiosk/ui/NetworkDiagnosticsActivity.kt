@@ -331,7 +331,7 @@ class NetworkDiagnosticsActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun onBackPressed() {
+    fun OnBackPressedDispatcher() {
         returnToTechMenu()
     }
 }

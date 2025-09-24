@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.databinding.ActivityRemoteSupportBinding
@@ -28,6 +30,11 @@ class RemoteSupportActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityRemoteSupportBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Handle back navigation
+        onBackPressedDispatcher.addCallback(this) {
+            returnToTechMenu()
+        }
 
         setupViews()
         setupClickListeners()
@@ -293,7 +300,7 @@ Support Code: ${supportCode ?: "Not generated"}
 
 === STATUS SUMMARY ===
 Network: Connected
-Backend: Online  
+Backend: Online
 Hardware: Operational
 Support Session: ${if (supportSessionActive) "Active" else "Inactive"}
 
@@ -367,9 +374,5 @@ Additional Context:
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onBackPressed() {
-        returnToTechMenu()
     }
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Android robot simplified icon -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,7V9H21M9,7V9H15V7H9M7,9V11H9V9H7M15,9V11H17V9H15M7,11V20C7,21.1 7.9,22 9,22H15C16.1,22 17,21.1 17,20V11H7Z" />
+    <!-- Android antenna -->
+    <path
+        android:fillColor="@color/zimpudo_primary"
+        android:pathData="M9,1L10,3L14,3L15,1L16.5,1.5L15,4L9,4L7.5,1.5Z" />
+    <!-- Android eyes -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M10,4.5C10,4.78 9.78,5 9.5,5S9,4.78 9,4.5S9.22,4 9.5,4S10,4.22 10,4.5Z" />
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M15,4.5C15,4.78 14.78,5 14.5,5S14,4.78 14,4.5S14.22,4 14.5,4S15,4.22 15,4.5Z" />
+</vector>
