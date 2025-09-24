@@ -6,11 +6,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.blitztech.pudokiosk.R
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityRegistrationProcessBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import kotlinx.coroutines.launch
@@ -24,7 +25,6 @@ class RegistrationProcessActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegistrationProcessBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
     private lateinit var apiRepository: ApiRepository
 
     private lateinit var formData: SignUpFormData
@@ -49,12 +49,7 @@ class RegistrationProcessActivity : AppCompatActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-        i18n = I18n(this)
-
-        // Load current language
-        val currentLocale = prefs.getLocale()
-        i18n.load(currentLocale)
+        prefs = ZimpudoApp.prefs
 
         // Initialize API repository
         val okHttpClient = NetworkModule.provideOkHttpClient()
@@ -65,10 +60,10 @@ class RegistrationProcessActivity : AppCompatActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = i18n.t("kyc_upload", "Document Verification")
-        binding.tvSubtitle.text = i18n.t("kyc_subtitle", "We need to verify your identity to complete registration")
-        binding.tvDocumentType.text = i18n.t("kyc_national_id", "National ID Document")
-        binding.btnUploadDocument.text = i18n.t("upload_document", "Upload Document")
+        binding.tvTitle.text = getString(R.string.kyc_upload)
+        binding.tvSubtitle.text = getString(R.string.kyc_subtitle)
+        binding.tvDocumentType.text = getString(R.string.kyc_national_id)
+        binding.btnUploadDocument.text = getString(R.string.upload_document)
 
         // Show step 1 initially
         updateStepUI(1)
@@ -91,7 +86,7 @@ class RegistrationProcessActivity : AppCompatActivity() {
     }
 
     private fun registerUser() {
-        setLoading(true, i18n.t("creating_account", "Creating account…"))
+        setLoading(true, getString(R.string.creating_account))
         updateStepUI(1)
 
         lifecycleScope.launch {
@@ -126,14 +121,14 @@ class RegistrationProcessActivity : AppCompatActivity() {
     }
 
     private fun uploadKycDocument() {
-        setLoading(true, i18n.t("uploading_document", "Uploading document…"))
+        setLoading(true, getString(R.string.uploading_document))
 
         lifecycleScope.launch {
             val result = apiRepository.uploadKyc(formData.mobileNumber)
 
             when (result) {
                 is NetworkResult.Success -> {
-                    showSuccess(i18n.t("kyc_upload_success", result.data.message))
+                    showSuccess(getString(R.string.kyc_upload_success))
                     // Registration complete, navigate to sign in
                     navigateToSignIn()
                 }
@@ -167,7 +162,7 @@ class RegistrationProcessActivity : AppCompatActivity() {
 
     private fun navigateToSignIn() {
         Toast.makeText(this,
-            i18n.t("success_registration", "Account created successfully! Please sign in."),
+            getString(R.string.success_registration),
             Toast.LENGTH_LONG).show()
 
         val intent = Intent(this, SignInActivity::class.java).apply {

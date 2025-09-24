@@ -9,11 +9,12 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.blitztech.pudokiosk.R
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityPinChangeBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
 import com.blitztech.pudokiosk.ui.main.CourierMainActivity
@@ -31,7 +32,6 @@ class PinChangeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPinChangeBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
     private lateinit var apiRepository: ApiRepository
 
     private var accessToken: String = ""
@@ -59,12 +59,7 @@ class PinChangeActivity : AppCompatActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-        i18n = I18n(this)
-
-        // Load current language
-        val currentLocale = prefs.getLocale()
-        i18n.load(currentLocale)
+        prefs = ZimpudoApp.prefs
 
         // Initialize API repository
         val okHttpClient = NetworkModule.provideOkHttpClient()
@@ -76,20 +71,20 @@ class PinChangeActivity : AppCompatActivity() {
 
     private fun setupViews() {
         if (isFirstTime) {
-            binding.tvTitle.text = i18n.t("create_new_pin", "Create New PIN")
-            binding.tvSubtitle.text = i18n.t("pin_change_subtitle", "Create a secure PIN for your account")
+            binding.tvTitle.text = getString(R.string.create_new_pin)
+            binding.tvSubtitle.text = getString(R.string.pin_change_subtitle)
             binding.tilOldPin.visibility = View.GONE
         } else {
-            binding.tvTitle.text = i18n.t("change_pin", "Change PIN")
-            binding.tvSubtitle.text = i18n.t("pin_change_subtitle", "Enter your current PIN and create a new one")
+            binding.tvTitle.text = getString(R.string.change_pin)
+            binding.tvTitle.text = getString(R.string.pin_change_subtitle)
             binding.tilOldPin.visibility = View.VISIBLE
-            binding.etOldPin.hint = i18n.t("old_pin", "Current PIN")
+            binding.etOldPin.hint = getString(R.string.old_pin)
         }
 
-        binding.etNewPin.hint = i18n.t("new_pin", "New PIN")
-        binding.etConfirmPin.hint = i18n.t("confirm_pin", "Confirm PIN")
-        binding.tvPinRequirements.text = i18n.t("pin_requirements", "PIN must be 4-6 digits")
-        binding.btnSavePin.text = i18n.t("save_pin", "Save PIN")
+        binding.etNewPin.hint = getString(R.string.new_pin)
+        binding.etConfirmPin.hint = getString(R.string.confirm_pin)
+        binding.tvPinRequirements.text = getString(R.string.pin_requirements)
+        binding.btnSavePin.text = getString(R.string.save_pin)
 
         // Initially disable save button
         binding.btnSavePin.isEnabled = false
@@ -142,7 +137,7 @@ class PinChangeActivity : AppCompatActivity() {
         // Validate new PIN
         if (!ValidationUtils.isValidPin(newPin)) {
             if (newPin.isNotEmpty()) {
-                binding.tilNewPin.error = i18n.t("error_invalid_pin", "PIN must be 4-6 digits")
+                binding.tilNewPin.error = getString(R.string.error_invalid_pin)
             }
             isValid = false
         }
@@ -150,7 +145,7 @@ class PinChangeActivity : AppCompatActivity() {
         // Validate confirm PIN
         if (newPin != confirmPin) {
             if (confirmPin.isNotEmpty()) {
-                binding.tilConfirmPin.error = i18n.t("pins_dont_match", "PINs don't match")
+                binding.tilConfirmPin.error = getString(R.string.pins_dont_match)
             }
             isValid = false
         }
@@ -167,17 +162,17 @@ class PinChangeActivity : AppCompatActivity() {
 
         // Final validation
         if (!isFirstTime && !ValidationUtils.isValidPin(oldPin)) {
-            binding.tilOldPin.error = i18n.t("error_invalid_pin", "PIN must be 4-6 digits")
+            binding.tilOldPin.error = getString(R.string.error_invalid_pin)
             return
         }
 
         if (!ValidationUtils.isValidPin(newPin)) {
-            binding.tilNewPin.error = i18n.t("error_invalid_pin", "PIN must be 4-6 digits")
+            binding.tilNewPin.error = getString(R.string.error_invalid_pin)
             return
         }
 
         if (newPin != confirmPin) {
-            binding.tilConfirmPin.error = i18n.t("pins_dont_match", "PINs don't match")
+            binding.tilConfirmPin.error = getString(R.string.pins_dont_match)
             return
         }
 
@@ -194,7 +189,7 @@ class PinChangeActivity : AppCompatActivity() {
 
                 when (val result = apiRepository.changePin(oldPinToUse, newPin, accessToken)) {
                     is NetworkResult.Success -> {
-                        showSuccess(i18n.t("pin_changed_success", "PIN changed successfully"))
+                        showSuccess(getString(R.string.pin_changed_success))
                         navigateToMainApp()
                     }
                     is NetworkResult.Error -> {
@@ -241,9 +236,9 @@ class PinChangeActivity : AppCompatActivity() {
         binding.progressBar?.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnSavePin.isEnabled = !loading
         binding.btnSavePin.text = if (loading) {
-            i18n.t("loading", "Loading…")
+            getString(R.string.loading)
         } else {
-            i18n.t("save_pin", "Save PIN")
+            getString(R.string.save_pin)
         }
 
         // Disable form fields during loading

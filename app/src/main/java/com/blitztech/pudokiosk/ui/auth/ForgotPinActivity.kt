@@ -1,17 +1,18 @@
 package com.blitztech.pudokiosk.ui.auth
 
-import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.blitztech.pudokiosk.R
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityForgotPinBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
@@ -20,7 +21,6 @@ class ForgotPinActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityForgotPinBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
     private lateinit var apiRepository: ApiRepository
 
     private var isLoading = false
@@ -36,12 +36,7 @@ class ForgotPinActivity : AppCompatActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-        i18n = I18n(this)
-
-        // Load current language
-        val currentLocale = prefs.getLocale()
-        i18n.load(currentLocale)
+        prefs = ZimpudoApp.prefs
 
         // Initialize API repository
         val okHttpClient = NetworkModule.provideOkHttpClient()
@@ -52,11 +47,11 @@ class ForgotPinActivity : AppCompatActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = i18n.t("forgot_pin", "Forgot PIN?")
-        binding.tvSubtitle.text = "Enter your mobile number and we'll send you instructions to reset your PIN"
-        binding.etMobileNumber.hint = i18n.t("mobile_placeholder", ApiConfig.PHONE_PLACEHOLDER)
-        binding.btnSendInstructions.text = "Send Instructions"
-        binding.btnBackToSignIn.text = "Back to Sign In"
+        binding.tvTitle.text = getString(R.string.forgot_pin)
+        binding.tvSubtitle.text = getString(R.string.sign_in)
+        binding.etMobileNumber.text = Editable.Factory.getInstance().newEditable(getString(R.string.mobile_placeholder))
+        binding.btnSendInstructions.text = getString(R.string.send_instructions)
+        binding.btnBackToSignIn.text = getString(R.string.content_description_back_button)
     }
 
     private fun setupClickListeners() {
@@ -80,12 +75,12 @@ class ForgotPinActivity : AppCompatActivity() {
 
         // Validate mobile number
         if (mobileNumber.isEmpty()) {
-            binding.tilMobileNumber.error = i18n.t("error_required_field", "This field is required")
+            getString(R.string.error_required_field)
             return
         }
 
         if (!ValidationUtils.isValidPhoneNumber(mobileNumber)) {
-            binding.tilMobileNumber.error = i18n.t("error_invalid_phone", "Please enter a valid phone number")
+            getString(R.string.error_invalid_phone)
             return
         }
 
@@ -114,7 +109,7 @@ class ForgotPinActivity : AppCompatActivity() {
         binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnSendInstructions.isEnabled = !loading
         binding.btnSendInstructions.text = if (loading) {
-            i18n.t("loading", "Loading…")
+            getString(R.string.loading)
         } else {
             "Send Instructions"
         }

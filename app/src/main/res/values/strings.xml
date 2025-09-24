@@ -139,6 +139,8 @@
     <string name="status_description">Update delivery status and add notes</string>
     <string name="courier_profile">My Profile</string>
     <string name="profile_description">Manage your courier profile and performance</string>
+    <string name="send_instructions">Send Instructions</string>
+
 
     <!-- General Actions -->
     <string name="logout">Logout</string>
@@ -220,4 +222,5 @@
     <!-- Existing strings for main app functionality -->
     <string name="courier">Courier</string>
     <string name="pudo_kiosk">PUDO Kiosk</string>
+    <string name="success_registration">Account created successfully! Please sign in.</string>
 </resources>

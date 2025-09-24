@@ -3,8 +3,9 @@ package com.blitztech.pudokiosk.ui.auth
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.blitztech.pudokiosk.R
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityTermsConditionsBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 
@@ -17,7 +18,6 @@ class TermsConditionsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTermsConditionsBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
 
     private lateinit var formData: SignUpFormData
     private var userType: UserType = UserType.CUSTOMER
@@ -38,18 +38,13 @@ class TermsConditionsActivity : AppCompatActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-        i18n = I18n(this)
-
-        // Load current language
-        val currentLocale = prefs.getLocale()
-        i18n.load(currentLocale)
+        prefs = ZimpudoApp.prefs
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = i18n.t("terms_conditions", "Terms and Conditions")
-        binding.tvEffectiveDate.text = i18n.t("effective_date", "Effective Date: 01 July 2025")
-        binding.btnAcceptContinue.text = i18n.t("accept_continue", "Accept and Continue")
+        binding.tvTitle.text = getString(R.string.terms_conditions)
+        binding.tvEffectiveDate.text = getString(R.string.effective_date)
+        binding.btnAcceptContinue.text = getString(R.string.accept_continue)
 
         // Set terms content (same as privacy policy for now)
         binding.tvTermsContent.text = getTermsConditionsContent()

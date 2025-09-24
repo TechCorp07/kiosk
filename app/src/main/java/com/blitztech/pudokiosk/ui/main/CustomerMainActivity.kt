@@ -5,8 +5,9 @@ import android.os.Bundle
 import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.blitztech.pudokiosk.R
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityCustomerMainBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 
 /**
@@ -17,7 +18,6 @@ class CustomerMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCustomerMainBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,30 +36,25 @@ class CustomerMainActivity : AppCompatActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-        i18n = I18n(this)
-
-        // Load current language
-        val currentLocale = prefs.getLocale()
-        i18n.load(currentLocale)
+        prefs = ZimpudoApp.prefs
     }
 
     private fun setupViews() {
-        binding.tvWelcome.text = i18n.t("welcome_customer", "Welcome, Customer!")
-        binding.tvSubtitle.text = i18n.t("customer_subtitle", "What would you like to do today?")
+        binding.tvWelcome.text = getString(R.string.welcome_customer)
+        binding.tvSubtitle.text = getString(R.string.customer_subtitle)
 
         // Main action cards
-        binding.tvSendPackage.text = i18n.t("send_package", "Send Package")
-        binding.tvSendDescription.text = i18n.t("send_description", "Send packages nationwide with secure delivery")
+        binding.tvSendPackage.text = getString(R.string.send_package)
+        binding.tvSendDescription.text = getString(R.string.send_description)
 
-        binding.tvCollectPackage.text = i18n.t("collect_package", "Collect Package")
-        binding.tvCollectDescription.text = i18n.t("collect_description", "Collect packages waiting for you at this location")
+        binding.tvCollectPackage.text = getString(R.string.collect_package)
+        binding.tvCollectDescription.text = getString(R.string.collect_description)
 
-        binding.tvTrackDelivery.text = i18n.t("track_delivery", "Track Delivery")
-        binding.tvTrackDescription.text = i18n.t("track_description", "Track your packages in real-time")
+        binding.tvTrackDelivery.text = getString(R.string.track_delivery)
+        binding.tvTrackDescription.text = getString(R.string.track_description)
 
-        binding.tvMyAccount.text = i18n.t("my_account", "My Account")
-        binding.tvAccountDescription.text = i18n.t("account_description", "Manage your profile and delivery history")
+        binding.tvMyAccount.text = getString(R.string.my_account)
+        binding.tvAccountDescription.text = getString(R.string.account_description)
     }
 
     private fun setupClickListeners() {
@@ -91,12 +86,12 @@ class CustomerMainActivity : AppCompatActivity() {
 
     private fun showLogoutDialog() {
         AlertDialog.Builder(this)
-            .setTitle(i18n.t("logout", "Logout"))
-            .setMessage(i18n.t("logout_confirmation", "Are you sure you want to logout?"))
-            .setPositiveButton(i18n.t("yes", "Yes")) { _, _ ->
+            .setTitle(getString(R.string.logout))
+            .setMessage(getString(R.string.logout_confirmation))
+            .setPositiveButton(getString(R.string.yes)) { _, _ ->
                 logout()
             }
-            .setNegativeButton(i18n.t("no", "No"), null)
+            .setNegativeButton(getString(R.string.no), null)
             .show()
     }
 

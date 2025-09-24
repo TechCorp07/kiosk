@@ -4,19 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import com.blitztech.pudokiosk.R
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkModule
-import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivitySignUpBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
-import kotlinx.coroutines.launch
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -26,7 +23,6 @@ class SignUpActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
     private lateinit var apiRepository: ApiRepository
 
     private var userType: UserType = UserType.CUSTOMER
@@ -48,12 +44,8 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-        i18n = I18n(this)
+        prefs = ZimpudoApp.prefs
 
-        // Load current language
-        val currentLocale = prefs.getLocale()
-        i18n.load(currentLocale)
 
         // Initialize API repository
         val okHttpClient = NetworkModule.provideOkHttpClient()
@@ -65,28 +57,28 @@ class SignUpActivity : AppCompatActivity() {
 
     private fun setupViews() {
         // Set localized text
-        binding.tvTitle.text = i18n.t("create_account", "Create Account")
-        binding.tvSubtitle.text = i18n.t("sign_up_subtitle", "Sign up to get started")
+        binding.tvTitle.text = getString(R.string.create_account)
+        binding.tvSubtitle.text = getString(R.string.sign_up_subtitle)
 
         // Personal Information section
-        binding.tvPersonalInfo.text = i18n.t("personal_information", "Personal Information")
-        binding.etName.hint = i18n.t("name", "Name")
-        binding.etSurname.hint = i18n.t("surname", "Surname")
-        binding.etEmail.hint = i18n.t("email_optional", "Email (Optional)")
-        binding.etMobileNumber.hint = i18n.t("mobile_number_format", "Format: +2637XXXXXXXX")
-        binding.etNationalId.hint = i18n.t("national_id_format", "Format: XX-XXXXXXX A XX")
+        binding.tvPersonalInfo.text = getString(R.string.personal_information)
+        binding.etName.hint = getString(R.string.name)
+        binding.etSurname.hint = getString(R.string.surname)
+        binding.etEmail.hint = getString(R.string.email_optional)
+        binding.etMobileNumber.hint = getString(R.string.mobile_number_format)
+        binding.etNationalId.hint = getString(R.string.national_id_format)
 
         // Address Information section
-        binding.tvAddressInfo.text = i18n.t("address_information", "Address Information")
-        binding.etHouseNumber.hint = i18n.t("house_number", "House Number")
-        binding.etStreet.hint = i18n.t("street", "Street")
-        binding.etSuburb.hint = i18n.t("suburb", "Suburb")
-        binding.etCity.hint = i18n.t("city", "City")
+        binding.tvAddressInfo.text = getString(R.string.address_information)
+        binding.etHouseNumber.hint = getString(R.string.house_number)
+        binding.etStreet.hint = getString(R.string.street)
+        binding.etSuburb.hint = getString(R.string.suburb)
+        binding.etCity.hint = getString(R.string.city)
 
         // Button text
-        binding.btnNext.text = i18n.t("next", "Next")
-        binding.tvAlreadyHaveAccount.text = i18n.t("already_have_account", "Already have an account?")
-        binding.tvSignIn.text = i18n.t("sign_in", "Sign In")
+        binding.btnNext.text = getString(R.string.next)
+        binding.tvAlreadyHaveAccount.text = getString(R.string.already_have_account)
+        binding.tvSignIn.text = getString(R.string.sign_in)
 
         // Initially disable next button
         binding.btnNext.isEnabled = false
@@ -190,7 +182,7 @@ class SignUpActivity : AppCompatActivity() {
 
     private fun navigateToPrivacyPolicy() {
         if (!validateForm()) {
-            showError(i18n.t("error_required_field", "Please fill in all required fields correctly"))
+            showError(getString(R.string.error_required_field))
             return
         }
 

@@ -4,11 +4,9 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.blitztech.pudokiosk.databinding.FragmentOnboardingSlideBinding
-import com.blitztech.pudokiosk.i18n.I18n
 
 class OnboardingPagerAdapter(
     private val slides: List<OnboardingSlide>,
-    private val i18n: I18n
 ) : RecyclerView.Adapter<OnboardingPagerAdapter.SlideViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SlideViewHolder {
@@ -33,8 +31,6 @@ class OnboardingPagerAdapter(
         fun bind(slide: OnboardingSlide) {
             binding.root.setBackgroundResource(slide.backgroundRes)
             binding.ivSlideImage.setImageResource(slide.imageRes)
-            binding.tvSlideTitle.text = i18n.t(slide.titleKey, slide.titleKey)
-            binding.tvSlideSubtitle.text = i18n.t(slide.subtitleKey, slide.subtitleKey)
         }
     }
 }

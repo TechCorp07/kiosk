@@ -6,13 +6,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
-import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.api.dto.common.AuthStatus
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivitySignInBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
 import com.blitztech.pudokiosk.ui.main.CourierMainActivity
@@ -28,7 +27,6 @@ class SignInActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignInBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
     private lateinit var apiRepository: ApiRepository
 
     private var userType: UserType = UserType.CUSTOMER
@@ -50,11 +48,10 @@ class SignInActivity : AppCompatActivity() {
 
     private fun setupDependencies() {
         prefs = Prefs(this)
-        i18n = I18n(this)
+
 
         // Load current language
         val currentLocale = prefs.getLocale()
-        i18n.load(currentLocale)
 
         // Initialize API repository
         val okHttpClient = NetworkModule.provideOkHttpClient()
@@ -66,20 +63,20 @@ class SignInActivity : AppCompatActivity() {
 
     private fun setupViews() {
         // Set localized text
-        binding.tvWelcomeBack.text = i18n.t("welcome_back", "Welcome Back")
-        binding.tvSubtitle.text = i18n.t("sign_in_subtitle", "Sign in to continue")
-        binding.etMobileNumber.hint = i18n.t("mobile_placeholder", ApiConfig.PHONE_PLACEHOLDER)
-        binding.etPin.hint = i18n.t("pin_placeholder", "Enter your PIN")
-        binding.btnSignIn.text = i18n.t("sign_in", "Sign In")
-        binding.tvForgotPin.text = i18n.t("forgot_pin", "Forgot PIN?")
-        binding.tvDontHaveAccount.text = i18n.t("dont_have_account", "Don't have an account?")
-        binding.tvSignUp.text = i18n.t("sign_up", "Sign Up")
+        binding.tvWelcomeBack.text = getString(R.string.welcome_back)
+        binding.tvSubtitle.text = getString(R.string.sign_in_subtitle)
+        binding.etMobileNumber.hint = getString(R.string.mobile_placeholder)
+        binding.etPin.hint = getString(R.string.pin_placeholder)
+        binding.btnSignIn.text = getString(R.string.sign_in)
+        binding.tvForgotPin.text = getString(R.string.forgot_pin)
+        binding.tvDontHaveAccount.text = getString(R.string.dont_have_account)
+        binding.tvSignUp.text = getString(R.string.sign_up)
 
         // Set user type specific title
         val userTypeTitle = if (userType == UserType.CUSTOMER) {
-            i18n.t("customer_signin", "Customer Sign In")
+            getString(R.string.customer_signin)
         } else {
-            i18n.t("courier_signin", "Courier Sign In")
+            getString(R.string.courier_signin)
         }
         binding.tvWelcomeBack.text = userTypeTitle
     }
@@ -110,23 +107,23 @@ class SignInActivity : AppCompatActivity() {
 
         // Validation
         if (mobileNumber.isEmpty()) {
-            showError(i18n.t("error_mobile_required", "Please enter your mobile number"))
+            showError(getString(R.string.error_mobile_required))
             return
         }
 
         if (pin.isEmpty()) {
-            showError(i18n.t("error_pin_required", "Please enter your PIN"))
+            showError(getString(R.string.error_pin_required))
             return
         }
 
         val formattedPhone = ValidationUtils.formatPhoneNumber(mobileNumber)
         if (!ValidationUtils.isValidPhoneNumber(formattedPhone)) {
-            showError(i18n.t("error_invalid_phone", "Please enter a valid phone number"))
+            showError(getString(R.string.error_invalid_phone))
             return
         }
 
         if (!ValidationUtils.isValidPin(pin)) {
-            showError(i18n.t("error_invalid_pin", "PIN must be 4-6 digits"))
+            showError(getString(R.string.error_invalid_pin))
             return
         }
 
@@ -148,7 +145,7 @@ class SignInActivity : AppCompatActivity() {
                             navigateToFirstTimePinChange(response.accessToken)
                         }
                         AuthStatus.FAILED -> {
-                            showError(i18n.t("error_login_failed", "Please check your credentials."))
+                            showError(getString(R.string.error_login_failed))
                         }
                     }
                 }
@@ -220,9 +217,9 @@ class SignInActivity : AppCompatActivity() {
         binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnSignIn.isEnabled = !loading
         binding.btnSignIn.text = if (loading) {
-            i18n.t("signing_in", "Signing in…")
+            getString(R.string.signing_in)
         } else {
-            i18n.t("sign_in", "Sign In")
+            getString(R.string.sign_in)
         }
     }
 

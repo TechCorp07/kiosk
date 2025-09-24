@@ -1,6 +1,7 @@
 package com.blitztech.pudokiosk.ui.onboarding
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,16 +11,16 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.blitztech.pudokiosk.R
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityLanguageSelectionBinding
 import com.blitztech.pudokiosk.databinding.ItemLanguageBinding
-import com.blitztech.pudokiosk.i18n.I18n
 import com.blitztech.pudokiosk.prefs.Prefs
+import java.util.*
 
 class LanguageSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLanguageSelectionBinding
     private lateinit var prefs: Prefs
-    private lateinit var i18n: I18n
     private lateinit var languageAdapter: LanguageAdapter
 
     private val languages = listOf(
@@ -42,17 +43,14 @@ class LanguageSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-        i18n = I18n(this)
-
-        // Start with default English
-        i18n.load("en")
+        prefs = ZimpudoApp.prefs
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = i18n.t("select_language", "Select Your Language")
-        binding.tvSubtitle.text = i18n.t("language_subtitle", "Choose your preferred language for the app")
-        binding.btnContinue.text = i18n.t("continue_button", "Continue")
+        // ✅ Use standard Android strings
+        binding.tvTitle.text = getString(R.string.select_language)
+        binding.tvSubtitle.text = getString(R.string.language_subtitle)
+        binding.btnContinue.text = getString(R.string.continue_button)
         binding.btnContinue.isEnabled = false
     }
 
@@ -61,9 +59,8 @@ class LanguageSelectionActivity : AppCompatActivity() {
             selectedLanguage = language
             binding.btnContinue.isEnabled = true
 
-            // Load the selected language immediately for preview
-            i18n.load(language.code)
-            updateUIText()
+            // Apply the selected language immediately for preview
+            applyLanguage(language.code)
         }
 
         binding.rvLanguages.apply {
@@ -71,8 +68,10 @@ class LanguageSelectionActivity : AppCompatActivity() {
             adapter = languageAdapter
         }
 
-        // Select English by default
-        selectedLanguage = languages.first { it.code == "en" }
+        // Select current locale by default
+        val currentLocale = prefs.getLocale()
+        selectedLanguage = languages.firstOrNull { it.code == currentLocale }
+            ?: languages.first { it.code == "en" }
         languageAdapter.setSelectedLanguage(selectedLanguage!!)
         binding.btnContinue.isEnabled = true
     }
@@ -80,19 +79,40 @@ class LanguageSelectionActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         binding.btnContinue.setOnClickListener {
             selectedLanguage?.let { language ->
-                // Save language preference
+                // Save the selected language
                 prefs.setLocale(language.code)
 
-                // Navigate to onboarding
+                // Apply language globally
+                applyLanguage(language.code)
+
+                // Navigate to next screen
                 navigateToOnboarding()
             }
         }
     }
 
+    private fun applyLanguage(localeCode: String) {
+        val locale = when (localeCode) {
+            "sn" -> Locale("sn", "ZW") // Shona
+            "nd" -> Locale("nd", "ZW") // Ndebele
+            else -> Locale("en", "ZW") // English default
+        }
+
+        Locale.setDefault(locale)
+
+        val config = Configuration(resources.configuration)
+        config.setLocale(locale)
+        resources.updateConfiguration(config, resources.displayMetrics)
+
+        // Update UI text immediately
+        updateUIText()
+    }
+
     private fun updateUIText() {
-        binding.tvTitle.text = i18n.t("select_language", "Select Your Language")
-        binding.tvSubtitle.text = i18n.t("language_subtitle", "Choose your preferred language for the app")
-        binding.btnContinue.text = i18n.t("continue_button", "Continue")
+        // ✅ Refresh UI with new language
+        binding.tvTitle.text = getString(R.string.select_language)
+        binding.tvSubtitle.text = getString(R.string.language_subtitle)
+        binding.btnContinue.text = getString(R.string.continue_button)
     }
 
     private fun navigateToOnboarding() {
@@ -100,68 +120,54 @@ class LanguageSelectionActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-}
 
-/**
- * Language selection adapter
- */
-class LanguageAdapter(
-    private val languages: List<Language>,
-    private val onLanguageSelected: (Language) -> Unit
-) : RecyclerView.Adapter<LanguageAdapter.LanguageViewHolder>()
- {
+    // Keep the existing LanguageAdapter class unchanged
+    inner class LanguageAdapter(
+        private val languages: List<Language>,
+        private val onLanguageSelected: (Language) -> Unit
+    ) : RecyclerView.Adapter<LanguageAdapter.LanguageViewHolder>() {
 
-    private var selectedPosition = 0
+        private var selectedPosition = -1
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LanguageViewHolder {
-        val binding = ItemLanguageBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return LanguageViewHolder(binding)
-    }
-
-    override fun onBindViewHolder(holder: LanguageViewHolder, position: Int) {
-        holder.bind(languages[position], position == selectedPosition)
-    }
-
-    override fun getItemCount() = languages.size
-
-    fun setSelectedLanguage(language: Language) {
-        val newPosition = languages.indexOf(language)
-        if (newPosition != -1) {
-            val oldPosition = selectedPosition
-            selectedPosition = newPosition
-            notifyItemChanged(oldPosition)
-            notifyItemChanged(selectedPosition)
+        fun setSelectedLanguage(language: Language) {
+            selectedPosition = languages.indexOf(language)
+            notifyDataSetChanged()
         }
-    }
 
-    inner class LanguageViewHolder(
-        private val binding: ItemLanguageBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LanguageViewHolder {
+            val binding = ItemLanguageBinding.inflate(
+                LayoutInflater.from(parent.context), parent, false
+            )
+            return LanguageViewHolder(binding)
+        }
 
-        fun bind(language: Language, isSelected: Boolean) {
-            binding.tvLanguageName.text = language.displayName
-            binding.tvLanguageNative.text = language.nativeName
-            binding.ivSelected.visibility = if (isSelected) View.VISIBLE else View.GONE
+        override fun onBindViewHolder(holder: LanguageViewHolder, position: Int) {
+            holder.bind(languages[position], position == selectedPosition)
+        }
 
-            binding.root.setOnClickListener {
-                val oldPosition = selectedPosition
-                selectedPosition = adapterPosition
-                notifyItemChanged(oldPosition)
-                notifyItemChanged(selectedPosition)
-                onLanguageSelected(language)
+        override fun getItemCount() = languages.size
+
+        inner class LanguageViewHolder(private val binding: ItemLanguageBinding) :
+            RecyclerView.ViewHolder(binding.root) {
+
+            fun bind(language: Language, isSelected: Boolean) {
+                binding.tvLanguageName.text = language.displayName
+                binding.tvLanguageNative.text = language.nativeName
+
+                // Update selection state
+                binding.root.isSelected = isSelected
+                binding.ivSelected.visibility = if (isSelected) View.VISIBLE else View.GONE
+
+                binding.root.setOnClickListener {
+                    val oldPosition = selectedPosition
+                    selectedPosition = adapterPosition
+
+                    notifyItemChanged(oldPosition)
+                    notifyItemChanged(selectedPosition)
+
+                    onLanguageSelected(language)
+                }
             }
-
-            // Update card appearance based on selection
-            val cardColor = if (isSelected) {
-                ContextCompat.getColor(binding.root.context, R.color.zimpudo_primary_light)
-            } else {
-                ContextCompat.getColor(binding.root.context, R.color.white)
-            }
-            binding.cardLanguage.setCardBackgroundColor(cardColor)
         }
     }
 }
