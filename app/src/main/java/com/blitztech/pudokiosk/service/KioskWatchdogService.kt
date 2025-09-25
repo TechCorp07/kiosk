@@ -71,7 +71,7 @@ class KioskWatchdogService : Service() {
                 val topActivity = runningTasks[0].topActivity
                 val packageName = packageName
 
-                Log.v(TAG, "Top activity: ${topActivity?.className}, Our package: $packageName")
+                //Log.v(TAG, "Top activity: ${topActivity?.className}, Our package: $packageName")
 
                 // Check if our kiosk app is the top activity
                 if (topActivity?.packageName != packageName) {
@@ -79,7 +79,7 @@ class KioskWatchdogService : Service() {
                     bringKioskToForeground()
                 } else if (topActivity.className != MainActivity::class.java.name) {
                     // Our app is running but not on MainActivity (could be normal)
-                    Log.d(TAG, "Kiosk app running, current activity: ${topActivity.className}")
+                    //Log.d(TAG, "Kiosk app running, current activity: ${topActivity.className}")
                 }
             } else {
                 Log.w(TAG, "No running tasks found - bringing kiosk to foreground")

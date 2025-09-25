@@ -4,6 +4,7 @@ import com.blitztech.pudokiosk.data.api.config.ApiEndpoints
 import com.blitztech.pudokiosk.data.api.dto.auth.*
 import com.blitztech.pudokiosk.data.api.dto.user.*
 import com.blitztech.pudokiosk.data.api.dto.common.*
+import com.blitztech.pudokiosk.data.api.dto.location.*
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
@@ -33,4 +34,11 @@ interface ApiService {
     suspend fun uploadKyc(@Path("mobileNumber") mobileNumber: String,
                           @Part("type") type: String,
                           @Part file: MultipartBody.Part): Response<KycResponse>
+
+    // Location endpoints
+    @GET("orders/cities")
+    suspend fun getCities(): Response<List<CityDto>>
+
+    @GET("orders/cities/{cityId}/suburbs")
+    suspend fun getSuburbs(@Path("cityId") cityId: String): Response<List<SuburbDto>>
 }

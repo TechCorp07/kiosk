@@ -24,8 +24,9 @@ object ValidationUtils {
     }
 
     fun isValidNationalId(nationalId: String): Boolean {
-        // Zimbabwe National ID format: XX-XXXXXXX A XX
-        val nationalIdRegex = Regex("^[0-9]{2}-[0-9]{7} [A-Z] [0-9]{2}$")
+        // Zimbabwe National ID format: XX-XXXXXXX-X-XX or XX-XXXXXX-X-XX or XX-XXXXXXXX-X-XX or XX-XXXXXXXXX-X-XX
+        // Examples: 29-279774-Q-13, 29-27977-Q-13, 29-2797745-Q-13, 29-27977452-Q-13
+        val nationalIdRegex = Regex("^[0-9]{2}-[0-9]{5,9}-[A-Z]-[0-9]{2}$")
         return nationalIdRegex.matches(nationalId)
     }
 
@@ -50,4 +51,11 @@ object ValidationUtils {
 
         return cleaned
     }
+
+    // Validation error messages
+    fun getEmailErrorMessage(): String = "Please enter a valid email address (e.g., user@example.com)"
+
+    fun getPhoneErrorMessage(): String = "Please enter a valid phone number (+2637XXXXXXXX)"
+
+    fun getNationalIdErrorMessage(): String = "Please enter a valid National ID (Format: XX-XXXXXXX-X-XX)"
 }

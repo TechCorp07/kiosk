@@ -69,7 +69,7 @@
     <string name="email">Email</string>
     <string name="email_optional">Email (Optional)</string>
     <string name="national_id">National ID Number</string>
-    <string name="national_id_format">Format: XX-XXXXXXX A XX</string>
+    <string name="national_id_format">Format: XX-XXXXXXX-X-XX</string>
     <string name="mobile_number_format">Format: +2637XXXXXXXX</string>
 
     <!-- Address Information -->
@@ -201,9 +201,34 @@
     <string name="notif_running">ZIMPUDO Kiosk is running</string>
 
     <!-- Validation Messages -->
-    <string name="invalid_email">Please enter a valid email address</string>
-    <string name="invalid_national_id">Please enter a valid National ID</string>
+    <string name="invalid_email">Please enter a valid email address (e.g., user@example.com)</string>
+    <string name="invalid_phone">Please enter a valid phone number (+2637XXXXXXXX)</string>
+    <string name="invalid_national_id">Please enter a valid National ID (Format: XX-XXXXXXX-X-XX)</string>
     <string name="field_required">This field is required</string>
+    <string name="name_required">Name is required</string>
+    <string name="surname_required">Surname is required</string>
+    <string name="phone_required">Mobile number is required</string>
+    <string name="national_id_required">National ID is required</string>
+    <string name="house_number_required">House number is required</string>
+    <string name="street_required">Street is required</string>
+    <string name="city_required">City is required</string>
+    <string name="suburb_required">Suburb is required</string>
+
+    <!-- Location related strings -->
+    <string name="select_city">Select City</string>
+    <string name="select_suburb">Select Suburb</string>
+    <string name="search_hint">Search...</string>
+    <string name="no_cities_available">No cities available</string>
+    <string name="no_suburbs_available">No suburbs available for selected city</string>
+    <string name="cities_loading">Cities are still loading. Please wait…</string>
+    <string name="select_city_first">Please select a city first</string>
+    <string name="failed_to_load_cities">Failed to load cities</string>
+    <string name="failed_to_load_suburbs">Failed to load suburbs</string>
+    <string name="try_again_later">Unable to connect after multiple attempts. Please try again later.</string>
+
+    <!-- Icons content descriptions -->
+    <string name="error_icon">Error icon</string>
+    <string name="search_icon">Search icon</string>
 
     <!-- Accessibility -->
     <string name="content_description_logo">ZIMPUDO Logo</string>

@@ -8,9 +8,12 @@ import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.api.dto.auth.*
 import com.blitztech.pudokiosk.data.api.dto.user.*
 import com.blitztech.pudokiosk.data.api.dto.common.*
+import com.blitztech.pudokiosk.data.api.dto.location.CityDto
+import com.blitztech.pudokiosk.data.api.dto.location.SuburbDto
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -29,6 +32,8 @@ class ApiRepository(
 
     companion object {
         private const val TAG = "ApiRepository"
+        private const val MAX_RETRY_ATTEMPTS = 7
+        private const val RETRY_DELAY_MS = 1000L
     }
 
     // Authentication methods
@@ -72,11 +77,16 @@ class ApiRepository(
         nationalId: String,
         houseNumber: String,
         street: String,
-        suburb: String,
-        city: String
+        suburbId: String,
+        cityId: String
     ): NetworkResult<RegistrationResponse> {
         return safeApiCall {
-            val address = Address(city, suburb, street, houseNumber)
+            val address = Address(
+                city = cityId,
+                suburb = suburbId,
+                street = street,
+                houseNumber = houseNumber
+            )
             val request = SignUpRequest(
                 name = name,
                 surname = surname,
@@ -101,6 +111,19 @@ class ApiRepository(
             val filePart = MultipartBody.Part.createFormData("file", tempFile.name, requestFile)
 
             apiService.uploadKyc(mobileNumber, ApiConfig.KYC_TYPE, filePart)
+        }
+    }
+
+    // Location methods with retry logic
+    suspend fun getCities(): NetworkResult<List<CityDto>> {
+        return safeApiCallWithRetry {
+            apiService.getCities()
+        }
+    }
+
+    suspend fun getSuburbs(cityId: String): NetworkResult<List<SuburbDto>> {
+        return safeApiCallWithRetry {
+            apiService.getSuburbs(cityId)
         }
     }
 
@@ -144,6 +167,44 @@ class ApiRepository(
                 Log.e(TAG, "Unexpected error", e)
                 NetworkResult.Error("An unexpected error occurred: ${e.message}")
             }
+        }
+    }
+
+    private suspend fun <T> safeApiCallWithRetry(
+        apiCall: suspend () -> Response<T>
+    ): NetworkResult<T> {
+        return withContext(Dispatchers.IO) {
+            repeat(MAX_RETRY_ATTEMPTS) { attempt ->
+                try {
+                    val response = apiCall()
+                    if (response.isSuccessful) {
+                        response.body()?.let { body ->
+                            return@withContext NetworkResult.Success(body)
+                        } ?: return@withContext NetworkResult.Error("Empty response body")
+                    } else if (attempt == MAX_RETRY_ATTEMPTS - 1) {
+                        val errorBody = response.errorBody()?.string()
+                        val errorMessage = try {
+                            val adapter = moshi.adapter(ApiResponse::class.java)
+                            adapter.fromJson(errorBody ?: "")?.message ?: "Unknown error"
+                        } catch (e: Exception) {
+                            "Error: ${response.code()} - ${response.message()}"
+                        }
+                        return@withContext NetworkResult.Error(errorMessage, response.code())
+                    }
+                } catch (e: IOException) {
+                    if (attempt == MAX_RETRY_ATTEMPTS - 1) {
+                        Log.e(TAG, "Network error after $MAX_RETRY_ATTEMPTS attempts", e)
+                        return@withContext NetworkResult.Error("Unable to connect. Please try again later.")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Unexpected error", e)
+                    return@withContext NetworkResult.Error("An unexpected error occurred: ${e.message}")
+                }
+
+                // Wait before retrying
+                delay(RETRY_DELAY_MS * (attempt + 1))
+            }
+            NetworkResult.Error("Unable to connect after multiple attempts. Please try again later.")
         }
     }
 }

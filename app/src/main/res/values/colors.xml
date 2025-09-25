@@ -4,6 +4,9 @@
     <color name="zimpudo_primary">#1DB584</color>
     <color name="zimpudo_primary_dark">#16A073</color>
     <color name="zimpudo_primary_light">#4FC49A</color>
+    <color name="error_red">#F44336</color>
+    <color name="success_green">#4CAF50</color>
+    <color name="warning_orange">#FF9800</color>
 
     <!-- Secondary Colors -->
     <color name="zimpudo_accent">#FF6B6B</color>

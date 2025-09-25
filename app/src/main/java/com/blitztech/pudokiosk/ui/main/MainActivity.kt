@@ -123,8 +123,6 @@ class MainActivity : AppCompatActivity() {
                             View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     )
         }
-
-        Log.d(TAG, "System UI hidden completely")
     }
 
     private fun setupSystemUIHiding() {
