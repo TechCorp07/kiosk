@@ -22,14 +22,18 @@ class KioskModeService : Service() {
         private const val CHANNEL_ID = "kiosk_service"
         private const val CHANNEL_NAME = "Kiosk Service"
 
-        @RequiresApi(Build.VERSION_CODES.O)
         fun start(context: Context) {
             val intent = Intent(context, KioskModeService::class.java)
-            context.startForegroundService(intent)
+
+            // Use appropriate start method based on API level
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "KioskModeService created")
@@ -48,19 +52,23 @@ class KioskModeService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Keeps ZIMPUDO Kiosk running in background"
-            setShowBadge(false)
-        }
 
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
+    private fun createNotificationChannel() {
+        // NotificationChannel is only available on API 26+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Keeps ZIMPUDO Kiosk running in background"
+                setShowBadge(false)
+            }
+
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
+        // For API 25 and below, no channel creation needed
     }
 
     private fun createNotification(): Notification {
