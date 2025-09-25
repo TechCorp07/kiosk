@@ -44,7 +44,6 @@ class PinChangeActivity : BaseKioskActivity() {
         binding = ActivityPinChangeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        fun setupBackPressHandling() { onBackPressedDispatcher.addCallback(this) { finish() } }
         // Get data from intent
         accessToken = intent.getStringExtra(EXTRA_ACCESS_TOKEN) ?: ""
         isFirstTime = intent.getBooleanExtra(EXTRA_IS_FIRST_TIME, false)
@@ -55,7 +54,7 @@ class PinChangeActivity : BaseKioskActivity() {
         setupViews()
         setupClickListeners()
         setupFormValidation()
-        setupBackPressHandling()
+        setupBackButton()
     }
 
     private fun setupDependencies() {
@@ -91,11 +90,14 @@ class PinChangeActivity : BaseKioskActivity() {
         binding.btnSavePin.alpha = 0.5f
     }
 
-    private fun setupClickListeners() {
+    private fun setupBackButton() {
+        // For the back button in your layout (top left corner)
         binding.btnBack.setOnClickListener {
-            finish()
+            handleBackNavigation()
         }
+    }
 
+    private fun setupClickListeners() {
         binding.btnSavePin.setOnClickListener {
             if (!isLoading) {
                 validateAndChangePin()

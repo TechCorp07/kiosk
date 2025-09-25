@@ -3,6 +3,7 @@ package com.blitztech.pudokiosk.ui.onboarding
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import com.blitztech.pudokiosk.databinding.ActivityLanguageSelectionBinding
 import com.blitztech.pudokiosk.databinding.ItemLanguageBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
+import com.blitztech.pudokiosk.ui.main.MainActivity
 import java.util.*
 
 class LanguageSelectionActivity : BaseKioskActivity() {
@@ -39,10 +41,29 @@ class LanguageSelectionActivity : BaseKioskActivity() {
         setupViews()
         setupRecyclerView()
         setupClickListeners()
+        setupBackButton()
     }
 
     private fun setupDependencies() {
         prefs = ZimpudoApp.prefs
+    }
+
+    private fun setupBackButton() {
+        // If you have a back button in your layout
+        binding.btnBack.setOnClickListener {
+            navigateBackToSplash()
+        }
+    }
+
+    private fun navigateBackToSplash() {
+        try {
+            Log.d("LanguageSelection", "Navigating back to splash screen...")
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish() // Close language selection screen
+        } catch (e: Exception) {
+            Log.e("LanguageSelection", "Failed to navigate back to splash", e)
+        }
     }
 
     private fun setupViews() {

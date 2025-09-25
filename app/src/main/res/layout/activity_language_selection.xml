@@ -15,6 +15,15 @@
         android:gravity="center"
         android:padding="@dimen/spacing_xl">
 
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="250dp"
+            android:layout_height="80dp"
+            android:layout_margin="5dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            app:tint="@color/white" />
+
         <!-- ZIMPUDO Logo -->
         <ImageView
             android:layout_width="150dp"

@@ -44,6 +44,7 @@ class SignInActivity : BaseKioskActivity() {
         setupDependencies()
         setupViews()
         setupClickListeners()
+        setupBackButton()
     }
 
     private fun setupDependencies() {
@@ -81,11 +82,13 @@ class SignInActivity : BaseKioskActivity() {
         binding.tvWelcomeBack.text = userTypeTitle
     }
 
-    private fun setupClickListeners() {
+    private fun setupBackButton() {
+        // For the back button in your layout (top left corner)
         binding.btnBack.setOnClickListener {
-            finish()
+            handleBackNavigation()
         }
-
+    }
+    private fun setupClickListeners() {
         binding.btnSignIn.setOnClickListener {
             if (!isLoading) {
                 attemptLogin()

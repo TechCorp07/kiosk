@@ -41,6 +41,7 @@ class SignUpActivity : BaseKioskActivity() {
         setupViews()
         setupClickListeners()
         setupFormValidation()
+        setupBackButton()
     }
 
     private fun setupDependencies() {
@@ -85,11 +86,14 @@ class SignUpActivity : BaseKioskActivity() {
         binding.btnNext.alpha = 0.5f
     }
 
-    private fun setupClickListeners() {
+    private fun setupBackButton() {
+        // For the back button in your layout (top left corner)
         binding.btnBack.setOnClickListener {
-            onBackPressed()
+            handleBackNavigation()
         }
+    }
 
+    private fun setupClickListeners() {
         binding.btnNext.setOnClickListener {
             if (!isLoading) {
                 navigateToPrivacyPolicy()
