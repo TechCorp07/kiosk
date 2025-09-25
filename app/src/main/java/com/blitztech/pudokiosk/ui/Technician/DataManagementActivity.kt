@@ -1,13 +1,13 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.databinding.ActivityDataManagementBinding
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,7 +19,7 @@ import java.util.*
  * Data Management Activity - Clear cache, logs, and user data
  * Compatible with Android API 25 (Android 7.1.2)
  */
-class DataManagementActivity : AppCompatActivity() {
+class DataManagementActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityDataManagementBinding
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -415,7 +415,7 @@ Note: For full export functionality, implement file saving to external storage.
     }
 
     private fun setLoading(loading: Boolean) {
-        binding.progressBar.visibility = if (loading) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnRefresh.isEnabled = !loading
         binding.btnClearCache.isEnabled = !loading
         binding.btnClearLogs.isEnabled = !loading

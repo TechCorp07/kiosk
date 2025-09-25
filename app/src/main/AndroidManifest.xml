@@ -11,6 +11,11 @@
     <uses-permission android:name="android.permission.USB_PERMISSION" />
     <uses-permission android:name="android.permission.ACCESS_SERIAL_PORT" />
 
+    <!-- KIOSK MODE PERMISSIONS -->
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <!-- USB host feature (for printer/serial dongles) -->
     <uses-feature android:name="android.hardware.usb.host"
         android:required="false"/>
@@ -26,53 +31,79 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ZimpudoKiosk">
 
-        <!-- Main launcher activity - New flow entry point -->
+        <!-- Main launcher activity - KIOSK MODE CONFIGURATION -->
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:launchMode="singleTask">
-            <intent-filter>
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:excludeFromRecents="false">
+
+            <!-- Primary launcher intent -->
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- Home button intent (kiosk mode) -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- Boot completed receiver -->
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 
-        <!-- Hardware Test Activity with USB device attached support -->
-        <activity
-            android:name=".ui.HardwareTestActivity"
-            android:exported="true"
-            android:screenOrientation="portrait" >
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+        <!-- Auto-start service for kiosk mode -->
+        <service
+            android:name=".service.KioskModeService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+
+        <receiver android:name=".receiver.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <meta-data
-                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
-                android:resource="@xml/device_filter"/>
-        </activity>
+        </receiver>
 
         <!-- Onboarding Flow Activities -->
         <activity android:name=".ui.onboarding.LanguageSelectionActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.main.MainActivity" />
 
         <activity android:name=".ui.onboarding.OnboardingActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.onboarding.LanguageSelectionActivity" />
 
         <activity android:name=".ui.onboarding.UserTypeSelectionActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.onboarding.OnboardingActivity" />
 
         <!-- Authentication Activities -->
         <activity android:name=".ui.auth.SignInActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.onboarding.UserTypeSelectionActivity" />
 
         <activity android:name=".ui.auth.SignUpActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.onboarding.UserTypeSelectionActivity" />
 
         <activity android:name=".ui.auth.OtpVerificationActivity"
             android:exported="false"
@@ -108,37 +139,51 @@
             android:screenOrientation="portrait" />
 
         <!-- Technician Access Activities -->
-        <activity android:name=".ui.TechnicianAccessActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.Technician.HardwareTestActivity"
+            android:exported="true"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter"/>
+        </activity>
 
-        <activity android:name=".ui.TechnicianMenuActivity"
+        <activity android:name=".ui.Technician.TechnicianAccessActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity android:name=".ui.Technician.TechnicianMenuActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <!-- Diagnostic Activities -->
-        <activity android:name=".ui.SystemLogsActivity"
+        <activity android:name=".ui.Technician.SystemLogsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.NetworkDiagnosticsActivity"
+        <activity android:name=".ui.Technician.NetworkDiagnosticsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.SystemInfoActivity"
+        <activity android:name=".ui.Technician.SystemInfoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.DataManagementActivity"
+        <activity android:name=".ui.Technician.DataManagementActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.RemoteSupportActivity"
+        <activity android:name=".ui.Technician.RemoteSupportActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <!-- Legacy Activities (for reference/reuse) -->
-        <activity android:name=".ui.DevSettingsActivity"
+        <activity android:name=".ui.Technician.DevSettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

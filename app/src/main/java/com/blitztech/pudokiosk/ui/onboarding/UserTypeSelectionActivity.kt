@@ -2,14 +2,14 @@ package com.blitztech.pudokiosk.ui.onboarding
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityUserTypeSelectionBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.auth.SignInActivity
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 
-class UserTypeSelectionActivity : AppCompatActivity() {
+class UserTypeSelectionActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityUserTypeSelectionBinding
     private lateinit var prefs: Prefs

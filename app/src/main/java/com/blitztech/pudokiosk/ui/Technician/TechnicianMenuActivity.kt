@@ -1,15 +1,15 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.databinding.ActivityTechnicianMenuBinding
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.MainActivity
 
 /**
  * Technician menu providing access to diagnostic tools, logs, and settings
  */
-class TechnicianMenuActivity : AppCompatActivity() {
+class TechnicianMenuActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityTechnicianMenuBinding
 
@@ -76,9 +76,5 @@ class TechnicianMenuActivity : AppCompatActivity() {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()
-    }
-
-    override fun onBackPressed() {
-        returnToMainApp()
     }
 }

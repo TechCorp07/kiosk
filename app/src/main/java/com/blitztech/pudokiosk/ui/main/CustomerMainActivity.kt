@@ -4,17 +4,17 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityCustomerMainBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 
 /**
  * Main dashboard for customer users
  * Provides access to send packages, collect packages, track deliveries
  */
-class CustomerMainActivity : AppCompatActivity() {
+class CustomerMainActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityCustomerMainBinding
     private lateinit var prefs: Prefs
@@ -24,15 +24,9 @@ class CustomerMainActivity : AppCompatActivity() {
         binding = ActivityCustomerMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        fun setupBackPressHandling() {
-            onBackPressedDispatcher.addCallback(this) {
-                finish()
-            }
-        }
         setupDependencies()
         setupViews()
         setupClickListeners()
-        setupBackPressHandling()
     }
 
     private fun setupDependencies() {
@@ -60,7 +54,6 @@ class CustomerMainActivity : AppCompatActivity() {
     private fun setupClickListeners() {
         binding.btnLogout.setOnClickListener {
             showLogoutDialog()
-            finish()
         }
 
         binding.cardSendPackage.setOnClickListener {

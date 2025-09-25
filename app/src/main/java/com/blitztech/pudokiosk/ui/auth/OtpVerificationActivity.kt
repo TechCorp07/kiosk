@@ -7,7 +7,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
@@ -17,13 +16,14 @@ import com.blitztech.pudokiosk.data.api.dto.common.AuthStatus
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityOtpVerificationBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
 import com.blitztech.pudokiosk.ui.main.CourierMainActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
 
-class OtpVerificationActivity : AppCompatActivity() {
+class OtpVerificationActivity : BaseKioskActivity() {
 
     companion object {
         const val EXTRA_MOBILE_NUMBER = "extra_mobile_number"

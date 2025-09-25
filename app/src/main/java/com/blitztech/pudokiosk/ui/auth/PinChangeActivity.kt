@@ -7,7 +7,6 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
@@ -16,13 +15,14 @@ import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityPinChangeBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
 import com.blitztech.pudokiosk.ui.main.CourierMainActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
 
-class PinChangeActivity : AppCompatActivity() {
+class PinChangeActivity : BaseKioskActivity() {
 
     companion object {
         const val EXTRA_ACCESS_TOKEN = "extra_access_token"

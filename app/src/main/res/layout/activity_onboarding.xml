@@ -68,6 +68,15 @@
                 android:drawablePadding="@dimen/spacing_sm" />
 
             <Button
+                android:id="@+id/btnBack"
+                style="@style/Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:text="@string/next"
+                android:drawableEnd="@drawable/ic_arrow_back"
+                android:drawablePadding="@dimen/spacing_sm" />
+
+            <Button
                 android:id="@+id/btnGetStarted"
                 style="@style/Button.Primary"
                 android:layout_width="match_parent"

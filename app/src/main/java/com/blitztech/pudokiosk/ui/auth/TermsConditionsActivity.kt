@@ -2,14 +2,14 @@ package com.blitztech.pudokiosk.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityTermsConditionsBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 
-class TermsConditionsActivity : AppCompatActivity() {
+class TermsConditionsActivity : BaseKioskActivity() {
 
     companion object {
         const val EXTRA_FORM_DATA = "extra_form_data"

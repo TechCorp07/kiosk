@@ -1,15 +1,15 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
 import android.os.Bundle
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 
-class DevSettingsActivity : AppCompatActivity() {
+class DevSettingsActivity : BaseKioskActivity() {
     private lateinit var prefs: Prefs
     private lateinit var chkSimHw: CheckBox
     private lateinit var chkIm30: CheckBox

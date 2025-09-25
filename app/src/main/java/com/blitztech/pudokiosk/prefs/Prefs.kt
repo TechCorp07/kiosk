@@ -70,7 +70,7 @@ class Prefs(context: Context) {
         return prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
     }
 
-    fun setOnboardingCompleted() {
+    fun setOnboardingCompleted(bool: Boolean) {
         prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, true).apply()
     }
 

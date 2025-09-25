@@ -2,22 +2,21 @@ package com.blitztech.pudokiosk.ui.onboarding
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityOnboardingBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.google.android.material.tabs.TabLayoutMediator
 
-class OnboardingActivity : AppCompatActivity() {
+class OnboardingActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityOnboardingBinding
     private lateinit var prefs: Prefs
     private lateinit var onboardingAdapter: OnboardingPagerAdapter
 
     private val onboardingSlides = listOf(
-        OnboardingSlide.WelcomeSlide,
         OnboardingSlide.SecureDeliverySlide,
         OnboardingSlide.FastDeliverySlide,
         OnboardingSlide.TrackingSlide
@@ -29,69 +28,63 @@ class OnboardingActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         prefs = ZimpudoApp.prefs
-
         setupViewPager()
-        setupButtons()
-        updateUI()
+        setupClickListeners()
     }
 
     private fun setupViewPager() {
         onboardingAdapter = OnboardingPagerAdapter(onboardingSlides)
         binding.viewPager.adapter = onboardingAdapter
 
-        // Setup page indicator
+        // Setup page indicator with 3 tabs
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { _, _ ->
-            // Empty implementation for dots indicator
+            // Empty implementation for dot indicators
         }.attach()
 
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-                updateUI()
+                updateNavigationButtons(position)
             }
         })
+
+        updateNavigationButtons(0)
     }
 
-    private fun setupButtons() {
+    private fun setupClickListeners() {
         binding.btnSkip.setOnClickListener {
-            navigateToUserTypeSelection()
+            completeOnboarding()
         }
 
         binding.btnNext.setOnClickListener {
-            val currentItem = binding.viewPager.currentItem
-            if (currentItem < onboardingSlides.size - 1) {
-                binding.viewPager.currentItem = currentItem + 1
+            val currentPosition = binding.viewPager.currentItem
+            if (currentPosition < onboardingSlides.size - 1) {
+                binding.viewPager.currentItem = currentPosition + 1
             } else {
-                navigateToUserTypeSelection()
+                completeOnboarding()
             }
         }
 
-        binding.btnGetStarted.setOnClickListener {
-            navigateToUserTypeSelection()
+        binding.btnBack.setOnClickListener {
+            val currentPosition = binding.viewPager.currentItem
+            if (currentPosition > 0) {
+                binding.viewPager.currentItem = currentPosition - 1
+            }
         }
     }
 
-    private fun updateUI() {
-        val currentPosition = binding.viewPager.currentItem
-        val isLastSlide = currentPosition == onboardingSlides.size - 1
+    private fun updateNavigationButtons(position: Int) {
+        binding.btnBack.visibility = if (position == 0) android.view.View.GONE else android.view.View.VISIBLE
 
-        // Update button visibility and text
-        getString(R.string.skip)
-        getString(R.string.next)
-        getString(R.string.get_started)
-
-        if (isLastSlide) {
-            binding.btnSkip.visibility = android.view.View.GONE
-            binding.btnNext.visibility = android.view.View.GONE
-            binding.btnGetStarted.visibility = android.view.View.VISIBLE
+        if (position == onboardingSlides.size - 1) {
+            binding.btnNext.text = getString(R.string.get_started)
         } else {
-            binding.btnSkip.visibility = android.view.View.VISIBLE
-            binding.btnNext.visibility = android.view.View.VISIBLE
-            binding.btnGetStarted.visibility = android.view.View.GONE
+            binding.btnNext.text = getString(R.string.next)
         }
     }
 
-    private fun navigateToUserTypeSelection() {
+    private fun completeOnboarding() {
+        prefs.setOnboardingCompleted(true)
+
         val intent = Intent(this, UserTypeSelectionActivity::class.java)
         startActivity(intent)
         finish()

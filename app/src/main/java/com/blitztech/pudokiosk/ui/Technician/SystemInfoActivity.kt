@@ -1,15 +1,16 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
+import android.app.ActivityManager
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.StatFs
+import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.databinding.ActivitySystemInfoBinding
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -22,7 +23,7 @@ import java.util.*
  * System Info Activity - Display comprehensive system information
  * Compatible with Android API 25 (Android 7.1.2)
  */
-class SystemInfoActivity : AppCompatActivity() {
+class SystemInfoActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivitySystemInfoBinding
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -166,8 +167,8 @@ Architecture: ${Build.CPU_ABI}
             val totalMemory = runtime.totalMemory()
 
             // Try to get system memory info
-            val memInfo = android.app.ActivityManager.MemoryInfo()
-            val activityManager = getSystemService(android.content.Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val memInfo = ActivityManager.MemoryInfo()
+            val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
             activityManager.getMemoryInfo(memInfo)
 
             """
@@ -283,7 +284,7 @@ Cache Directory: ${cacheDir.absolutePath}
 
     private fun setLoading(loading: Boolean) {
         isLoading = loading
-        binding.progressBar?.visibility = if (loading) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar?.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnRefresh.isEnabled = !loading
         binding.btnExport.isEnabled = !loading && binding.tvSystemInfoContent.text.isNotEmpty()
     }

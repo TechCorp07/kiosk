@@ -6,8 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.blitztech.pudokiosk.R
@@ -15,9 +13,10 @@ import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityLanguageSelectionBinding
 import com.blitztech.pudokiosk.databinding.ItemLanguageBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import java.util.*
 
-class LanguageSelectionActivity : AppCompatActivity() {
+class LanguageSelectionActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityLanguageSelectionBinding
     private lateinit var prefs: Prefs

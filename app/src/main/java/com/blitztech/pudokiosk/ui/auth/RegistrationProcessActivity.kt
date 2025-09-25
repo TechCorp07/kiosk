@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
@@ -13,10 +12,11 @@ import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityRegistrationProcessBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import kotlinx.coroutines.launch
 
-class RegistrationProcessActivity : AppCompatActivity() {
+class RegistrationProcessActivity : BaseKioskActivity() {
 
     companion object {
         const val EXTRA_FORM_DATA = "extra_form_data"

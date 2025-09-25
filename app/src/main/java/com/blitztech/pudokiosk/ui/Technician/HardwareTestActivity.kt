@@ -1,9 +1,8 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import kotlinx.coroutines.*
@@ -13,9 +12,9 @@ import java.util.*
 
 // Hardware component imports
 import com.blitztech.pudokiosk.deviceio.rs485.LockerController
-import com.blitztech.pudokiosk.deviceio.rs485.LockerConfiguration
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 
 /**
  * Unified Hardware Test Activity for PUDO Kiosk
@@ -24,7 +23,7 @@ import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
  * 2. Honeywell Xenon 1900 Barcode Scanner (RS232)
  * 3. Custom TG2480HIII Thermal Printer (USB/Custom API)
  */
-class HardwareTestActivity : AppCompatActivity() {
+class HardwareTestActivity : BaseKioskActivity() {
 
     companion object {
         private const val TAG = "HardwareTest"

@@ -27,6 +27,7 @@ roomKtx = "2.8.0"
 securityCrypto = "1.1.0"
 usbSerialForAndroid = "3.5.1"
 workRuntimeKtx = "2.10.4"
+filamentAndroid = "1.17.1"
 
 [libraries]
 android-database-sqlcipher = { module = "net.zetetic:android-database-sqlcipher", version.ref = "androidDatabaseSqlcipher" }
@@ -58,6 +59,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "loggingInterce
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "converterMoshi" }
 usb-serial-for1-android = { module = "com.github.mik3y:usb-serial-for-android", version.ref = "usbSerialForAndroid" }
+filament-android = { group = "com.google.ar.sceneform", name = "filament-android", version.ref = "filamentAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

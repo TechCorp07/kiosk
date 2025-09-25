@@ -1,12 +1,12 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.databinding.ActivitySystemLogsBinding
-import com.blitztech.pudokiosk.ui.main.MainActivity
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,7 +19,7 @@ import java.util.*
  * System Logs Activity - View application and system logs
  * Compatible with Android API 25 (Android 7.1.2)
  */
-class SystemLogsActivity : AppCompatActivity() {
+class SystemLogsActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivitySystemLogsBinding
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -86,7 +86,7 @@ class SystemLogsActivity : AppCompatActivity() {
     }
 
     private fun loadLogsWithFilter(level: String) {
-        binding.progressBar.visibility = android.view.View.VISIBLE
+        binding.progressBar.visibility = View.VISIBLE
 
         lifecycleScope.launch {
             try {
@@ -106,7 +106,7 @@ class SystemLogsActivity : AppCompatActivity() {
 
                 showToast("Could not access system logs. Showing internal logs.")
             } finally {
-                binding.progressBar.visibility = android.view.View.GONE
+                binding.progressBar.visibility = View.GONE
             }
         }
     }
@@ -197,9 +197,5 @@ class SystemLogsActivity : AppCompatActivity() {
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onBackPressed() {
-        returnToTechMenu()
     }
 }

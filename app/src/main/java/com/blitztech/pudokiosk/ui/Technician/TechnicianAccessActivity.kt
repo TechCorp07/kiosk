@@ -1,18 +1,17 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.databinding.ActivityTechnicianAccessBinding
-import com.blitztech.pudokiosk.ui.HardwareTestActivity
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.MainActivity
 
 /**
  * Technician access screen for kiosk maintenance and diagnostics
  * Hardcoded credentials for technical personnel
  */
-class TechnicianAccessActivity : AppCompatActivity() {
+class TechnicianAccessActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityTechnicianAccessBinding
 

@@ -1,14 +1,16 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.databinding.ActivityRemoteSupportBinding
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,7 +21,7 @@ import java.util.*
  * Remote Support Activity - Generate support codes and enable remote assistance
  * Compatible with Android API 25 (Android 7.1.2)
  */
-class RemoteSupportActivity : AppCompatActivity() {
+class RemoteSupportActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityRemoteSupportBinding
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -246,8 +248,8 @@ Session will be secure and monitored.
 
         try {
             // For API 25, use ClipboardManager
-            val clipboard = getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
-            val clip = android.content.ClipData.newPlainText("Support Code", supportCode)
+            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Support Code", supportCode)
             clipboard.setPrimaryClip(clip)
 
             showToast("Support code copied to clipboard")
@@ -352,7 +354,7 @@ Additional Context:
     }
 
     private fun setLoading(loading: Boolean) {
-        binding.progressBar.visibility = if (loading) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnGenerateCode.isEnabled = !loading
         binding.btnStartSession.isEnabled = !loading && supportCode != null
         binding.btnRefresh.isEnabled = !loading

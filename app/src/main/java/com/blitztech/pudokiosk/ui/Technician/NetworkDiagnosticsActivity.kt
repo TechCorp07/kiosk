@@ -1,16 +1,14 @@
-package com.blitztech.pudokiosk.ui
+package com.blitztech.pudokiosk.ui.Technician
 
-import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.databinding.ActivityNetworkDiagnosticsBinding
-import com.blitztech.pudokiosk.ui.main.MainActivity
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,7 +21,7 @@ import java.util.*
  * Network Diagnostics Activity - Test network connectivity and diagnose issues
  * Compatible with Android API 25 (Android 7.1.2)
  */
-class NetworkDiagnosticsActivity : AppCompatActivity() {
+class NetworkDiagnosticsActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityNetworkDiagnosticsBinding
     private lateinit var connectivityManager: ConnectivityManager
@@ -49,8 +47,8 @@ class NetworkDiagnosticsActivity : AppCompatActivity() {
     }
 
     private fun initializeManagers() {
-        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
     }
 
     private fun setupViews() {
@@ -314,7 +312,7 @@ class NetworkDiagnosticsActivity : AppCompatActivity() {
     }
 
     private fun setLoading(loading: Boolean) {
-        binding.progressBar.visibility = if (loading) android.view.View.VISIBLE else android.view.View.GONE
+        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         binding.btnRefresh.isEnabled = !loading
         binding.btnPingTest.isEnabled = !loading
         binding.btnConnectivityTest.isEnabled = !loading

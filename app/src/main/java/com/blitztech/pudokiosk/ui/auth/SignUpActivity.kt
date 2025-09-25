@@ -5,17 +5,17 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivitySignUpBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.utils.ValidationUtils
 
-class SignUpActivity : AppCompatActivity() {
+class SignUpActivity : BaseKioskActivity() {
 
     companion object {
         const val EXTRA_USER_TYPE = "extra_user_type"

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
@@ -14,10 +13,11 @@ import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityForgotPinBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.utils.ValidationUtils
 import kotlinx.coroutines.launch
 
-class ForgotPinActivity : AppCompatActivity() {
+class ForgotPinActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityForgotPinBinding
     private lateinit var prefs: Prefs

@@ -3,17 +3,17 @@ package com.blitztech.pudokiosk.ui.main
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityCourierMainBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 
 /**
  * Main dashboard for courier users
  * Provides access to pickup deliveries, update status, view routes
  */
-class CourierMainActivity : AppCompatActivity() {
+class CourierMainActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityCourierMainBinding
     private lateinit var prefs: Prefs
@@ -94,9 +94,5 @@ class CourierMainActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
-    }
-
-    fun onBackPressedDispatcher() {
-        showLogoutDialog()
     }
 }
