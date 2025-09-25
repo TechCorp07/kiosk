@@ -223,4 +223,5 @@
     <string name="courier">Courier</string>
     <string name="pudo_kiosk">PUDO Kiosk</string>
     <string name="success_registration">Account created successfully! Please sign in.</string>
+    <string name="loading_please_wait">Loading Please Wait...</string>
 </resources>

@@ -47,11 +47,23 @@ class KioskModeService : Service() {
         // Ensure main activity is running
         ensureMainActivityRunning()
 
+        // Start watchdog service
+        startWatchdogService()
+
         return START_STICKY // Restart service if killed
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
+    private fun startWatchdogService() {
+        try {
+            val watchdogIntent = Intent(this, KioskWatchdogService::class.java)
+            startService(watchdogIntent)
+            Log.d(TAG, "Watchdog service started")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start watchdog service", e)
+        }
+    }
 
+    override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotificationChannel() {
         // NotificationChannel is only available on API 26+

@@ -63,18 +63,9 @@ class OnboardingActivity : BaseKioskActivity() {
                 completeOnboarding()
             }
         }
-
-        binding.btnBack.setOnClickListener {
-            val currentPosition = binding.viewPager.currentItem
-            if (currentPosition > 0) {
-                binding.viewPager.currentItem = currentPosition - 1
-            }
-        }
     }
 
     private fun updateNavigationButtons(position: Int) {
-        binding.btnBack.visibility = if (position == 0) android.view.View.GONE else android.view.View.VISIBLE
-
         if (position == onboardingSlides.size - 1) {
             binding.btnNext.text = getString(R.string.get_started)
         } else {

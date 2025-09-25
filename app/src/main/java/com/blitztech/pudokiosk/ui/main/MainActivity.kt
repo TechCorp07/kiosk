@@ -6,12 +6,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.View
-import android.view.WindowManager
+import android.view.*
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.blitztech.pudokiosk.databinding.ActivityMainBinding
@@ -19,11 +15,7 @@ import com.blitztech.pudokiosk.service.KioskModeService
 import com.blitztech.pudokiosk.ui.Technician.TechnicianAccessActivity
 import com.blitztech.pudokiosk.ui.onboarding.LanguageSelectionActivity
 
-/**
- * Main entry point for ZIMPUDO Kiosk
- * Shows splash screen then navigates to language selection
- * Has hidden technician access via 7 rapid taps on logo area
- */
+
 class MainActivity : AppCompatActivity() {
 
     companion object {
@@ -34,75 +26,176 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var gestureDetector: GestureDetectorCompat
     private val handler = Handler(Looper.getMainLooper())
+    private val uiHideHandler = Handler(Looper.getMainLooper())
 
     // Technician access variables
     private var tapCount = 0
     private var lastTapTime = 0L
-    private val techAccessTapCount = 7  // 7 rapid taps for tech access
-    private val tapTimeoutMs = 2000L    // Reset tap count after 2 seconds (increased from 1)
+    private val techAccessTapCount = 7
+    private val tapTimeoutMs = 2000L
     private var splashNavigationPending = false
+
+    // Kiosk mode variables
+    private var kioskModeEnabled = true
+    private val UI_HIDE_DELAY = 3000L // Hide UI after 3 seconds of inactivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "MainActivity.onCreate() called")
-
         super.onCreate(savedInstanceState)
 
         try {
-            // Setup kiosk mode UI
-            setupKioskMode()
+            // MUST setup kiosk mode BEFORE setting content view
+            setupTrueKioskMode()
 
-            // Inflate layout
             binding = ActivityMainBinding.inflate(layoutInflater)
             setContentView(binding.root)
             Log.d(TAG, "Layout inflated successfully")
 
-            // Setup technician access gesture detection
             setupTechnicianAccess()
-
-            // Handle back button for kiosk mode
             setupBackButtonHandling()
+            setupSystemUIHiding()
 
-            // Start kiosk service
             KioskModeService.start(this)
-
-            // Auto-navigate to language selection after splash delay
             scheduleNavigation()
 
-            Log.d(TAG, "MainActivity.onCreate() completed successfully")
+            // Start monitoring for system UI visibility changes
+            startUIVisibilityMonitoring()
+
+            Log.d(TAG, "TRUE KIOSK MODE activated")
 
         } catch (e: Exception) {
             Log.e(TAG, "Error in MainActivity.onCreate()", e)
-            // Try to navigate directly in case of error
             navigateToLanguageSelection()
         }
     }
 
-    private fun setupKioskMode() {
-        // Keep screen on and disable keyguard
-        window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
+    private fun setupTrueKioskMode() {
+        // Make activity full screen and hide all system UI
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            // Android 9+ - Handle notch/cutout areas
+            window.attributes.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
 
-        // Disable status bar and navigation bar for true kiosk experience
-        window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                        View.SYSTEM_UI_FLAG_FULLSCREEN or
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                )
+        window.apply {
+            // Request fullscreen window
+            requestFeature(Window.FEATURE_NO_TITLE)
+
+            // Add all necessary flags for true kiosk mode
+            addFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN or
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
+            )
+
+            // Prevent screenshots/screen recording for security
+            addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+
+        // Hide system UI completely
+        hideSystemUI()
+    }
+
+    private fun hideSystemUI() {
+        // This method hides ALL system UI elements
+        val decorView = window.decorView
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            // API 19+ Immersive mode
+            decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                            View.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
+        } else {
+            // API 25 fallback
+            decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    )
+        }
+
+        Log.d(TAG, "System UI hidden completely")
+    }
+
+    private fun setupSystemUIHiding() {
+        // Listen for system UI visibility changes and re-hide immediately
+        window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+            Log.d(TAG, "System UI visibility changed: $visibility")
+
+            // If system UI becomes visible, hide it again immediately
+            if (kioskModeEnabled && (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                Log.d(TAG, "System UI appeared - hiding again")
+                hideSystemUI()
+            }
+        }
+
+        // Monitor for any touches that might reveal system UI
+        binding.root.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // Reset the hide timer on any touch
+                    resetUIHideTimer()
+                    gestureDetector.onTouchEvent(event)
+                }
+                MotionEvent.ACTION_UP -> {
+                    // Ensure UI stays hidden after touch
+                    scheduleUIHide()
+                    gestureDetector.onTouchEvent(event)
+                }
+                else -> gestureDetector.onTouchEvent(event)
+            }
+            false // Allow other touch events to proceed
+        }
+    }
+
+    private fun startUIVisibilityMonitoring() {
+        // Continuously monitor and enforce UI hiding
+        val monitoringRunnable = object : Runnable {
+            override fun run() {
+                if (kioskModeEnabled) {
+                    hideSystemUI()
+                    // Check again in 1 second
+                    uiHideHandler.postDelayed(this, 1000)
+                }
+            }
+        }
+        uiHideHandler.post(monitoringRunnable)
+    }
+
+    private fun resetUIHideTimer() {
+        uiHideHandler.removeCallbacksAndMessages(null)
+    }
+
+    private fun scheduleUIHide() {
+        resetUIHideTimer()
+        uiHideHandler.postDelayed({ hideSystemUI() }, UI_HIDE_DELAY)
     }
 
     private fun setupBackButtonHandling() {
-        // Override back button behavior for kiosk mode
+        // Completely disable back button for kiosk mode
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                Log.d(TAG, "Back button pressed - ignoring (kiosk mode)")
-                // Do nothing - prevent back button from closing app
-                // Only technician access can exit the app flow
+                Log.d(TAG, "Back button pressed - BLOCKED in kiosk mode")
+                // Show a subtle indication that back button was pressed
+                showKioskModeMessage()
             }
         })
+    }
+
+    private fun showKioskModeMessage() {
+        // Optional: Brief message to indicate kiosk mode is active
+        // You can remove this if you don't want any indication
+        Log.d(TAG, "Kiosk mode active - system navigation disabled")
     }
 
     private fun setupTechnicianAccess() {
@@ -112,13 +205,6 @@ class MainActivity : AppCompatActivity() {
                     return handleTechnicianAccessTap()
                 }
             })
-
-            // Make the entire root view listen for taps
-            binding.root.setOnTouchListener { _, event ->
-                gestureDetector.onTouchEvent(event)
-                false // Allow other touch events to proceed
-            }
-
             Log.d(TAG, "Technician access gesture detector setup complete")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to setup technician access", e)
@@ -128,7 +214,6 @@ class MainActivity : AppCompatActivity() {
     private fun handleTechnicianAccessTap(): Boolean {
         val currentTime = System.currentTimeMillis()
 
-        // Reset tap count if too much time passed
         if (currentTime - lastTapTime > tapTimeoutMs) {
             tapCount = 0
         }
@@ -138,9 +223,10 @@ class MainActivity : AppCompatActivity() {
 
         Log.d(TAG, "Tap count: $tapCount (need $techAccessTapCount for tech access)")
 
-        // Check if we reached the tech access tap count
         if (tapCount >= techAccessTapCount) {
             Log.d(TAG, "Technician access sequence detected!")
+            // Temporarily disable kiosk mode for technician access
+            disableKioskMode()
             navigateToTechnicianAccess()
             return true
         }
@@ -148,10 +234,105 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
+    private fun disableKioskMode() {
+        kioskModeEnabled = false
+        uiHideHandler.removeCallbacksAndMessages(null)
+
+        // Restore normal system UI for technician
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+
+        Log.d(TAG, "Kiosk mode temporarily disabled for technician access")
+    }
+
+    private fun enableKioskMode() {
+        kioskModeEnabled = true
+        hideSystemUI()
+        startUIVisibilityMonitoring()
+
+        Log.d(TAG, "Kiosk mode re-enabled")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "MainActivity.onResume() called")
+
+        // Always re-enable kiosk mode on resume (unless technician is active)
+        if (kioskModeEnabled) {
+            hideSystemUI()
+            startUIVisibilityMonitoring()
+        }
+
+        // Auto-return timer for accidental navigation
+        if (!splashNavigationPending) {
+            Log.d(TAG, "MainActivity resumed - starting return timer (5 seconds)")
+            handler.postDelayed({
+                Log.d(TAG, "Auto-return timer triggered - going to language selection")
+                navigateToLanguageSelection()
+            }, 5000L)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "MainActivity.onPause() called")
+        handler.removeCallbacksAndMessages(null)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "MainActivity.onDestroy() called")
+        handler.removeCallbacksAndMessages(null)
+        uiHideHandler.removeCallbacksAndMessages(null)
+    }
+
+    // Override to prevent activity from finishing
+    override fun finish() {
+        if (kioskModeEnabled) {
+            Log.d(TAG, "finish() called but blocked in kiosk mode")
+            // Don't call super.finish() - prevent app from closing
+        } else {
+            super.finish()
+        }
+    }
+
+    // Override to prevent moving to background
+    override fun moveTaskToBack(nonRoot: Boolean): Boolean {
+        if (kioskModeEnabled) {
+            Log.d(TAG, "moveTaskToBack() called but blocked in kiosk mode")
+            return false // Prevent moving to background
+        }
+        return super.moveTaskToBack(nonRoot)
+    }
+
+    // Prevent window focus loss in kiosk mode
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+
+        if (kioskModeEnabled && !hasFocus) {
+            Log.d(TAG, "Window focus lost - attempting to regain focus")
+
+            // Try to bring app back to foreground
+            handler.postDelayed({
+                hideSystemUI()
+            }, 100)
+        }
+    }
+
+    // Handle home button press (API 25 compatible)
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+
+        if (kioskModeEnabled) {
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+            )
+        }
+    }
+
     private fun scheduleNavigation() {
         splashNavigationPending = true
 
-        // Allow manual tap to skip splash (but still count towards tech access)
         binding.root.setOnClickListener {
             Log.d(TAG, "Manual tap detected")
             if (splashNavigationPending) {
@@ -161,7 +342,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Auto-navigate after delay
         handler.postDelayed({
             if (splashNavigationPending) {
                 Log.d(TAG, "Auto-navigation timer triggered")
@@ -175,10 +355,6 @@ class MainActivity : AppCompatActivity() {
         handler.removeCallbacksAndMessages(null)
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
-    }
-
     private fun navigateToLanguageSelection() {
         try {
             splashNavigationPending = false
@@ -190,7 +366,6 @@ class MainActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to navigate to LanguageSelectionActivity", e)
-            // Try again after a short delay
             handler.postDelayed({ navigateToLanguageSelection() }, 1000)
         }
     }
@@ -205,25 +380,8 @@ class MainActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to navigate to TechnicianAccessActivity", e)
+            // Re-enable kiosk mode if navigation fails
+            enableKioskMode()
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "MainActivity.onResume() called")
-
-        // Re-apply kiosk mode settings
-        setupKioskMode()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d(TAG, "MainActivity.onPause() called")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "MainActivity.onDestroy() called")
-        handler.removeCallbacksAndMessages(null)
     }
 }

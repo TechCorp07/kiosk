@@ -1,9 +1,45 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.PudoKiosk" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/zimpudo_primary</item>
+        <item name="colorPrimaryVariant">@color/zimpudo_primary_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
     </style>
 
     <style name="Theme.PudoKiosk" parent="Base.Theme.PudoKiosk" />
+
+    <style name="Theme.ZimpudoKiosk.Fullscreen" parent="Base.Theme.PudoKiosk">
+        <!-- Remove window title -->
+        <item name="windowNoTitle">true</item>
+
+        <!-- Enable fullscreen -->
+        <item name="android:windowFullscreen">true</item>
+
+        <!-- Hide action bar -->
+        <item name="windowActionBar">false</item>
+
+        <!-- Extend content into system bars -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+
+        <!-- Make status bar and navigation bar transparent -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Extend content behind system bars -->
+        <item name="android:fitsSystemWindows">false</item>
+
+        <!-- Disable window animations for instant display -->
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowEnterAnimation">@null</item>
+        <item name="android:windowExitAnimation">@null</item>
+
+        <!-- Keep screen on -->
+        <item name="android:keepScreenOn">true</item>
+
+        <!-- Hardware acceleration -->
+        <item name="android:hardwareAccelerated">true</item>
+    </style>
 </resources>

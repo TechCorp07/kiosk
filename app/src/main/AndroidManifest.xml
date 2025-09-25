@@ -14,6 +14,8 @@
     <!-- KIOSK MODE PERMISSIONS -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
 
     <!-- USB host feature (for printer/serial dongles) -->
     <uses-feature android:name="android.hardware.usb.host"
@@ -28,16 +30,19 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ZimpudoKiosk">
+        android:theme="@style/Theme.ZimpudoKiosk.Fullscreen">
 
-        <!-- Main launcher activity - KIOSK MODE CONFIGURATION -->
+        <!-- Main launcher activity - - TRUE KIOSK MODE -->
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:taskAffinity=""
-            android:excludeFromRecents="false">
+            android:excludeFromRecents="false"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:hardwareAccelerated="true"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen">
 
             <!-- Primary launcher intent -->
             <intent-filter android:priority="1000">
@@ -47,16 +52,26 @@
             </intent-filter>
 
             <!-- Home button intent (kiosk mode) -->
-            <intent-filter>
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <!-- Boot completed receiver -->
-            <intent-filter>
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- User present (unlock) -->
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+
+            <!-- Screen on -->
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON" />
             </intent-filter>
         </activity>
 
@@ -65,15 +80,39 @@
             android:name=".service.KioskModeService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="specialUse" />
+            android:stopWithTask="false" />
+
+        <!-- Kiosk watchdog service -->
+        <service
+            android:name=".service.KioskWatchdogService"
+            android:enabled="true"
+            android:exported="false" />
 
         <receiver android:name=".receiver.BootReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:priority="1000">
+
             <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="android.intent.action.SCREEN_ON" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Device Admin receiver (for advanced kiosk control) -->
+        <receiver
+            android:name=".receiver.KioskDeviceAdminReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true">
+
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
 
@@ -81,27 +120,37 @@
         <activity android:name=".ui.onboarding.LanguageSelectionActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".ui.main.MainActivity" />
 
         <activity android:name=".ui.onboarding.OnboardingActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".ui.onboarding.LanguageSelectionActivity" />
 
         <activity android:name=".ui.onboarding.UserTypeSelectionActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".ui.onboarding.OnboardingActivity" />
 
         <!-- Authentication Activities -->
         <activity android:name=".ui.auth.SignInActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".ui.onboarding.UserTypeSelectionActivity" />
 
         <activity android:name=".ui.auth.SignUpActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".ui.onboarding.UserTypeSelectionActivity" />
 
         <activity android:name=".ui.auth.OtpVerificationActivity"
@@ -131,17 +180,23 @@
         <!-- Main Menu Activities -->
         <activity android:name=".ui.main.CustomerMainActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
 
         <activity android:name=".ui.main.CourierMainActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
 
         <!-- Technician Access Activities -->
         <activity
             android:name=".ui.Technician.HardwareTestActivity"
             android:exported="true"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk">
+
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -154,11 +209,13 @@
         <activity android:name=".ui.Technician.TechnicianAccessActivity"
             android:exported="false"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk"
             android:parentActivityName=".ui.main.MainActivity" />
 
         <activity android:name=".ui.Technician.TechnicianMenuActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk" />
 
         <!-- Diagnostic Activities -->
         <activity android:name=".ui.Technician.SystemLogsActivity"

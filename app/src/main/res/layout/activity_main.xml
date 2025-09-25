@@ -10,7 +10,7 @@
 
     <!-- ZIMPUDO Logo -->
     <ImageView
-        android:layout_width="200dp"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:src="@drawable/zimpudo_logo"
         android:contentDescription="@string/app_name"
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:text="@string/zimpudo_tagline"
         android:textColor="@color/text_white"
-        android:textSize="16sp"
+        android:textSize="42sp"
         android:textStyle="bold"
         android:layout_marginBottom="@dimen/spacing_xl" />
 
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:text="@string/zimpudo_welcome"
         android:textColor="@color/text_white"
-        android:textSize="14sp"
+        android:textSize="30sp"
         android:gravity="center"
         android:lineSpacingMultiplier="1.4"
         android:layout_marginBottom="@dimen/spacing_xl" />
@@ -44,13 +44,13 @@
         android:indeterminateTint="@color/white"
         android:layout_marginBottom="@dimen/spacing_lg" />
 
-    <!-- Tap to continue hint -->
+    <!-- Loading to contiue hint -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tap anywhere to continue"
+        android:text="@string/loading_please_wait"
         android:textColor="@color/text_white"
-        android:textSize="12sp"
+        android:textSize="20sp"
         android:alpha="0.7" />
 
 </LinearLayout>
