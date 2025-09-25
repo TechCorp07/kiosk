@@ -42,7 +42,6 @@ class MainActivity : AppCompatActivity() {
     private val tapTimeoutMs = 2000L    // Reset tap count after 2 seconds (increased from 1)
     private var splashNavigationPending = false
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "MainActivity.onCreate() called")
 
