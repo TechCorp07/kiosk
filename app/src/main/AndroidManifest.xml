@@ -13,7 +13,6 @@
 
     <!-- KIOSK MODE PERMISSIONS -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- USB host feature (for printer/serial dongles) -->

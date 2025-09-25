@@ -74,7 +74,6 @@ dependencies {
 
     // Room (DB)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.filament.android)
     kapt(libs.androidx.room.compiler)
 
     // Moshi (JSON for payloads)
