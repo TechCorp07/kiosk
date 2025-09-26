@@ -854,52 +854,85 @@ class HardwareTestActivity : BaseKioskActivity() {
         scanResults: List<String>,
         availableDrivers: List<UsbSerialDriver>
     ) {
+        // Debug logging
+        Log.d(TAG, "=== SPINNER UPDATE DEBUG ===")
+        Log.d(TAG, "scanResults.size: ${scanResults.size}")
+        Log.d(TAG, "availableDrivers.size: ${availableDrivers.size}")
+
+        scanResults.forEachIndexed { index, result ->
+            Log.d(TAG, "scanResult[$index]: $result")
+        }
+
         runOnUiThread {
-            // Update the serialDevices list for connection purposes
-            serialDevices = availableDrivers.map { driver ->
-                val device = driver.device
-                RS485CommunicationTester.SerialDevice(
-                    device = device,
-                    driver = driver,
-                    deviceInfo = buildString {
-                        append("${device.deviceName} - ")
-                        append("VID:${String.format("%04X", device.vendorId)} ")
-                        append("PID:${String.format("%04X", device.productId)}")
-                        device.manufacturerName?.let { append(" ($it)") }
-                        device.productName?.let { append(" - $it") }
-                    },
-                    vendorId = String.format("%04X", device.vendorId),
-                    productId = String.format("%04X", device.productId),
-                    deviceName = device.deviceName
-                )
-            }
+            try {
+                // Update the serialDevices list for connection purposes
+                serialDevices = availableDrivers.map { driver ->
+                    val device = driver.device
+                    RS485CommunicationTester.SerialDevice(
+                        device = device,
+                        driver = driver,
+                        deviceInfo = buildString {
+                            append("${device.deviceName} - ")
+                            append("VID:${String.format("%04X", device.vendorId)} ")
+                            append("PID:${String.format("%04X", device.productId)}")
+                            device.manufacturerName?.let { append(" ($it)") }
+                            device.productName?.let { append(" - $it") }
+                        },
+                        vendorId = String.format("%04X", device.vendorId),
+                        productId = String.format("%04X", device.productId),
+                        deviceName = device.deviceName
+                    )
+                }
 
-            // Create a new adapter instead of clearing the old one
-            val displayItems = if (scanResults.isEmpty()) {
-                listOf("No compatible devices found")
-            } else {
-                scanResults
-            }
+                Log.d(TAG, "serialDevices.size after mapping: ${serialDevices.size}")
 
-            val newAdapter = ArrayAdapter(
-                this@HardwareTestActivity,
-                android.R.layout.simple_spinner_item,
-                displayItems.toMutableList()
-            )
-            newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                // Get current adapter or create new one
+                val adapter = spSerialDevices.adapter as? ArrayAdapter<String>
+                    ?: ArrayAdapter<String>(this@HardwareTestActivity, android.R.layout.simple_spinner_item)
 
-            // Set the new adapter
-            spSerialDevices.adapter = newAdapter
+                Log.d(TAG, "Current adapter item count before clear: ${adapter.count}")
 
-            // Update button states
-            btnConnectSerial.isEnabled = scanResults.isNotEmpty()
+                // Clear existing items
+                adapter.clear()
+                Log.d(TAG, "Adapter cleared, count: ${adapter.count}")
 
-            // Log for debugging
-            Log.d(TAG, "Spinner updated with ${displayItems.size} items:")
-            displayItems.forEachIndexed { index, item ->
-                Log.d(TAG, "  [$index] $item")
+                // Add items
+                if (scanResults.isEmpty()) {
+                    adapter.add("No compatible devices found")
+                    btnConnectSerial.isEnabled = false
+                    Log.d(TAG, "Added 'No devices' message")
+                } else {
+                    scanResults.forEach { result ->
+                        adapter.add(result)
+                        Log.d(TAG, "Added to adapter: $result")
+                    }
+                    btnConnectSerial.isEnabled = true
+                }
+
+                Log.d(TAG, "Final adapter item count: ${adapter.count}")
+
+                // Set dropdown resource and notify
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+                // Ensure adapter is set
+                if (spSerialDevices.adapter !== adapter) {
+                    spSerialDevices.adapter = adapter
+                    Log.d(TAG, "Set new adapter on spinner")
+                }
+
+                // Force notify data changed
+                adapter.notifyDataSetChanged()
+                Log.d(TAG, "Notified data set changed")
+
+                // Verify final state
+                Log.d(TAG, "Final spinner adapter count: ${spSerialDevices.adapter?.count ?: 0}")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating spinner: ${e.message}", e)
             }
         }
+
+        Log.d(TAG, "=== END SPINNER UPDATE DEBUG ===")
     }
 
     /**
