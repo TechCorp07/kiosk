@@ -12,8 +12,6 @@ data class SignUpFormData(
     val nationalId: String,
     val houseNumber: String,
     val street: String,
-    val suburbId: String,
-    val cityId: String,
-    val suburbName: String = "",
-    val cityName: String = ""
+    val suburb: String,
+    val city: String,
 ) : Parcelable

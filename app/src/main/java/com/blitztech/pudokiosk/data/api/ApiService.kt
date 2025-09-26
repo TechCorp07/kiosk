@@ -32,7 +32,7 @@ interface ApiService {
     @Multipart
     @POST(ApiEndpoints.USER_KYC_UPLOAD)
     suspend fun uploadKyc(@Path("mobileNumber") mobileNumber: String,
-                          @Part("type") type: String,
+                          @Part type: MultipartBody.Part,
                           @Part file: MultipartBody.Part): Response<KycResponse>
 
     // Location endpoints

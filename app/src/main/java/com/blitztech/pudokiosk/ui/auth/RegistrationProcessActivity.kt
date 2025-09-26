@@ -98,8 +98,8 @@ class RegistrationProcessActivity : BaseKioskActivity() {
                 nationalId = formData.nationalId,
                 houseNumber = formData.houseNumber,
                 street = formData.street,
-                suburbId = formData.suburbId,
-                cityId = formData.cityId
+                suburb = formData.suburb,
+                city = formData.city
             )
 
             when (result) {

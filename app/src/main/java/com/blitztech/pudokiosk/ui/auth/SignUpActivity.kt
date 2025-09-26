@@ -33,9 +33,6 @@ class SignUpActivity : BaseKioskActivity() {
     private lateinit var apiRepository: ApiRepository
 
     private var userType: UserType = UserType.CUSTOMER
-    private var cities: List<CityDto> = emptyList()
-    private var allSuburbs: List<SuburbDto> = emptyList()
-    private var filteredSuburbs: List<SuburbDto> = emptyList()
     private var isLoading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,9 +46,8 @@ class SignUpActivity : BaseKioskActivity() {
 
         setupDependencies()
         setupViews()
-        setupValidation()
         setupClickListeners()
-        loadLocationData()
+        setupValidation()
         setupBackButton()
     }
 
@@ -81,6 +77,8 @@ class SignUpActivity : BaseKioskActivity() {
         binding.tvAddressInfo.text = getString(R.string.address_information)
         binding.etHouseNumber.hint = getString(R.string.house_number)
         binding.etStreet.hint = getString(R.string.street)
+        binding.etSuburb.hint = getString(R.string.suburb)
+        binding.etCity.hint = getString(R.string.city)
 
         // Button text
         binding.btnNext.text = getString(R.string.next)
@@ -90,19 +88,6 @@ class SignUpActivity : BaseKioskActivity() {
         // Initially disable next button
         binding.btnNext.isEnabled = false
         binding.btnNext.alpha = 0.5f
-
-        setupSearchableSpinners()
-    }
-
-    private fun setupSearchableSpinners() {
-        // Convert regular TextInputEditText to SearchableSpinner behavior
-        binding.etCity.isFocusable = false
-        binding.etCity.isClickable = true
-        binding.etSuburb.isFocusable = false
-        binding.etSuburb.isClickable = true
-
-        binding.etCity.setOnClickListener { showCityDialog() }
-        binding.etSuburb.setOnClickListener { showSuburbDialog() }
     }
 
     private fun setupValidation() {
@@ -188,6 +173,28 @@ class SignUpActivity : BaseKioskActivity() {
                 true
             }
         })
+
+        // Suburb validation
+        binding.etSuburb.addTextChangedListener(createTextWatcher(binding.tilSuburb) { text ->
+            if (text.isBlank()) {
+                showFieldError(binding.tilSuburb, "Suburb is required")
+                false
+            } else {
+                clearFieldError(binding.tilSuburb)
+                true
+            }
+        })
+
+        // City validation
+        binding.etCity.addTextChangedListener(createTextWatcher(binding.tilCity) { text ->
+            if (text.isBlank()) {
+                showFieldError(binding.tilCity, "City is required")
+                false
+            } else {
+                clearFieldError(binding.tilCity)
+                true
+            }
+        })
     }
 
     private fun setupBackButton() {
@@ -227,131 +234,6 @@ class SignUpActivity : BaseKioskActivity() {
         binding.tvSignIn.setOnClickListener { navigateToSignIn() }
     }
 
-    private fun loadLocationData() {
-        lifecycleScope.launch {
-            // Load cities
-            when (val result = apiRepository.getCities()) {
-                is NetworkResult.Success -> {
-                    cities = result.data
-                }
-                is NetworkResult.Error -> {
-                    showError("Failed to load cities: ${result.message}")
-                }
-                is NetworkResult.Loading -> {}
-            }
-
-            // Load all suburbs
-            when (val result = apiRepository.getSuburbs("")) { // Get all suburbs initially
-                is NetworkResult.Success -> {
-                    allSuburbs = result.data
-                }
-                is NetworkResult.Error -> {
-                    // Try to load suburbs for each city individually
-                    loadSuburbsForAllCities()
-                }
-                is NetworkResult.Loading -> {}
-            }
-        }
-    }
-
-    private suspend fun loadSuburbsForAllCities() {
-        val allSuburbsList = mutableListOf<SuburbDto>()
-        cities.forEach { city ->
-            when (val result = apiRepository.getSuburbs(city.id)) {
-                is NetworkResult.Success -> {
-                    allSuburbsList.addAll(result.data)
-                }
-                is NetworkResult.Error -> {
-                    // Continue loading other cities' suburbs
-                }
-                is NetworkResult.Loading -> {}
-            }
-        }
-        allSuburbs = allSuburbsList
-    }
-
-    private fun showCityDialog() {
-        if (cities.isEmpty()) {
-            showError("Cities are still loading. Please wait...")
-            return
-        }
-
-        val cityItems = cities.map { SpinnerItem(it.id, it.name) }
-        showSearchableDialog("Select City", cityItems) { selectedItem ->
-            binding.etCity.setText(selectedItem.name)
-            binding.etCity.tag = selectedItem.id
-
-            // Filter suburbs for selected city
-            filteredSuburbs = allSuburbs.filter { it.city.id == selectedItem.id }
-            binding.etSuburb.setText("") // Clear suburb selection
-            binding.etSuburb.tag = null
-
-            clearFieldError(binding.tilCity)
-            updateButtonState()
-        }
-    }
-
-    private fun showSuburbDialog() {
-        val selectedCityId = binding.etCity.tag as? String
-        if (selectedCityId == null) {
-            showError("Please select a city first")
-            return
-        }
-
-        if (filteredSuburbs.isEmpty()) {
-            showError("No suburbs available for selected city")
-            return
-        }
-
-        val suburbItems = filteredSuburbs.map { SpinnerItem(it.id, it.name) }
-        showSearchableDialog("Select Suburb", suburbItems) { selectedItem ->
-            binding.etSuburb.setText(selectedItem.name)
-            binding.etSuburb.tag = selectedItem.id
-
-            clearFieldError(binding.tilSuburb)
-            updateButtonState()
-        }
-    }
-
-    private fun showSearchableDialog(
-        title: String,
-        items: List<SpinnerItem>,
-        onItemSelected: (SpinnerItem) -> Unit
-    ) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_searchable_spinner, null)
-        val searchEditText = dialogView.findViewById<android.widget.EditText>(R.id.etSearch)
-        val listView = dialogView.findViewById<android.widget.ListView>(R.id.lvItems)
-
-        val adapter = SearchableSpinnerAdapter(this, items.toMutableList())
-        listView.adapter = adapter
-
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle(title)
-            .setView(dialogView)
-            .setNegativeButton("Cancel", null)
-            .create()
-
-        searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                val query = s.toString().lowercase()
-                val filtered = items.filter {
-                    it.name.lowercase().contains(query)
-                }
-                adapter.updateItems(filtered)
-            }
-        })
-
-        listView.setOnItemClickListener { _, _, position, _ ->
-            val item = adapter.getItem(position)
-            onItemSelected(item)
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
     private fun validateForm(): Boolean {
         val name = binding.etName.text.toString().trim()
         val surname = binding.etSurname.text.toString().trim()
@@ -360,18 +242,15 @@ class SignUpActivity : BaseKioskActivity() {
         val nationalId = binding.etNationalId.text.toString().trim()
         val houseNumber = binding.etHouseNumber.text.toString().trim()
         val street = binding.etStreet.text.toString().trim()
-        val cityId = binding.etCity.tag as? String
-        val suburbId = binding.etSuburb.tag as? String
+        val city = binding.etCity.text.toString().trim()
+        val suburb = binding.etSuburb.text.toString().trim()
 
         var isValid = true
 
         // Validate required fields
         if (name.isEmpty() || surname.isEmpty() || mobileNumber.isEmpty() ||
             nationalId.isEmpty() || houseNumber.isEmpty() || street.isEmpty() ||
-            cityId == null || suburbId == null) {
-
-            if (cityId == null) showFieldError(binding.tilCity, "City is required")
-            if (suburbId == null) showFieldError(binding.tilSuburb, "Suburb is required")
+            city.isEmpty() || suburb.isEmpty()) {
 
             isValid = false
         }
@@ -415,10 +294,8 @@ class SignUpActivity : BaseKioskActivity() {
             nationalId = binding.etNationalId.text.toString().trim(),
             houseNumber = binding.etHouseNumber.text.toString().trim(),
             street = binding.etStreet.text.toString().trim(),
-            suburbId = binding.etSuburb.tag as? String ?: "",
-            cityId = binding.etCity.tag as? String ?: "",
-            suburbName = binding.etSuburb.text.toString(),
-            cityName = binding.etCity.text.toString()
+            suburb = binding.etSuburb.text.toString().trim(),
+            city = binding.etCity.text.toString().trim()
         )
 
         val intent = Intent(this, PrivacyPolicyActivity::class.java).apply {
@@ -438,32 +315,5 @@ class SignUpActivity : BaseKioskActivity() {
 
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-    }
-
-    // Adapter class for searchable dialog
-    private class SearchableSpinnerAdapter(
-        context: android.content.Context,
-        private val items: MutableList<SpinnerItem>
-    ) : android.widget.BaseAdapter() {
-
-        private val inflater = android.view.LayoutInflater.from(context)
-
-        fun updateItems(newItems: List<SpinnerItem>) {
-            items.clear()
-            items.addAll(newItems)
-            notifyDataSetChanged()
-        }
-
-        override fun getCount(): Int = items.size
-        override fun getItem(position: Int): SpinnerItem = items[position]
-        override fun getItemId(position: Int): Long = position.toLong()
-
-        override fun getView(position: Int, convertView: android.view.View?, parent: android.view.ViewGroup?): android.view.View {
-            val view = convertView ?: inflater.inflate(android.R.layout.simple_list_item_1, parent, false)
-            val textView = view.findViewById<android.widget.TextView>(android.R.id.text1)
-            textView.text = items[position].name
-            textView.setPadding(32, 24, 32, 24)
-            return view
-        }
     }
 }

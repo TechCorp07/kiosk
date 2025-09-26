@@ -77,13 +77,13 @@ class ApiRepository(
         nationalId: String,
         houseNumber: String,
         street: String,
-        suburbId: String,
-        cityId: String
+        suburb: String,
+        city: String
     ): NetworkResult<RegistrationResponse> {
         return safeApiCall {
             val address = Address(
-                city = cityId,
-                suburb = suburbId,
+                city = city,
+                suburb = suburb,
                 street = street,
                 houseNumber = houseNumber
             )
@@ -102,15 +102,35 @@ class ApiRepository(
 
     suspend fun uploadKyc(mobileNumber: String): NetworkResult<KycResponse> {
         return safeApiCall {
-            // For now, using a placeholder file as mentioned in requirements
-            val placeholderContent = "PLACEHOLDER_KYC_DOCUMENT_FOR_KIOSK"
+            // Copy PDF from assets to cache directory
             val tempFile = File(context.cacheDir, "kyc_placeholder.pdf")
-            tempFile.writeText(placeholderContent)
 
-            val requestFile = tempFile.asRequestBody("application/pdf".toMediaTypeOrNull())
-            val filePart = MultipartBody.Part.createFormData("file", tempFile.name, requestFile)
+            try {
+                context.assets.open("kyc_placeholder.pdf").use { inputStream ->
+                    tempFile.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
 
-            apiService.uploadKyc(mobileNumber, ApiConfig.KYC_TYPE, filePart)
+                // ✅ Create type as proper MultipartBody.Part (plain text, not JSON)
+                val typePart = MultipartBody.Part.createFormData("type", ApiConfig.KYC_TYPE)
+
+                // Create file part
+                val requestFile = tempFile.asRequestBody("application/pdf".toMediaTypeOrNull())
+                val filePart = MultipartBody.Part.createFormData("file", tempFile.name, requestFile)
+
+                // ✅ Pass both parts correctly
+                apiService.uploadKyc(mobileNumber, typePart, filePart)
+
+            } catch (e: Exception) {
+                Log.e("ApiRepository", "Error uploading KYC file", e)
+                throw e
+            } finally {
+                // Clean up temp file
+                if (tempFile.exists()) {
+                    tempFile.delete()
+                }
+            }
         }
     }
 
