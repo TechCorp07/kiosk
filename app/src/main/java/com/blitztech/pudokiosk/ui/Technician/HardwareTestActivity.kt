@@ -953,12 +953,16 @@ class HardwareTestActivity : BaseKioskActivity() {
 
                     if (!alreadyAdded) {
                         val deviceInfo = buildString {
-                            append("🔌 USB: ")
+                            append("✅ SERIAL: ")
                             append("${device.deviceName} - ")
                             append("VID:${String.format("%04X", device.vendorId)} ")
                             append("PID:${String.format("%04X", device.productId)} - ")
                             append(identifyDeviceType(device.vendorId, device.productId, device.manufacturerName, device.productName))
-                            append(" [Class:${device.deviceClass}]")
+                            device.manufacturerName?.let {
+                                if (!it.contains("STM", ignoreCase = true) && !it.contains("FTDI", ignoreCase = true)) {
+                                    append(" ($it)")
+                                }
+                            }
                         }
 
                         allDeviceItems.add(deviceInfo)
