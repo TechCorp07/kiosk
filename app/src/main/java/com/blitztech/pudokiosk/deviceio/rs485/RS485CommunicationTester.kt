@@ -154,25 +154,67 @@ class RS485CommunicationTester(private val ctx: Context) {
             }
 
             if (portReady) {
+                var configSuccess = false
+
+                // Method 1: Try full configuration (works for most devices)
                 try {
-                    // Configure the port
+                    log("🔧 Attempting full configuration...")
                     selectedPort.setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
                     selectedPort.dtr = true
                     selectedPort.rts = true
                     selectedPort.purgeHwBuffers(true, true)
+                    log("✅ Full configuration successful")
+                    configSuccess = true
+                } catch (e: Exception) {
+                    log("⚠️ Full config failed: ${e.message ?: "null"}")
+                }
 
+                // Method 2: Try without setParameters (CDC devices often work without this)
+                if (!configSuccess) {
+                    try {
+                        log("🔧 Attempting CDC-style configuration...")
+                        selectedPort.dtr = true
+                        selectedPort.rts = true
+                        selectedPort.purgeHwBuffers(true, true)
+                        log("✅ CDC configuration successful")
+                        configSuccess = true
+                    } catch (e: Exception) {
+                        log("⚠️ CDC config failed: ${e.message ?: "null"}")
+                    }
+                }
+
+                // Method 3: Try minimal configuration (just control signals)
+                if (!configSuccess) {
+                    try {
+                        log("🔧 Attempting minimal configuration...")
+                        selectedPort.dtr = true
+                        selectedPort.rts = false  // Some devices prefer RTS low
+                        log("✅ Minimal configuration successful")
+                        configSuccess = true
+                    } catch (e: Exception) {
+                        log("⚠️ Minimal config failed: ${e.message ?: "null"}")
+                    }
+                }
+
+                // Method 4: No configuration at all (last resort)
+                if (!configSuccess) {
+                    log("🔧 Using device with no configuration (raw mode)")
+                    configSuccess = true
+                }
+
+                if (configSuccess) {
                     port = selectedPort
                     currentDevice = serialDevice.device
 
                     log("✅ Connected successfully to Port ${portNumber + 1}!")
                     log("📡 Device: ${serialDevice.device.deviceName}")
                     log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
+                    log("🎯 Ready for communication testing")
 
                     delay(100) // Allow port to stabilize
                     return@withContext true
-
-                } catch (configException: Exception) {
-                    log("❌ Error configuring port: ${configException.message}")
+                } else {
+                    log("❌ All configuration methods failed")
                     try {
                         selectedPort.close()
                         connection.close()
