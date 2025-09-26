@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.Technician
 
+import android.content.Context
+import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
@@ -16,6 +18,8 @@ import com.blitztech.pudokiosk.deviceio.rs485.RS485CommunicationTester
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
+import com.hoho.android.usbserial.driver.UsbSerialDriver
+import com.hoho.android.usbserial.driver.UsbSerialProber
 
 /**
  * Unified Hardware Test Activity for PUDO Kiosk
@@ -445,32 +449,170 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun scanSerialDevices() {
         showProgress(true)
-        updateSerialStatus("🔍 Scanning for serial devices...")
+        updateSerialStatus("🔍 Comprehensive device scanning...")
 
         lifecycleScope.launch {
             try {
-                val devices = rs485Tester.scanForSerialDevices()
-                serialDevices = devices
+                Log.i(TAG, "=== COMPREHENSIVE USB/SERIAL DEVICE SCAN ===")
 
-                val adapter = spSerialDevices.adapter as ArrayAdapter<String>
-                adapter.clear()
+                val scanResults = mutableListOf<String>()
+                val logBuilder = StringBuilder()
 
-                if (devices.isEmpty()) {
-                    adapter.add("No devices found")
-                    updateSerialStatus("❌ No USB serial devices found")
+                logBuilder.appendLine("🔍 COMPREHENSIVE DEVICE SCAN STARTED")
+                logBuilder.appendLine("=" * 40)
+
+                // 1. GET USB MANAGER
+                val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+
+                // 2. SCAN ALL USB DEVICES (Raw USB devices)
+                Log.d(TAG, "Scanning all USB devices...")
+                logBuilder.appendLine("📱 ALL USB DEVICES:")
+
+                val allUsbDevices = usbManager.deviceList
+                Log.i(TAG, "Found ${allUsbDevices.size} total USB devices")
+
+                if (allUsbDevices.isEmpty()) {
+                    logBuilder.appendLine("❌ No USB devices found at all!")
+                    Log.w(TAG, "No USB devices detected - check USB connections")
                 } else {
-                    devices.forEach { device ->
-                        adapter.add(device.deviceInfo)
+                    allUsbDevices.values.forEachIndexed { index, device ->
+                        val deviceInfo = buildString {
+                            append("Device ${index + 1}: ")
+                            append("${device.deviceName} ")
+                            append("VID:${String.format("%04X", device.vendorId)} ")
+                            append("PID:${String.format("%04X", device.productId)}")
+
+                            device.manufacturerName?.let { append(" Mfg:$it") }
+                            device.productName?.let { append(" Product:$it") }
+                            device.serialNumber?.let { append(" SN:$it") }
+
+                            append(" Class:${device.deviceClass}")
+                            append(" Subclass:${device.deviceSubclass}")
+                            append(" Protocol:${device.deviceProtocol}")
+                            append(" Interfaces:${device.interfaceCount}")
+                        }
+
+                        Log.i(TAG, "USB Device: $deviceInfo")
+                        logBuilder.appendLine("  • $deviceInfo")
+
+                        // Check if we have permission to access this device
+                        val hasPermission = usbManager.hasPermission(device)
+                        Log.d(TAG, "  → Permission: $hasPermission")
+                        logBuilder.appendLine("    Permission: ${if (hasPermission) "✅ GRANTED" else "❌ DENIED"}")
+
+                        // Log interface details
+                        for (i in 0 until device.interfaceCount) {
+                            try {
+                                val intf = device.getInterface(i)
+                                val intfInfo = "Interface $i: Class:${intf.interfaceClass} " +
+                                        "Subclass:${intf.interfaceSubclass} Protocol:${intf.interfaceProtocol} " +
+                                        "Endpoints:${intf.endpointCount}"
+                                Log.d(TAG, "    $intfInfo")
+                                logBuilder.appendLine("    $intfInfo")
+                            } catch (e: Exception) {
+                                Log.w(TAG, "    Error reading interface $i: ${e.message}")
+                            }
+                        }
+                        logBuilder.appendLine("")
                     }
-                    updateSerialStatus("✅ Found ${devices.size} serial device(s)")
                 }
 
-                adapter.notifyDataSetChanged()
-                updateCommLogFromTester()
+                // 3. SCAN USB SERIAL DRIVERS (Detected by usb-serial library)
+                Log.d(TAG, "Scanning USB serial drivers...")
+                logBuilder.appendLine("🔌 USB SERIAL DRIVERS:")
+
+                val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
+                Log.i(TAG, "Found ${availableDrivers.size} USB serial drivers")
+
+                if (availableDrivers.isEmpty()) {
+                    logBuilder.appendLine("❌ No USB serial drivers detected!")
+                    Log.w(TAG, "No USB serial drivers found - RS485 adapter may not be compatible")
+                } else {
+                    availableDrivers.forEachIndexed { index, driver ->
+                        val device = driver.device
+                        val driverInfo = buildString {
+                            append("Driver ${index + 1}: ")
+                            append("${driver.javaClass.simpleName} ")
+                            append("Device:${device.deviceName} ")
+                            append("VID:${String.format("%04X", device.vendorId)} ")
+                            append("PID:${String.format("%04X", device.productId)} ")
+                            append("Ports:${driver.ports.size}")
+                        }
+
+                        Log.i(TAG, "Serial Driver: $driverInfo")
+                        logBuilder.appendLine("  • $driverInfo")
+
+                        // Check each port
+                        driver.ports.forEachIndexed { portIndex, port ->
+                            val portInfo = "    Port $portIndex: ${port.javaClass.simpleName} " +
+                                    "PortNumber:${port.portNumber}"
+                            Log.d(TAG, "  $portInfo")
+                            logBuilder.appendLine("  $portInfo")
+                        }
+
+                        scanResults.add(driverInfo)
+                        logBuilder.appendLine("")
+                    }
+                }
+
+                // 4. SCAN NATIVE SERIAL PORTS (Linux /dev/tty* devices)
+                Log.d(TAG, "Scanning native serial ports...")
+                logBuilder.appendLine("🖥️ NATIVE SERIAL PORTS:")
+
+                val serialPorts = scanNativeSerialPorts()
+                if (serialPorts.isEmpty()) {
+                    logBuilder.appendLine("❌ No native serial ports found")
+                    Log.w(TAG, "No /dev/tty* devices accessible")
+                } else {
+                    serialPorts.forEach { portInfo ->
+                        Log.i(TAG, "Native Serial Port: $portInfo")
+                        logBuilder.appendLine("  • $portInfo")
+                    }
+                }
+                logBuilder.appendLine("")
+
+                // 5. SYSTEM INFORMATION
+                Log.d(TAG, "Gathering system information...")
+                logBuilder.appendLine("📋 SYSTEM INFORMATION:")
+                logBuilder.appendLine("  • Android Version: ${android.os.Build.VERSION.RELEASE}")
+                logBuilder.appendLine("  • API Level: ${android.os.Build.VERSION.SDK_INT}")
+                logBuilder.appendLine("  • Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
+                logBuilder.appendLine("  • Board: ${android.os.Build.BOARD}")
+                logBuilder.appendLine("  • Hardware: ${android.os.Build.HARDWARE}")
+                logBuilder.appendLine("")
+
+                // 6. SPECIFIC RS485/STM32 RECOMMENDATIONS
+                logBuilder.appendLine("🔍 STM32L412 DETECTION TIPS:")
+                logBuilder.appendLine("  • Look for FTDI (VID:0403), CP2102 (VID:10C4), or CH340 (VID:1A86) chips")
+                logBuilder.appendLine("  • STM32 with USB may appear as VID:0483 (STMicroelectronics)")
+                logBuilder.appendLine("  • Check USB cable - must support data, not just power")
+                logBuilder.appendLine("  • Verify RS485-USB adapter is properly connected")
+                logBuilder.appendLine("  • Try different USB ports on Android box")
+                logBuilder.appendLine("")
+
+                // 7. UPDATE UI COMPONENTS
+                updateSpinnerWithResults(scanResults, availableDrivers)
+                updateSerialStatus(if (scanResults.isEmpty())
+                    "❌ No compatible devices found - see log for details" else
+                    "✅ Found ${scanResults.size} serial device(s) - ${allUsbDevices.size} total USB devices")
+
+                // 8. UPDATE COMMUNICATION LOG
+                updateCommLog("📋 DEVICE SCAN COMPLETED")
+                updateCommLogFromScanResults(logBuilder.toString())
+
+                // 9. FINAL LOG SUMMARY
+                Log.i(TAG, "=== SCAN SUMMARY ===")
+                Log.i(TAG, "Total USB Devices: ${allUsbDevices.size}")
+                Log.i(TAG, "USB Serial Drivers: ${availableDrivers.size}")
+                Log.i(TAG, "Native Serial Ports: ${serialPorts.size}")
+                Log.i(TAG, "Compatible Devices: ${scanResults.size}")
+                Log.i(TAG, "=== END SCAN ===")
 
             } catch (e: Exception) {
-                updateSerialStatus("❌ Error scanning devices: ${e.message}")
-                Log.e(TAG, "Error scanning devices", e)
+                val errorMsg = "❌ Error during device scan: ${e.message}"
+                updateSerialStatus(errorMsg)
+                updateCommLog(errorMsg)
+                Log.e(TAG, "Device scan error", e)
             } finally {
                 showProgress(false)
             }
@@ -651,6 +793,115 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         runOnUiThread {
             tvCommLog.text = logText
+            // Scroll to bottom
+            scrollCommLog.post {
+                scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
+            }
+        }
+    }
+
+    /**
+     * Scan for native serial ports (Linux /dev/tty* devices)
+     */
+    private suspend fun scanNativeSerialPorts(): List<String> = withContext(Dispatchers.IO) {
+        val ports = mutableListOf<String>()
+
+        try {
+            // Common serial device paths on Android/Linux
+            val serialPaths = listOf(
+                "/dev/ttyUSB", "/dev/ttyACM", "/dev/ttyS",
+                "/dev/tty", "/dev/serial", "/dev/bus/usb"
+            )
+
+            serialPaths.forEach { basePath ->
+                for (i in 0..10) {
+                    val devicePath = "$basePath$i"
+                    val file = java.io.File(devicePath)
+
+                    if (file.exists()) {
+                        val accessible = file.canRead() || file.canWrite()
+                        val info = "$devicePath ${if (accessible) "(accessible)" else "(no permission)"}"
+                        ports.add(info)
+                        Log.d(TAG, "Native serial port: $info")
+                    }
+                }
+            }
+
+            // Also check for USB device nodes
+            try {
+                val usbDir = java.io.File("/dev/bus/usb")
+                if (usbDir.exists() && usbDir.isDirectory) {
+                    usbDir.listFiles()?.forEach { busDir ->
+                        if (busDir.isDirectory) {
+                            busDir.listFiles()?.forEach { deviceFile ->
+                                ports.add("/dev/bus/usb/${busDir.name}/${deviceFile.name}")
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Error scanning USB device nodes: ${e.message}")
+            }
+
+        } catch (e: Exception) {
+            Log.w(TAG, "Error scanning native serial ports: ${e.message}")
+        }
+
+        ports
+    }
+
+    private fun updateSpinnerWithResults(
+        scanResults: List<String>,
+        availableDrivers: List<UsbSerialDriver>
+    ) {
+        runOnUiThread {
+            serialDevices = availableDrivers.map { driver ->
+                val device = driver.device
+                RS485CommunicationTester.SerialDevice(
+                    device = device,
+                    driver = driver,
+                    deviceInfo = buildString {
+                        append("${device.deviceName} - ")
+                        append("VID:${String.format("%04X", device.vendorId)} ")
+                        append("PID:${String.format("%04X", device.productId)}")
+                        device.manufacturerName?.let { append(" ($it)") }
+                        device.productName?.let { append(" - $it") }
+                    },
+                    vendorId = String.format("%04X", device.vendorId),
+                    productId = String.format("%04X", device.productId),
+                    deviceName = device.deviceName
+                )
+            }
+
+            val adapter = spSerialDevices.adapter as ArrayAdapter<String>
+            adapter.clear()
+
+            if (scanResults.isEmpty()) {
+                adapter.add("No compatible devices found")
+                btnConnectSerial.isEnabled = false
+            } else {
+                scanResults.forEach { result ->
+                    adapter.add(result)
+                }
+                btnConnectSerial.isEnabled = true
+            }
+
+            adapter.notifyDataSetChanged()
+        }
+    }
+
+    /**
+     * Update communication log with scan results
+     */
+    private fun updateCommLogFromScanResults(scanText: String) {
+        runOnUiThread {
+            // Split into lines and add to log
+            scanText.lines().forEach { line ->
+                if (line.trim().isNotEmpty()) {
+                    updateCommLog(line)
+                }
+            }
+
             // Scroll to bottom
             scrollCommLog.post {
                 scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
