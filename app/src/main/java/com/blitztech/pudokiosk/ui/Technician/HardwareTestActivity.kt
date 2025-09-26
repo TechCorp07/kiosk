@@ -620,34 +620,97 @@ class HardwareTestActivity : BaseKioskActivity() {
     }
 
     private fun connectToSelectedDevice() {
-        if (serialDevices.isEmpty()) {
-            updateSerialStatus("❌ No devices available - scan first")
-            return
-        }
-
         val selectedIndex = spSerialDevices.selectedItemPosition
-        if (selectedIndex < 0 || selectedIndex >= serialDevices.size) {
-            updateSerialStatus("❌ Please select a valid device")
+        val selectedText = spSerialDevices.selectedItem as? String ?: ""
+
+        Log.d(TAG, "Selected device index: $selectedIndex")
+        Log.d(TAG, "Selected device text: $selectedText")
+
+        if (selectedIndex < 0) {
+            updateSerialStatus("❌ Please select a device first")
             return
         }
 
         showProgress(true)
-        val selectedDevice = serialDevices[selectedIndex]
-        updateSerialStatus("🔌 Connecting to device...")
+        updateSerialStatus("🔌 Attempting connection...")
 
         lifecycleScope.launch {
             try {
-                val connected = rs485Tester.connectToDevice(selectedDevice)
+                // Check if this is a recognized serial driver
+                if (selectedText.startsWith("✅ SERIAL:") && selectedIndex < serialDevices.size) {
+                    // Use existing RS485 tester for recognized serial drivers
+                    val selectedDevice = serialDevices[selectedIndex]
+                    Log.d(TAG, "Connecting to recognized serial device: ${selectedDevice.deviceInfo}")
 
-                if (connected) {
-                    updateSerialStatus("✅ Connected to: ${selectedDevice.deviceName}")
-                    btnConnectSerial.isEnabled = false
-                    btnDisconnectSerial.isEnabled = true
-                    btnTestComm.isEnabled = true
-                    btnSendRaw.isEnabled = true
-                    btnStartListening.isEnabled = true
+                    val connected = rs485Tester.connectToDevice(selectedDevice)
+
+                    if (connected) {
+                        updateSerialStatus("✅ Connected to serial device: ${selectedDevice.deviceName}")
+                        btnConnectSerial.isEnabled = false
+                        btnDisconnectSerial.isEnabled = true
+                        btnTestComm.isEnabled = true
+                        btnSendRaw.isEnabled = true
+                        btnStartListening.isEnabled = true
+                    } else {
+                        updateSerialStatus("❌ Failed to connect to serial device")
+                    }
+
+                } else if (selectedText.startsWith("🔌 USB:")) {
+                    // Handle raw USB device connection
+                    Log.d(TAG, "Attempting to connect to raw USB device...")
+                    updateSerialStatus("🔧 Raw USB device selected - attempting generic connection...")
+
+                    // For raw USB devices, we'll try to find a compatible driver
+                    val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+                    val allDevices = usbManager.deviceList.values.toList()
+
+                    // Find the device based on the display text
+                    val deviceInfo = selectedText.substringAfter("🔌 USB: ")
+                    val targetDevice = allDevices.find { device ->
+                        val deviceDesc = "${device.deviceName} - VID:${String.format("%04X", device.vendorId)} PID:${String.format("%04X", device.productId)}"
+                        deviceInfo.contains(deviceDesc)
+                    }
+
+                    if (targetDevice != null) {
+                        Log.d(TAG, "Found raw USB device: ${targetDevice.deviceName}")
+
+                        // Try to create a serial driver for this device
+                        val driver = UsbSerialProber.getDefaultProber().probeDevice(targetDevice)
+
+                        if (driver != null) {
+                            Log.d(TAG, "Created driver for raw device: ${driver.javaClass.simpleName}")
+
+                            val customSerialDevice = RS485CommunicationTester.SerialDevice(
+                                device = targetDevice,
+                                driver = driver,
+                                deviceInfo = selectedText,
+                                vendorId = String.format("%04X", targetDevice.vendorId),
+                                productId = String.format("%04X", targetDevice.productId),
+                                deviceName = targetDevice.deviceName
+                            )
+
+                            val connected = rs485Tester.connectToDevice(customSerialDevice)
+
+                            if (connected) {
+                                updateSerialStatus("✅ Connected to raw USB device: ${targetDevice.deviceName}")
+                                btnConnectSerial.isEnabled = false
+                                btnDisconnectSerial.isEnabled = true
+                                btnTestComm.isEnabled = true
+                                btnSendRaw.isEnabled = true
+                                btnStartListening.isEnabled = true
+                            } else {
+                                updateSerialStatus("❌ Failed to connect to raw USB device")
+                            }
+                        } else {
+                            updateSerialStatus("❌ No compatible driver found for this USB device")
+                            Log.w(TAG, "Could not create driver for device VID:${String.format("%04X", targetDevice.vendorId)} PID:${String.format("%04X", targetDevice.productId)}")
+                        }
+                    } else {
+                        updateSerialStatus("❌ Could not find selected USB device")
+                    }
+
                 } else {
-                    updateSerialStatus("❌ Failed to connect to device")
+                    updateSerialStatus("❌ Invalid device selection")
                 }
 
                 updateCommLogFromTester()
@@ -854,85 +917,101 @@ class HardwareTestActivity : BaseKioskActivity() {
         scanResults: List<String>,
         availableDrivers: List<UsbSerialDriver>
     ) {
-        // Debug logging
-        Log.d(TAG, "=== SPINNER UPDATE DEBUG ===")
-        Log.d(TAG, "scanResults.size: ${scanResults.size}")
-        Log.d(TAG, "availableDrivers.size: ${availableDrivers.size}")
-
-        scanResults.forEachIndexed { index, result ->
-            Log.d(TAG, "scanResult[$index]: $result")
-        }
-
         runOnUiThread {
             try {
-                // Update the serialDevices list for connection purposes
+                Log.d(TAG, "=== POPULATING ALL USB DEVICES ===")
+
+                // Get USB manager to access ALL devices
+                val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
+                val allUsbDevices = usbManager.deviceList
+
+                Log.d(TAG, "Total USB devices found: ${allUsbDevices.size}")
+                Log.d(TAG, "Recognized serial drivers: ${availableDrivers.size}")
+
+                // Create list to hold all devices
+                val allDeviceItems = mutableListOf<String>()
+
+                // First, add recognized serial drivers (marked as COMPATIBLE)
+                availableDrivers.forEachIndexed { index, driver ->
+                    val device = driver.device
+                    val deviceInfo = buildString {
+                        append("✅ SERIAL: ")
+                        append("${device.deviceName} - ")
+                        append("VID:${String.format("%04X", device.vendorId)} ")
+                        append("PID:${String.format("%04X", device.productId)} - ")
+                        append(identifyDeviceType(device.vendorId, device.productId, device.manufacturerName, device.productName))
+                    }
+
+                    allDeviceItems.add(deviceInfo)
+                    Log.d(TAG, "Added recognized serial: $deviceInfo")
+                }
+
+                // Then add ALL other USB devices (marked as RAW USB)
+                allUsbDevices.values.forEach { device ->
+                    // Check if this device is already added as a serial driver
+                    val alreadyAdded = availableDrivers.any { it.device.deviceName == device.deviceName }
+
+                    if (!alreadyAdded) {
+                        val deviceInfo = buildString {
+                            append("🔌 USB: ")
+                            append("${device.deviceName} - ")
+                            append("VID:${String.format("%04X", device.vendorId)} ")
+                            append("PID:${String.format("%04X", device.productId)} - ")
+                            append(identifyDeviceType(device.vendorId, device.productId, device.manufacturerName, device.productName))
+                            append(" [Class:${device.deviceClass}]")
+                        }
+
+                        allDeviceItems.add(deviceInfo)
+                        Log.d(TAG, "Added raw USB device: $deviceInfo")
+                    }
+                }
+
+                // Update serialDevices list (for backward compatibility with recognized drivers)
                 serialDevices = availableDrivers.map { driver ->
                     val device = driver.device
                     RS485CommunicationTester.SerialDevice(
                         device = device,
                         driver = driver,
-                        deviceInfo = buildString {
-                            append("${device.deviceName} - ")
-                            append("VID:${String.format("%04X", device.vendorId)} ")
-                            append("PID:${String.format("%04X", device.productId)}")
-                            device.manufacturerName?.let { append(" ($it)") }
-                            device.productName?.let { append(" - $it") }
-                        },
+                        deviceInfo = "${device.deviceName} - VID:${String.format("%04X", device.vendorId)} PID:${String.format("%04X", device.productId)}",
                         vendorId = String.format("%04X", device.vendorId),
                         productId = String.format("%04X", device.productId),
                         deviceName = device.deviceName
                     )
                 }
 
-                Log.d(TAG, "serialDevices.size after mapping: ${serialDevices.size}")
-
-                // Get current adapter or create new one
-                val adapter = spSerialDevices.adapter as? ArrayAdapter<String>
-                    ?: ArrayAdapter<String>(this@HardwareTestActivity, android.R.layout.simple_spinner_item)
-
-                Log.d(TAG, "Current adapter item count before clear: ${adapter.count}")
-
-                // Clear existing items
-                adapter.clear()
-                Log.d(TAG, "Adapter cleared, count: ${adapter.count}")
-
-                // Add items
-                if (scanResults.isEmpty()) {
-                    adapter.add("No compatible devices found")
-                    btnConnectSerial.isEnabled = false
-                    Log.d(TAG, "Added 'No devices' message")
+                // Create new adapter with all devices
+                val displayItems = if (allDeviceItems.isEmpty()) {
+                    listOf("❌ No USB devices detected at all")
                 } else {
-                    scanResults.forEach { result ->
-                        adapter.add(result)
-                        Log.d(TAG, "Added to adapter: $result")
-                    }
-                    btnConnectSerial.isEnabled = true
+                    allDeviceItems
                 }
 
-                Log.d(TAG, "Final adapter item count: ${adapter.count}")
+                val newAdapter = ArrayAdapter(
+                    this@HardwareTestActivity,
+                    android.R.layout.simple_spinner_item,
+                    displayItems
+                )
+                newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
-                // Set dropdown resource and notify
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                // Set the new adapter
+                spSerialDevices.adapter = newAdapter
 
-                // Ensure adapter is set
-                if (spSerialDevices.adapter !== adapter) {
-                    spSerialDevices.adapter = adapter
-                    Log.d(TAG, "Set new adapter on spinner")
-                }
+                // Enable connect button if we have any devices
+                btnConnectSerial.isEnabled = allDeviceItems.isNotEmpty()
 
-                // Force notify data changed
-                adapter.notifyDataSetChanged()
-                Log.d(TAG, "Notified data set changed")
+                Log.d(TAG, "Populated spinner with ${displayItems.size} total devices")
+                Log.d(TAG, "  - Recognized serial drivers: ${availableDrivers.size}")
+                Log.d(TAG, "  - Raw USB devices: ${allUsbDevices.size - availableDrivers.size}")
 
-                // Verify final state
-                Log.d(TAG, "Final spinner adapter count: ${spSerialDevices.adapter?.count ?: 0}")
+                // Log what to look for
+                updateCommLog("📋 DEVICE SCAN COMPLETE - ${displayItems.size} devices found")
+                updateCommLog("🎯 Look for devices marked with 'STM32' or 'RS485' in the dropdown")
+                updateCommLog("✅ SERIAL = Ready to use, 🔌 USB = Requires driver probe")
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error updating spinner: ${e.message}", e)
+                Log.e(TAG, "Error populating all devices: ${e.message}", e)
             }
         }
-
-        Log.d(TAG, "=== wakumhanya ===")
     }
 
     /**
@@ -951,6 +1030,31 @@ class HardwareTestActivity : BaseKioskActivity() {
             scrollCommLog.post {
                 scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
             }
+        }
+    }
+
+    private fun identifyDeviceType(vendorId: Int, productId: Int, manufacturerName: String?, productName: String?): String {
+        val vid = String.format("%04X", vendorId)
+        val pid = String.format("%04X", productId)
+
+        return when {
+            // STMicroelectronics devices
+            vendorId == 0x0483 -> "🎯 STM32/STMicroelectronics"
+
+            // Common USB-Serial adapters used with RS485
+            vendorId == 0x0403 && productId == 0x6001 -> "🔌 FTDI FT232R (Common RS485 adapter)"
+            vendorId == 0x0403 && productId == 0x6011 -> "🔌 FTDI FT4232H (Quad RS485 adapter)"
+            vendorId == 0x10C4 && productId == 0xEA60 -> "🔌 CP2102 USB-UART (RS485 compatible)"
+            vendorId == 0x1A86 && productId == 0x7523 -> "🔌 CH340 USB-Serial (Common Chinese RS485)"
+            vendorId == 0x067B && productId == 0x2303 -> "🔌 PL2303 USB-Serial"
+
+            // Generic USB-Serial class devices
+            manufacturerName?.contains("FTDI", ignoreCase = true) == true -> "🔌 FTDI USB-Serial"
+            productName?.contains("USB", ignoreCase = true) == true &&
+                    productName?.contains("Serial", ignoreCase = true) == true -> "🔌 USB-Serial Device"
+
+            // Default
+            else -> "❓ Unknown (VID:$vid PID:$pid)"
         }
     }
 
