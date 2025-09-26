@@ -953,7 +953,7 @@ class HardwareTestActivity : BaseKioskActivity() {
 
                     if (!alreadyAdded) {
                         val deviceInfo = buildString {
-                            append("✅ SERIAL: ")
+                            append("🔌 USB: ")
                             append("${device.deviceName} - ")
                             append("VID:${String.format("%04X", device.vendorId)} ")
                             append("PID:${String.format("%04X", device.productId)} - ")
