@@ -92,48 +92,64 @@ class RS485CommunicationTester(private val ctx: Context) {
     /**
      * Connect to a specific serial device
      */
-    suspend fun connectToDevice(serialDevice: SerialDevice, baudRate: Int = DEFAULT_BAUD_RATE): Boolean =
-        withContext(Dispatchers.IO) {
-            try {
-                // Close existing connection if any
-                disconnect()
+    suspend fun connectToDevice(
+        serialDevice: SerialDevice,
+        baudRate: Int = DEFAULT_BAUD_RATE,
+        portNumber: Int = 0
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            // Close existing connection if any
+            disconnect()
 
-                log("🔌 Connecting to: ${serialDevice.deviceInfo}")
-                log("⚙️ Settings: $baudRate baud, 8N1")
+            log("🔌 Connecting to: ${serialDevice.deviceInfo}")
+            log("📍 Port: ${portNumber + 1} of ${serialDevice.driver.ports.size}")
+            log("⚙️ Settings: $baudRate baud, 8N1")
 
-                val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
-                val connection = usbManager.openDevice(serialDevice.device)
+            val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
+            val connection = usbManager.openDevice(serialDevice.device)
 
-                if (connection == null) {
-                    log("❌ Failed to open device - permission denied")
-                    return@withContext false
-                }
-
-                port = serialDevice.driver.ports.firstOrNull()?.apply {
-                    open(connection)
-                    setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
-                    dtr = true
-                    rts = true
-                    purgeHwBuffers(true, true)
-                }
-
-                currentDevice = serialDevice.device
-
-                if (port != null) {
-                    log("✅ Connected successfully!")
-                    delay(100) // Allow port to stabilize
-                    return@withContext true
-                } else {
-                    log("❌ Failed to open serial port")
-                    return@withContext false
-                }
-
-            } catch (e: Exception) {
-                log("❌ Connection error: ${e.message}")
-                Log.e(TAG, "Error connecting to device", e)
+            if (connection == null) {
+                log("❌ Failed to open device - permission denied")
                 return@withContext false
             }
+
+            // Select the specific port (important for multi-port devices like CDC)
+            val availablePorts = serialDevice.driver.ports
+            if (portNumber >= availablePorts.size) {
+                log("❌ Port $portNumber not available (device has ${availablePorts.size} ports)")
+                return@withContext false
+            }
+
+            val selectedPort = availablePorts[portNumber]
+            log("📡 Using port: ${selectedPort.javaClass.simpleName} (Port ${portNumber + 1})")
+
+            port = selectedPort.apply {
+                open(connection)
+                setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
+                dtr = true
+                rts = true
+                purgeHwBuffers(true, true)
+            }
+
+            currentDevice = serialDevice.device
+
+            if (port != null) {
+                log("✅ Connected successfully to Port ${portNumber + 1}!")
+                log("📡 Device: ${serialDevice.device.deviceName}")
+                log("🔧 Driver: ${serialDevice.driver.javaClass.simpleName}")
+                delay(100) // Allow port to stabilize
+                return@withContext true
+            } else {
+                log("❌ Failed to open serial port")
+                return@withContext false
+            }
+
+        } catch (e: Exception) {
+            log("❌ Connection error: ${e.message}")
+            Log.e(TAG, "Error connecting to device", e)
+            return@withContext false
         }
+    }
 
     /**
      * Send basic test commands following Winnsen protocol format
