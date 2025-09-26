@@ -932,7 +932,7 @@ class HardwareTestActivity : BaseKioskActivity() {
             }
         }
 
-        Log.d(TAG, "=== END SPINNER UPDATE DEBUG ===")
+        Log.d(TAG, "=== wakumhanya ===")
     }
 
     /**
