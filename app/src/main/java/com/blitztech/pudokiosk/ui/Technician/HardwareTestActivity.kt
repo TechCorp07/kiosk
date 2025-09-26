@@ -12,6 +12,7 @@ import java.util.*
 
 // Hardware component imports
 import com.blitztech.pudokiosk.deviceio.rs485.LockerController
+import com.blitztech.pudokiosk.deviceio.rs485.RS485CommunicationTester
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
@@ -24,7 +25,6 @@ import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
  * 3. Custom TG2480HIII Thermal Printer (USB/Custom API)
  */
 class HardwareTestActivity : BaseKioskActivity() {
-
     companion object {
         private const val TAG = "HardwareTest"
     }
@@ -41,6 +41,24 @@ class HardwareTestActivity : BaseKioskActivity() {
     private lateinit var tvSystemStatus: TextView
     private lateinit var spStation: Spinner
     private lateinit var spLockNumber: Spinner
+
+    // === RS485 COMMUNICATION TEST COMPONENTS ===
+    private lateinit var rs485Tester: RS485CommunicationTester
+    private lateinit var spSerialDevices: Spinner
+    private lateinit var btnScanSerial: Button
+    private lateinit var btnConnectSerial: Button
+    private lateinit var btnDisconnectSerial: Button
+    private lateinit var btnTestComm: Button
+    private lateinit var btnSendRaw: Button
+    private lateinit var btnStartListening: Button
+    private lateinit var btnClearCommLog: Button
+    private lateinit var etRawHexInput: EditText
+    private lateinit var etCommStation: EditText
+    private lateinit var etCommLock: EditText
+    private lateinit var tvSerialStatus: TextView
+    private lateinit var tvCommLog: TextView
+    private lateinit var scrollCommLog: ScrollView
+    private var serialDevices = listOf<RS485CommunicationTester.SerialDevice>()
 
     // === BARCODE SCANNER COMPONENTS ===
     private lateinit var btnScannerFocus: Button
@@ -67,9 +85,10 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     // === STATE TRACKING ===
     private var lockerInitialized = false
+    private var rs485Initialized = false
     private var scannerInitialized = false
     private var printerInitialized = false
-
+    private var isListening = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hardware_test)
@@ -94,6 +113,22 @@ class HardwareTestActivity : BaseKioskActivity() {
         spStation = findViewById(R.id.spStation)
         spLockNumber = findViewById(R.id.spLockNumber)
 
+        // RS485 Communication Test UI
+        spSerialDevices = findViewById(R.id.spSerialDevices)
+        btnScanSerial = findViewById(R.id.btnScanSerial)
+        btnConnectSerial = findViewById(R.id.btnConnectSerial)
+        btnDisconnectSerial = findViewById(R.id.btnDisconnectSerial)
+        btnTestComm = findViewById(R.id.btnTestComm)
+        btnSendRaw = findViewById(R.id.btnSendRaw)
+        btnStartListening = findViewById(R.id.btnStartListening)
+        btnClearCommLog = findViewById(R.id.btnClearCommLog)
+        etRawHexInput = findViewById(R.id.etRawHexInput)
+        etCommStation = findViewById(R.id.etCommStation)
+        etCommLock = findViewById(R.id.etCommLock)
+        tvSerialStatus = findViewById(R.id.tvSerialStatus)
+        tvCommLog = findViewById(R.id.tvCommLog)
+        scrollCommLog = findViewById(R.id.scrollCommLog)
+
         // Barcode Scanner UI
         btnScannerFocus = findViewById(R.id.btnScannerFocus)
         etScannerResults = findViewById(R.id.etScannerResults)
@@ -117,7 +152,6 @@ class HardwareTestActivity : BaseKioskActivity() {
         btnResetAll = findViewById(R.id.btnResetAll)
 
         setupSpinners()
-        setButtonsEnabled(false)
     }
 
     private fun setupSpinners() {
@@ -132,10 +166,15 @@ class HardwareTestActivity : BaseKioskActivity() {
             (1..16).map { "Lock $it" })
         lockAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spLockNumber.adapter = lockAdapter
-    }
 
+        // Serial devices spinner (initially empty)
+        val serialAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item,
+            mutableListOf<String>())
+        serialAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spSerialDevices.adapter = serialAdapter
+    }
     private fun setupEventListeners() {
-        // === LOCKER CONTROLLER EVENTS ===
+        // Locker Controller Events
         swSimulateLockers.setOnCheckedChangeListener { _, isChecked ->
             reinitializeLockerController(isChecked)
         }
@@ -145,7 +184,7 @@ class HardwareTestActivity : BaseKioskActivity() {
             if (lockerId.isNotEmpty()) {
                 openLocker(lockerId)
             } else {
-                updateLockerStatus("Please enter a locker ID (e.g., M1, M25)")
+                updateLockerStatus("Please enter a locker ID")
             }
         }
 
@@ -160,59 +199,39 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         btnTestStation.setOnClickListener {
             val station = spStation.selectedItemPosition
-            testStation(station)
+            testStationCommunication(station)
         }
 
         btnSystemDiagnostics.setOnClickListener {
             runSystemDiagnostics()
         }
 
-        // === BARCODE SCANNER EVENTS ===
-        btnScannerFocus.setOnClickListener {
-            focusScannerInput()
+        // RS485 Communication Events
+        btnScanSerial.setOnClickListener { scanSerialDevices() }
+        btnConnectSerial.setOnClickListener { connectToSelectedDevice() }
+        btnDisconnectSerial.setOnClickListener { disconnectFromDevice() }
+        btnTestComm.setOnClickListener { testBasicCommunication() }
+        btnSendRaw.setOnClickListener { sendRawHexData() }
+        btnStartListening.setOnClickListener {
+            if (isListening) stopListening() else startListening()
         }
+        btnClearCommLog.setOnClickListener { clearCommunicationLog() }
 
-        btnTriggerScan.setOnClickListener {
-            triggerBarcodeScan()
-        }
+        // Scanner Events
+        btnScannerFocus.setOnClickListener { etScannerResults.requestFocus() }
+        btnTriggerScan.setOnClickListener { triggerBarcodeScan() }
+        btnClearScans.setOnClickListener { etScannerResults.text.clear() }
+        btnScannerReconnect.setOnClickListener { reconnectScanner() }
 
-        btnClearScans.setOnClickListener {
-            clearScanResults()
-        }
+        // Printer Events
+        btnPrintTest.setOnClickListener { testBasicPrinting() }
+        btnPrintReceipt.setOnClickListener { printSampleReceipt() }
+        btnPrintBarcode.setOnClickListener { printBarcodeTest() }
+        btnPrinterStatus.setOnClickListener { checkPrinterStatus() }
 
-        btnScannerReconnect.setOnClickListener {
-            reconnectScanner()
-        }
-
-        etScannerResults.setOnClickListener {
-            clearScanResults()
-        }
-
-        // === THERMAL PRINTER EVENTS ===
-        btnPrintTest.setOnClickListener {
-            testBasicPrinting()
-        }
-
-        btnPrintReceipt.setOnClickListener {
-            printSampleReceipt()
-        }
-
-        btnPrintBarcode.setOnClickListener {
-            printBarcodeTest()
-        }
-
-        btnPrinterStatus.setOnClickListener {
-            checkPrinterStatus()
-        }
-
-        // === GENERAL EVENTS ===
-        btnRunAllTests.setOnClickListener {
-            runComprehensiveTests()
-        }
-
-        btnResetAll.setOnClickListener {
-            resetAllHardware()
-        }
+        // General Events
+        btnRunAllTests.setOnClickListener { runComprehensiveTests() }
+        btnResetAll.setOnClickListener { resetAllSystems() }
     }
 
     private fun initializeHardware() {
@@ -221,14 +240,14 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
-                // Initialize all three hardware components
+                // Initialize all hardware components
                 initializeLockerController()
+                initializeRS485Tester()
                 initializeBarcodeScanner()
                 initializeThermalPrinter()
 
-                // Enable UI after initialization
+                updateStatus("All hardware components initialized")
                 setButtonsEnabled(true)
-                updateStatus("All hardware initialized successfully!")
 
             } catch (e: Exception) {
                 Log.e(TAG, "Hardware initialization failed", e)
@@ -239,7 +258,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         }
     }
 
-    // === LOCKER CONTROLLER METHODS ===
+// === LOCKER CONTROLLER METHODS ===
 
     private fun initializeLockerController() {
         val simulate = swSimulateLockers.isChecked
@@ -284,7 +303,6 @@ class HardwareTestActivity : BaseKioskActivity() {
                     showToast("Locker $lockerId opened successfully!")
                 } else {
                     updateLockerStatus("❌ Failed to open $lockerId\n$mapping")
-                    showToast("Failed to open locker $lockerId")
                 }
             } catch (e: Exception) {
                 updateLockerStatus("❌ Error opening $lockerId: ${e.message}")
@@ -306,7 +324,6 @@ class HardwareTestActivity : BaseKioskActivity() {
                 val status = if (isClosed) "CLOSED" else "OPEN"
 
                 updateLockerStatus("📋 Locker $lockerId is $status\n$mapping")
-                showToast("Locker $lockerId is $status")
             } catch (e: Exception) {
                 updateLockerStatus("❌ Error checking $lockerId status: ${e.message}")
                 Log.e(TAG, "Error checking locker status", e)
@@ -316,7 +333,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         }
     }
 
-    private fun testStation(station: Int) {
+    private fun testStationCommunication(station: Int) {
         showProgress(true)
         updateLockerStatus("Testing station $station...")
 
@@ -354,7 +371,7 @@ class HardwareTestActivity : BaseKioskActivity() {
                 val systemStatus = lockerController.getSystemStatus()
 
                 val statusBuilder = StringBuilder().apply {
-                    appendLine("🔧 LOCKER SYSTEM DIAGNOSTICS")
+                    appendLine("🔧 SYSTEM DIAGNOSTICS REPORT")
                     appendLine("=" * 30)
                     appendLine("Total Stations: 4")
                     appendLine("Expected Capacity: 64 lockers")
@@ -404,6 +421,239 @@ class HardwareTestActivity : BaseKioskActivity() {
                 Log.e(TAG, "Error running diagnostics", e)
             } finally {
                 showProgress(false)
+            }
+        }
+    }
+
+    // === RS485 COMMUNICATION TEST METHODS ===
+
+    private fun initializeRS485Tester() {
+        rs485Tester = RS485CommunicationTester(this)
+        rs485Initialized = true
+
+        updateSerialStatus("RS485 Communication Tester initialized")
+        updateCommLog("📋 RS485 Communication Tester ready")
+        updateCommLog("📌 Click 'Scan Serial' to discover connected devices")
+
+        // Set default values
+        etCommStation.setText("1")
+        etCommLock.setText("1")
+        etRawHexInput.setText("90 06 05 01 01 03")
+
+        Log.i(TAG, "RS485 Communication Tester initialized")
+    }
+
+    private fun scanSerialDevices() {
+        showProgress(true)
+        updateSerialStatus("🔍 Scanning for serial devices...")
+
+        lifecycleScope.launch {
+            try {
+                val devices = rs485Tester.scanForSerialDevices()
+                serialDevices = devices
+
+                val adapter = spSerialDevices.adapter as ArrayAdapter<String>
+                adapter.clear()
+
+                if (devices.isEmpty()) {
+                    adapter.add("No devices found")
+                    updateSerialStatus("❌ No USB serial devices found")
+                } else {
+                    devices.forEach { device ->
+                        adapter.add(device.deviceInfo)
+                    }
+                    updateSerialStatus("✅ Found ${devices.size} serial device(s)")
+                }
+
+                adapter.notifyDataSetChanged()
+                updateCommLogFromTester()
+
+            } catch (e: Exception) {
+                updateSerialStatus("❌ Error scanning devices: ${e.message}")
+                Log.e(TAG, "Error scanning devices", e)
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun connectToSelectedDevice() {
+        if (serialDevices.isEmpty()) {
+            updateSerialStatus("❌ No devices available - scan first")
+            return
+        }
+
+        val selectedIndex = spSerialDevices.selectedItemPosition
+        if (selectedIndex < 0 || selectedIndex >= serialDevices.size) {
+            updateSerialStatus("❌ Please select a valid device")
+            return
+        }
+
+        showProgress(true)
+        val selectedDevice = serialDevices[selectedIndex]
+        updateSerialStatus("🔌 Connecting to device...")
+
+        lifecycleScope.launch {
+            try {
+                val connected = rs485Tester.connectToDevice(selectedDevice)
+
+                if (connected) {
+                    updateSerialStatus("✅ Connected to: ${selectedDevice.deviceName}")
+                    btnConnectSerial.isEnabled = false
+                    btnDisconnectSerial.isEnabled = true
+                    btnTestComm.isEnabled = true
+                    btnSendRaw.isEnabled = true
+                    btnStartListening.isEnabled = true
+                } else {
+                    updateSerialStatus("❌ Failed to connect to device")
+                }
+
+                updateCommLogFromTester()
+
+            } catch (e: Exception) {
+                updateSerialStatus("❌ Connection error: ${e.message}")
+                Log.e(TAG, "Error connecting to device", e)
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun disconnectFromDevice() {
+        lifecycleScope.launch {
+            try {
+                rs485Tester.disconnect()
+                updateSerialStatus("🔌 Disconnected")
+
+                btnConnectSerial.isEnabled = true
+                btnDisconnectSerial.isEnabled = false
+                btnTestComm.isEnabled = false
+                btnSendRaw.isEnabled = false
+                btnStartListening.isEnabled = false
+
+                updateCommLogFromTester()
+
+            } catch (e: Exception) {
+                updateSerialStatus("❌ Error disconnecting: ${e.message}")
+                Log.e(TAG, "Error disconnecting", e)
+            }
+        }
+    }
+
+    private fun testBasicCommunication() {
+        if (!rs485Tester.isConnected()) {
+            updateSerialStatus("❌ Not connected - connect to a device first")
+            return
+        }
+
+        showProgress(true)
+        updateSerialStatus("📡 Testing basic communication...")
+
+        lifecycleScope.launch {
+            try {
+                val station = etCommStation.text.toString().toIntOrNull() ?: 1
+                val lock = etCommLock.text.toString().toIntOrNull() ?: 1
+
+                val success = rs485Tester.sendBasicTest(station, lock)
+
+                if (success) {
+                    updateSerialStatus("✅ Communication test successful!")
+                } else {
+                    updateSerialStatus("⚠️ No response received - check connections")
+                }
+
+                updateCommLogFromTester()
+
+            } catch (e: Exception) {
+                updateSerialStatus("❌ Communication test failed: ${e.message}")
+                Log.e(TAG, "Error in communication test", e)
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun sendRawHexData() {
+        if (!rs485Tester.isConnected()) {
+            updateSerialStatus("❌ Not connected - connect to a device first")
+            return
+        }
+
+        val hexInput = etRawHexInput.text.toString().trim()
+        if (hexInput.isEmpty()) {
+            updateSerialStatus("❌ Please enter hex data to send")
+            return
+        }
+
+        showProgress(true)
+        updateSerialStatus("📤 Sending raw hex data...")
+
+        lifecycleScope.launch {
+            try {
+                val success = rs485Tester.sendRawHex(hexInput)
+
+                if (success) {
+                    updateSerialStatus("✅ Raw data sent and response received")
+                } else {
+                    updateSerialStatus("⚠️ Data sent but no response")
+                }
+
+                updateCommLogFromTester()
+
+            } catch (e: Exception) {
+                updateSerialStatus("❌ Error sending raw data: ${e.message}")
+                Log.e(TAG, "Error sending raw data", e)
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun startListening() {
+        if (!rs485Tester.isConnected()) {
+            updateSerialStatus("❌ Not connected - connect to a device first")
+            return
+        }
+
+        isListening = true
+        btnStartListening.text = "Stop Listening"
+        updateSerialStatus("👂 Listening for incoming data...")
+
+        lifecycleScope.launch {
+            try {
+                rs485Tester.startListening(10000) // Listen for 10 seconds
+                updateCommLogFromTester()
+
+            } catch (e: Exception) {
+                updateSerialStatus("❌ Error during listening: ${e.message}")
+                Log.e(TAG, "Error during listening", e)
+            } finally {
+                stopListening()
+            }
+        }
+    }
+
+    private fun stopListening() {
+        isListening = false
+        btnStartListening.text = "Start Listening"
+        updateSerialStatus("👂 Listening stopped")
+    }
+
+    private fun clearCommunicationLog() {
+        rs485Tester.clearLog()
+        tvCommLog.text = "Communication log cleared\n"
+        updateSerialStatus("🧹 Log cleared")
+    }
+
+    private fun updateCommLogFromTester() {
+        val logMessages = rs485Tester.getLogMessages()
+        val logText = logMessages.joinToString("\n")
+
+        runOnUiThread {
+            tvCommLog.text = logText
+            // Scroll to bottom
+            scrollCommLog.post {
+                scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
             }
         }
     }
@@ -797,30 +1047,21 @@ class HardwareTestActivity : BaseKioskActivity() {
         }
     }
 
-    private fun resetAllHardware() {
-        showProgress(true)
-        updateStatus("Resetting all hardware...")
-
+    private fun resetAllSystems() {
         lifecycleScope.launch {
             try {
-                // Clear all UI
-                clearScanResults()
-                etLockerId.setText("")
-                tvSystemStatus.text = ""
+                if (rs485Initialized && rs485Tester.isConnected()) {
+                    rs485Tester.disconnect()
+                }
 
-                // Reset states
-                updateLockerStatus("Hardware reset - ready for testing")
-                updateScannerStatus("Hardware reset - ready for scanning")
-                updatePrinterStatus("Hardware reset - ready for printing")
-
-                updateStatus("All hardware reset completed")
-                showToast("Hardware reset completed!")
+                updateStatus("All systems reset")
+                updateLockerStatus("Ready for testing")
+                updateSerialStatus("Ready for testing")
+                updateScannerStatus("Ready for testing")
+                updatePrinterStatus("Ready for testing")
 
             } catch (e: Exception) {
-                Log.e(TAG, "Reset failed", e)
-                updateStatus("Reset failed: ${e.message}")
-            } finally {
-                showProgress(false)
+                Log.e(TAG, "Error resetting systems", e)
             }
         }
     }
@@ -845,14 +1086,22 @@ class HardwareTestActivity : BaseKioskActivity() {
             btnTestStation.isEnabled = enabled && lockerInitialized
             btnSystemDiagnostics.isEnabled = enabled && lockerInitialized
 
-            btnScannerFocus.isEnabled = true // Always enabled
-            btnClearScans.isEnabled = true // Always enabled
+            btnScanSerial.isEnabled = enabled && rs485Initialized
+            btnConnectSerial.isEnabled = enabled && rs485Initialized && serialDevices.isNotEmpty() && !rs485Tester.isConnected()
+            btnDisconnectSerial.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
+            btnTestComm.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
+            btnSendRaw.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
+            btnStartListening.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
+            btnClearCommLog.isEnabled = enabled && rs485Initialized
+
+            btnScannerFocus.isEnabled = true
+            btnClearScans.isEnabled = true
             btnScannerReconnect.isEnabled = enabled && scannerInitialized
 
             btnPrinterStatus.isEnabled = enabled && printerInitialized
 
             btnRunAllTests.isEnabled = enabled
-            btnResetAll.isEnabled = true // Always enabled
+            btnResetAll.isEnabled = true
         }
     }
 
@@ -869,6 +1118,23 @@ class HardwareTestActivity : BaseKioskActivity() {
     private fun updateLockerStatus(message: String) {
         runOnUiThread {
             tvLockerStatus.text = "$message\n\nTime: ${SimpleDateFormat("HH:mm:ss").format(Date())}"
+        }
+    }
+
+    private fun updateSerialStatus(message: String) {
+        runOnUiThread {
+            tvSerialStatus.text = "$message\n\nTime: ${SimpleDateFormat("HH:mm:ss").format(Date())}"
+        }
+    }
+
+    private fun updateCommLog(message: String) {
+        runOnUiThread {
+            val timestamp = SimpleDateFormat("HH:mm:ss.SSS").format(Date())
+            tvCommLog.append("[$timestamp] $message\n")
+
+            scrollCommLog.post {
+                scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
+            }
         }
     }
 
@@ -905,6 +1171,16 @@ class HardwareTestActivity : BaseKioskActivity() {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Error closing locker controller: ${e.message}")
+        }
+
+        try {
+            if (rs485Initialized) {
+                lifecycleScope.launch {
+                    rs485Tester.disconnect()
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error closing RS485 tester: ${e.message}")
         }
 
         try {
