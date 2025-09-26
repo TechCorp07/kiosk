@@ -1,79 +1,97 @@
 /**
- * TypeScript interfaces for STM32L412 Locker Controller System
- * Compatible with Kotlin implementation using Winnsen Protocol
+ * TypeScript interfaces for STM32L412 Locker Controller System - Production Version
+ * Single Board Configuration (Station 0, Locks 1-16)
  *
  * For Android API Level 25 (Android 7.1.2)
  * Communication: RS485 via MAX485 IC at 9600 baud
+ * Hardware: VID:04E2 PID:1414 CDC device, Port 2
  */
 
 /**
- * Station and lock number mapping
+ * Fixed hardware configuration constants
  */
-export interface StationLockPair {
-  station: number;        // 0-3 (DIP switch settings: 00, 01, 10, 11)
-  lockNumber: number;     // 1-16 (lock position on board)
-}
+export const HardwareConfig = {
+  // USB Device identifiers (fixed)
+  TARGET_VID: 0x04E2,
+  TARGET_PID: 0x1414,
+  TARGET_PORT_INDEX: 2,
+
+  // Communication settings (fixed)
+  BAUD_RATE: 9600,
+  DATA_BITS: 8,
+  STOP_BITS: 1,
+  PARITY: 'none' as const,
+
+  // System configuration (single board)
+  STATION_ADDRESS: 0,
+  MIN_LOCK: 1,
+  MAX_LOCK: 16,
+  TOTAL_LOCKS: 16,
+
+  // Timing settings
+  COMMUNICATION_TIMEOUT_MS: 800,
+  READ_TIMEOUT_MS: 500,
+  WRITE_TIMEOUT_MS: 500,
+  MAX_RETRIES: 3
+} as const;
 
 /**
- * Locker system configuration
+ * Locker system configuration for single board
  */
 export interface LockerConfiguration {
-  maxStations: number;              // Maximum number of stations (default: 4)
-  locksPerBoard: number;            // Locks per board (default: 16)
-  baudRate: number;                 // Communication baud rate (default: 9600)
-  communicationTimeoutMs: number;   // Timeout for RS485 communication (default: 800)
-  maxRetries: number;               // Maximum retry attempts (default: 2)
-  simulationMode: boolean;          // Enable simulation mode for testing (default: false)
-  totalCapacity: number;            // Total system capacity (calculated)
-  dipSwitchSettings: string[];      // DIP switch configurations ["00", "01", "10", "11"]
-  customMapping?: { [lockerId: string]: StationLockPair }; // Optional custom ID mapping
+  stationAddress: number;           // Always 0 for single board
+  totalLocks: number;               // Always 16 for single board
+  baudRate: number;                 // Always 9600
+  communicationTimeoutMs: number;   // Default: 800
+  maxRetries: number;               // Default: 3
+  hardwareConnected: boolean;       // Connection status
 }
 
 /**
  * Unlock operation result
  */
 export interface UnlockResult {
-  station: number;
-  lockNumber: number;
-  success: boolean;
-  isOpen: boolean;
+  station: number;        // Always 0 for single board
+  lockNumber: number;     // 1-16
+  success: boolean;       // Operation success
+  isOpen: boolean;        // Final lock state
 }
 
 /**
  * Status check result
  */
 export interface StatusResult {
-  station: number;
-  lockNumber: number;
-  isOpen: boolean;
+  station: number;        // Always 0 for single board
+  lockNumber: number;     // 1-16
+  isOpen: boolean;        // true = open, false = closed/locked
 }
 
 /**
  * System status information
  */
-export interface LockerSystemStatus {
-  totalStations: number;
-  onlineStations: number;
-  stationStatus: { [station: number]: boolean };
-  totalCapacity: number;
-  configuration: LockerConfiguration;
-  lastUpdated: number;
+export interface SystemStatus {
+  boardOnline: boolean;               // STM32L412 board connectivity
+  stationAddress: number;             // Always 0
+  totalLocks: number;                 // Always 16
+  communicationOk: boolean;           // RS485 communication status
+  serialConnected: boolean;           // USB serial connection status
+  lastUpdated: number;                // Timestamp of last update
+  error?: string;                     // Error message if any
 }
 
 /**
  * Locker operation response
  */
 export interface LockerOperationResponse {
-  success: boolean;
-  lockerId: string;
-  station: number;
-  lockNumber: number;
-  message?: string;
-  timestamp: number;
+  success: boolean;       // Operation success
+  lockNumber: number;     // Lock that was operated on (1-16)
+  station: number;        // Always 0 for single board
+  message?: string;       // Optional status message
+  timestamp: number;      // Operation timestamp
 }
 
 /**
- * Communication protocol constants
+ * Communication protocol constants (Winnsen Protocol)
  */
 export const WinnsenProtocol = {
   // Frame constants
@@ -96,178 +114,165 @@ export const WinnsenProtocol = {
 } as const;
 
 /**
- * Main Locker Controller Interface
+ * Main Locker Controller Interface for Single Board
  */
 export interface ILockerController {
   /**
    * Open a specific locker
-   * @param lockerId Locker identifier (e.g., "M12", "M25")
-   * @param retries Number of retry attempts (optional)
+   * @param lockNumber Lock number (1-16)
+   * @param retries Number of retry attempts (optional, default: 3)
    * @returns Promise<boolean> true if unlock successful
    */
-  openLocker(lockerId: string, retries?: number): Promise<boolean>;
+  openLocker(lockNumber: number, retries?: number): Promise<boolean>;
 
   /**
-   * Check if locker door is closed
-   * @param lockerId Locker identifier
-   * @returns Promise<boolean> true if door is closed
+   * Check the status of a specific locker
+   * @param lockNumber Lock number (1-16)
+   * @param retries Number of retry attempts (optional, default: 3)
+   * @returns Promise<boolean> true if locker is closed/locked
    */
-  isClosed(lockerId: string): Promise<boolean>;
+  checkLockerStatus(lockNumber: number, retries?: number): Promise<boolean>;
 
   /**
-   * Test communication with specific station
-   * @param station Station number (0-3)
-   * @returns Promise<boolean> true if station responds
+   * Test communication with the locker board
+   * @returns Promise<boolean> true if board responds correctly
    */
-  testStation(station: number): Promise<boolean>;
+  testCommunication(): Promise<boolean>;
 
   /**
-   * Get system status for all stations
-   * @returns Promise<LockerSystemStatus> Complete system status
+   * Get current system status
+   * @returns Promise<SystemStatus> Current system information
    */
-  getSystemStatus(): Promise<LockerSystemStatus>;
+  getSystemStatus(): Promise<SystemStatus>;
 
   /**
-   * Get mapping information for a locker ID
-   * @param lockerId Locker identifier
-   * @returns string Human-readable mapping information
+   * Close the serial connection
    */
-  getLockerMapping(lockerId: string): string;
-
-  /**
-   * Close controller and cleanup resources
-   */
-  close(): Promise<void>;
+  close(): void;
 }
 
 /**
- * Factory functions for creating configurations
+ * Hardware test result
  */
-export const LockerConfigurationFactory = {
-  /**
-   * Standard production configuration
-   */
-  standard(): LockerConfiguration {
-    return {
-      maxStations: 4,
-      locksPerBoard: 16,
-      baudRate: 9600,
-      communicationTimeoutMs: 800,
-      maxRetries: 2,
-      simulationMode: false,
-      totalCapacity: 64,
-      dipSwitchSettings: ["00", "01", "10", "11"]
-    };
-  },
-
-  /**
-   * Testing/development configuration
-   */
-  testing(): LockerConfiguration {
-    return {
-      maxStations: 4,
-      locksPerBoard: 16,
-      baudRate: 9600,
-      communicationTimeoutMs: 200,
-      maxRetries: 1,
-      simulationMode: true,
-      totalCapacity: 64,
-      dipSwitchSettings: ["00", "01", "10", "11"]
-    };
-  },
-
-  /**
-   * Single board configuration
-   */
-  singleBoard(): LockerConfiguration {
-    return {
-      maxStations: 1,
-      locksPerBoard: 16,
-      baudRate: 9600,
-      communicationTimeoutMs: 800,
-      maxRetries: 2,
-      simulationMode: false,
-      totalCapacity: 16,
-      dipSwitchSettings: ["00"]
-    };
-  },
-
-  /**
-   * Custom configuration
-   */
-  custom(overrides: Partial<LockerConfiguration>): LockerConfiguration {
-    const standard = LockerConfigurationFactory.standard();
-    return { ...standard, ...overrides };
-  }
-};
+export interface HardwareTestResult {
+  testName: string;           // Test identifier
+  success: boolean;           // Test result
+  duration: number;           // Test duration in ms
+  message: string;            // Result message
+  timestamp: number;          // Test timestamp
+  details?: any;              // Additional test details
+}
 
 /**
- * Default locker ID mapping functions
+ * System diagnostics result
  */
-export const LockerMapping = {
+export interface SystemDiagnostics {
+  lockerController: HardwareTestResult;     // Locker board test
+  barcodeScanner: HardwareTestResult;       // Scanner test
+  printer: HardwareTestResult;              // Printer test
+  overallStatus: 'operational' | 'degraded' | 'offline';
+  timestamp: number;                        // Diagnostics timestamp
+  recommendations?: string[];               // Service recommendations
+}
+
+/**
+ * Lock validation utilities
+ */
+export const LockValidation = {
   /**
-   * Map locker ID to station and lock number
-   * Default mapping: M1-M16 -> Station 0, M17-M32 -> Station 1, etc.
+   * Validate lock number is within valid range
    */
-  getStationLock(lockerId: string, config: LockerConfiguration): StationLockPair {
-    // Check custom mapping first
-    if (config.customMapping && config.customMapping[lockerId]) {
-      return config.customMapping[lockerId];
+  isValidLockNumber: (lockNumber: number): boolean => {
+    return Number.isInteger(lockNumber) &&
+           lockNumber >= HardwareConfig.MIN_LOCK &&
+           lockNumber <= HardwareConfig.MAX_LOCK;
+  },
+
+  /**
+   * Get all valid lock numbers
+   */
+  getAllValidLockNumbers: (): number[] => {
+    return Array.from(
+      { length: HardwareConfig.MAX_LOCK },
+      (_, i) => i + HardwareConfig.MIN_LOCK
+    );
+  },
+
+  /**
+   * Format lock number for display
+   */
+  formatLockNumber: (lockNumber: number): string => {
+    return LockValidation.isValidLockNumber(lockNumber)
+      ? `Lock ${lockNumber.toString().padStart(2, '0')}`
+      : 'Invalid Lock';
+  }
+} as const;
+
+/**
+ * Protocol utilities
+ */
+export const ProtocolUtils = {
+  /**
+   * Convert byte array to hex string
+   */
+  toHexString: (bytes: number[]): string => {
+    return bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+  },
+
+  /**
+   * Create unlock command bytes
+   */
+  createUnlockCommand: (lockNumber: number): number[] => {
+    if (!LockValidation.isValidLockNumber(lockNumber)) {
+      throw new Error(`Invalid lock number: ${lockNumber}`);
     }
 
-    // Extract numeric part from locker ID
-    const numericPart = parseInt(lockerId.replace(/\D/g, ''), 10);
-    if (isNaN(numericPart) || numericPart < 1 || numericPart > config.totalCapacity) {
-      throw new Error(`Invalid locker ID: ${lockerId}`);
+    return [
+      WinnsenProtocol.FRAME_HEADER,
+      WinnsenProtocol.CMD_LENGTH,
+      WinnsenProtocol.FUNC_UNLOCK,
+      HardwareConfig.STATION_ADDRESS,
+      lockNumber,
+      WinnsenProtocol.FRAME_END
+    ];
+  },
+
+  /**
+   * Create status command bytes
+   */
+  createStatusCommand: (lockNumber: number): number[] => {
+    if (!LockValidation.isValidLockNumber(lockNumber)) {
+      throw new Error(`Invalid lock number: ${lockNumber}`);
     }
 
-    // Calculate station and lock number
-    const station = Math.floor((numericPart - 1) / config.locksPerBoard);
-    const lockNumber = ((numericPart - 1) % config.locksPerBoard) + 1;
-
-    return { station, lockNumber };
-  },
-
-  /**
-   * Get DIP switch setting for station
-   */
-  getDipSetting(station: number): string {
-    const settings = ["00", "01", "10", "11"];
-    return settings[station] || "??";
-  },
-
-  /**
-   * Validate locker ID format
-   */
-  isValidLockerId(lockerId: string): boolean {
-    return /^[A-Z]\d+$/.test(lockerId);
+    return [
+      WinnsenProtocol.FRAME_HEADER,
+      WinnsenProtocol.CMD_LENGTH,
+      WinnsenProtocol.FUNC_STATUS,
+      HardwareConfig.STATION_ADDRESS,
+      lockNumber,
+      WinnsenProtocol.FRAME_END
+    ];
   }
+} as const;
+
+/**
+ * Export all types and utilities
+ */
+export type {
+  LockerConfiguration,
+  UnlockResult,
+  StatusResult,
+  SystemStatus,
+  LockerOperationResponse,
+  ILockerController,
+  HardwareTestResult,
+  SystemDiagnostics
 };
 
-/**
- * Error types for locker operations
- */
-export enum LockerError {
-  INVALID_LOCKER_ID = "INVALID_LOCKER_ID",
-  COMMUNICATION_TIMEOUT = "COMMUNICATION_TIMEOUT",
-  STATION_OFFLINE = "STATION_OFFLINE",
-  UNLOCK_FAILED = "UNLOCK_FAILED",
-  STATUS_CHECK_FAILED = "STATUS_CHECK_FAILED",
-  SERIAL_PORT_ERROR = "SERIAL_PORT_ERROR",
-  CONFIGURATION_ERROR = "CONFIGURATION_ERROR"
-}
-
-/**
- * Locker operation exception
- */
-export class LockerException extends Error {
-  constructor(
-    public readonly errorType: LockerError,
-    message: string,
-    public readonly lockerId?: string,
-    public readonly station?: number
-  ) {
-    super(message);
-    this.name = "LockerException";
-  }
-}
+export {
+  HardwareConfig,
+  WinnsenProtocol,
+  LockValidation,
+  ProtocolUtils
+};

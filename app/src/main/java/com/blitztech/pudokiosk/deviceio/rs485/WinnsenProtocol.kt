@@ -1,14 +1,13 @@
 package com.blitztech.pudokiosk.deviceio.rs485
 
 /**
- * Winnsen Smart Locker Protocol Implementation
- * Custom protocol for STM32L412-based locker control boards
+ * Winnsen Smart Locker Protocol Implementation for STM32L412
  *
  * Frame Format: [Header] [Length] [Function] [Station] [Lock] [Frame End]
  * - Header: 0x90
  * - Length: 0x06 for commands, 0x07 for responses
  * - Function: 0x05 (unlock), 0x85 (unlock response), 0x12 (status), 0x92 (status response)
- * - Station: 0-3 (based on DIP switch: 00, 01, 10, 11)
+ * - Station: 0 (hardcoded for single board)
  * - Lock: 1-16 (lock number on board)
  * - Frame End: 0x03
  */
@@ -37,7 +36,7 @@ object WinnsenProtocol {
      * Send: 0x90 0x06 0x05 [Station] [Lock] 0x03
      */
     fun createUnlockCommand(station: Int, lockNumber: Int): ByteArray {
-        require(station in 0..3) { "Station must be 0-3, got $station" }
+        require(station == 0) { "Station must be 0 for single board, got $station" }
         require(lockNumber in 1..16) { "Lock number must be 1-16, got $lockNumber" }
 
         return byteArrayOf(
@@ -55,7 +54,7 @@ object WinnsenProtocol {
      * Send: 0x90 0x06 0x12 [Station] [Lock] 0x03
      */
     fun createStatusCommand(station: Int, lockNumber: Int): ByteArray {
-        require(station in 0..3) { "Station must be 0-3, got $station" }
+        require(station == 0) { "Station must be 0 for single board, got $station" }
         require(lockNumber in 1..16) { "Lock number must be 1-16, got $lockNumber" }
 
         return byteArrayOf(
@@ -73,87 +72,90 @@ object WinnsenProtocol {
      * Receive: 0x90 0x07 0x85 [Station] [Lock] [Status] 0x03
      */
     fun parseUnlockResponse(response: ByteArray): UnlockResult? {
-        if (response.size != 7) return null
-        if (response[0] != FRAME_HEADER) return null
-        if (response[1] != RESP_LENGTH) return null
-        if (response[2] != FUNC_UNLOCK_RESP) return null
-        if (response[6] != FRAME_END) return null
+        if (!isValidResponseFrame(response, FUNC_UNLOCK_RESP)) {
+            return null
+        }
 
-        return UnlockResult(
-            station = response[3].toInt() and 0xFF,
-            lockNumber = response[4].toInt() and 0xFF,
-            success = response[5] == STATUS_SUCCESS,
-            isOpen = response[5] == STATUS_SUCCESS
-        )
+        val station = response[3].toInt()
+        val lockNumber = response[4].toInt()
+        val statusByte = response[5]
+        val success = (statusByte == STATUS_SUCCESS)
+        val isOpen = (statusByte == STATUS_OPEN)
+
+        return UnlockResult(station, lockNumber, success, isOpen)
     }
 
     /**
      * Parse status response frame
      * Receive: 0x90 0x07 0x92 [Station] [Status] [Lock] 0x03
-     * Note: Different order than unlock response - Status comes before Lock
      */
     fun parseStatusResponse(response: ByteArray): StatusResult? {
-        if (response.size != 7) return null
-        if (response[0] != FRAME_HEADER) return null
-        if (response[1] != RESP_LENGTH) return null
-        if (response[2] != FUNC_STATUS_RESP) return null
-        if (response[6] != FRAME_END) return null
+        if (!isValidResponseFrame(response, FUNC_STATUS_RESP)) {
+            return null
+        }
 
-        return StatusResult(
-            station = response[3].toInt() and 0xFF,
-            isOpen = response[4] == STATUS_OPEN,
-            lockNumber = response[5].toInt() and 0xFF
-        )
+        val station = response[3].toInt()
+        val statusByte = response[4]
+        val lockNumber = response[5].toInt()
+        val isOpen = (statusByte == STATUS_OPEN)
+
+        return StatusResult(station, lockNumber, isOpen)
     }
 
     /**
-     * Validate response matches sent command
+     * Validate response frame format and function code
      */
     fun validateResponse(command: ByteArray, response: ByteArray): Boolean {
-        if (command.size < 6 || response.size < 6) return false
+        if (response.size != 7) return false
+        if (response[0] != FRAME_HEADER) return false
+        if (response[1] != RESP_LENGTH) return false
+        if (response[6] != FRAME_END) return false
 
-        val cmdStation = command[3]
-        val cmdLock = command[4]
-        val cmdFunction = command[2]
-
-        when (cmdFunction) {
-            FUNC_UNLOCK -> {
-                val result = parseUnlockResponse(response) ?: return false
-                return result.station == (cmdStation.toInt() and 0xFF) &&
-                        result.lockNumber == (cmdLock.toInt() and 0xFF)
-            }
-            FUNC_STATUS -> {
-                val result = parseStatusResponse(response) ?: return false
-                return result.station == (cmdStation.toInt() and 0xFF) &&
-                        result.lockNumber == (cmdLock.toInt() and 0xFF)
-            }
+        // Check if response function matches command
+        val commandFunction = command[2]
+        val expectedResponseFunction = when (commandFunction) {
+            FUNC_UNLOCK -> FUNC_UNLOCK_RESP
+            FUNC_STATUS -> FUNC_STATUS_RESP
             else -> return false
         }
+
+        return response[2] == expectedResponseFunction
     }
 
     /**
-     * Convert response to hex string for debugging
+     * Validate response frame structure
      */
-    fun toHexString(data: ByteArray): String {
-        return data.joinToString(" ") { "%02X".format(it) }
+    private fun isValidResponseFrame(response: ByteArray, expectedFunction: Byte): Boolean {
+        return response.size == 7 &&
+                response[0] == FRAME_HEADER &&
+                response[1] == RESP_LENGTH &&
+                response[2] == expectedFunction &&
+                response[6] == FRAME_END
     }
+
+    /**
+     * Convert byte array to hex string for logging
+     */
+    fun toHexString(bytes: ByteArray): String {
+        return bytes.joinToString(" ") { "%02X".format(it) }
+    }
+
+    /**
+     * Data class for unlock operation result
+     */
+    data class UnlockResult(
+        val station: Int,
+        val lockNumber: Int,
+        val success: Boolean,
+        val isOpen: Boolean
+    )
+
+    /**
+     * Data class for status check result
+     */
+    data class StatusResult(
+        val station: Int,
+        val lockNumber: Int,
+        val isOpen: Boolean
+    )
 }
-
-/**
- * Result of unlock operation
- */
-data class UnlockResult(
-    val station: Int,
-    val lockNumber: Int,
-    val success: Boolean,
-    val isOpen: Boolean
-)
-
-/**
- * Result of status check operation
- */
-data class StatusResult(
-    val station: Int,
-    val lockNumber: Int,
-    val isOpen: Boolean
-)

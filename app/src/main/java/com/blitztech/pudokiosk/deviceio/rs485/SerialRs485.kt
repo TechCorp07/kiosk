@@ -1,163 +1,194 @@
 package com.blitztech.pudokiosk.deviceio.rs485
 
 import android.content.Context
-import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
-import com.hoho.android.usbserial.driver.UsbSerialDriver
+import android.util.Log
+import com.hoho.android.usbserial.driver.CdcAcmSerialDriver
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import java.io.IOException
 
 /**
- * RS485 Serial Communication Handler
- * Configured for STM32L412 locker control boards via MAX485 IC
- * Default baud rate: 9600, 8N1 (8 data bits, no parity, 1 stop bit)
+ * Production RS485 Serial Driver for STM32L412 Locker Controller
+ *
+ * Fixed Configuration:
+ * - VID: 04E2, PID: 1414 (CDC-ACM device)
+ * - Port: 2 (fixed)
+ * - Baud: 9600, 8N1
+ * - Station: 0 (hardcoded)
+ *
+ * Hardware: STM32L412 + MAX485 IC via RS485 to RS232/USB converter
  */
-class SerialRs485(private val ctx: Context) {
-    private var port: UsbSerialPort? = null
-    private var isConnected = false
+class SerialRs485(private val context: Context) {
 
     companion object {
-        private const val DEFAULT_BAUD_RATE = 9600
-        private const val DEFAULT_TIMEOUT_MS = 500
-        private const val INTER_FRAME_DELAY_MS = 50L // Delay between frames for RS485
-        private const val MAX_RETRY_ATTEMPTS = 3
+        private const val TAG = "SerialRs485"
+
+        // Fixed hardware configuration
+        private const val TARGET_VID = 0x04E2
+        private const val TARGET_PID = 0x1414
+        private const val TARGET_PORT_INDEX = 2
+        private const val BAUD_RATE = 9600
+
+        // Communication settings
+        private const val DATA_BITS = 8
+        private const val STOP_BITS = UsbSerialPort.STOPBITS_1
+        private const val PARITY = UsbSerialPort.PARITY_NONE
+        private const val READ_TIMEOUT_MS = 500
+        private const val WRITE_TIMEOUT_MS = 500
+        private const val CONNECTION_DELAY_MS = 150L
     }
 
-    /**
-     * Open RS485 connection with specified parameters
-     */
-    suspend fun open(
-        baud: Int = DEFAULT_BAUD_RATE,
-        dataBits: Int = 8,
-        stopBits: Int = UsbSerialPort.STOPBITS_1,
-        parity: Int = UsbSerialPort.PARITY_NONE
-    ) = withContext(Dispatchers.IO) {
-        if (isConnected && port != null) return@withContext
-
-        val usb = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
-        val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usb)
-        require(availableDrivers.isNotEmpty()) { "No USB serial drivers found" }
-
-        // Find the correct RS485 adapter (you may need to filter by VID/PID)
-        val driver: UsbSerialDriver = availableDrivers.firstOrNull { driver ->
-            // Add specific filtering here if needed for your RS485-USB adapter
-            true // For now, use the first available driver
-        } ?: throw IllegalStateException("No compatible RS485 adapter found")
-
-        val connection = usb.openDevice(driver.device)
-            ?: throw IllegalStateException("No permission to open USB device: ${driver.device.deviceName}")
-
-        port = driver.ports.firstOrNull()?.apply {
-            open(connection)
-            setParameters(baud, dataBits, stopBits, parity)
-
-            // Configure for RS485 (important for proper communication)
-            dtr = true
-            rts = true
-
-            // Flush any existing data
-            purgeHwBuffers(true, true)
-        } ?: throw IllegalStateException("No serial ports available on device")
-
-        isConnected = true
-
-        // Small delay to ensure port is ready
-        delay(100)
-    }
+    private var serialPort: UsbSerialPort? = null
+    private var isConnected = false
 
     /**
-     * Write command and read response with proper RS485 timing
+     * Initialize and connect to the fixed CDC device
+     * @return true if connection successful
      */
-    suspend fun writeRead(
-        command: ByteArray,
-        expectedResponseSize: Int,
-        timeoutMs: Int = DEFAULT_TIMEOUT_MS,
-        retries: Int = MAX_RETRY_ATTEMPTS
-    ): ByteArray = withContext(Dispatchers.IO) {
-        val p = port ?: throw IllegalStateException("Serial port not open")
-
-        repeat(retries) { attempt ->
-            try {
-                // Clear any pending data
-                p.purgeHwBuffers(true, true)
-                delay(10)
-
-                // Send command
-                p.write(command, timeoutMs)
-                if (command.isEmpty()) {
-                    throw IllegalStateException("Failed to write complete command. Command size is zero.")
-                }
-
-                // RS485 inter-frame delay
-                delay(INTER_FRAME_DELAY_MS)
-
-                // Read response
-                val buffer = ByteArray(expectedResponseSize)
-                val bytesRead = p.read(buffer, timeoutMs)
-
-                if (bytesRead > 0) {
-                    return@withContext buffer.copyOf(bytesRead)
-                } else if (attempt == retries - 1) {
-                    throw IllegalStateException("No response received after $retries attempts")
-                }
-
-            } catch (e: Exception) {
-                if (attempt == retries - 1) throw e
-                // Wait before retry
-                delay(100)
+    suspend fun open(baud: Int = BAUD_RATE): Boolean {
+        try {
+            if (isConnected) {
+                Log.d(TAG, "Already connected")
+                return true
             }
+
+            Log.d(TAG, "Connecting to STM32L412 locker controller...")
+
+            val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
+            val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
+
+            // Find our specific CDC device
+            val targetDriver = availableDrivers.find { driver ->
+                val device = driver.device
+                val vendorId = device.vendorId
+                val productId = device.productId
+
+                Log.d(TAG, "Checking device VID:${vendorId.toString(16).uppercase()} PID:${productId.toString(16).uppercase()}")
+
+                vendorId == TARGET_VID && productId == TARGET_PID && driver is CdcAcmSerialDriver
+            }
+
+            if (targetDriver == null) {
+                Log.e(TAG, "STM32L412 CDC device not found (VID:04E2 PID:1414)")
+                return false
+            }
+
+            // Get the fixed port (Port 2)
+            val ports = targetDriver.ports
+            if (ports.size <= TARGET_PORT_INDEX) {
+                Log.e(TAG, "Port $TARGET_PORT_INDEX not available, device has ${ports.size} ports")
+                return false
+            }
+
+            serialPort = ports[TARGET_PORT_INDEX]
+            val port = serialPort ?: return false
+
+            // Close if already open
+            if (port.isOpen) {
+                port.close()
+                delay(CONNECTION_DELAY_MS)
+            }
+
+            // Open connection
+            port.open(usbManager.openDevice(targetDriver.device))
+
+            // Configure CDC-friendly parameters
+            port.setParameters(baud, DATA_BITS, STOP_BITS, PARITY)
+
+            isConnected = true
+            Log.i(TAG, "✅ Connected to STM32L412 at $baud baud on Port $TARGET_PORT_INDEX")
+
+            return true
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to connect: ${e.message}")
+            isConnected = false
+            serialPort = null
+            return false
         }
-
-        throw IllegalStateException("Failed to communicate after $retries attempts")
-    }
-
-    /**
-     * Write data only (no response expected)
-     */
-    suspend fun write(data: ByteArray, timeoutMs: Int = DEFAULT_TIMEOUT_MS): Int =
-        withContext(Dispatchers.IO) {
-            val p = port ?: throw IllegalStateException("Serial port not open")
-            p.write(data, timeoutMs)
-            data.size
-        }
-
-    /**
-     * Read data only
-     */
-    suspend fun read(buffer: ByteArray, timeoutMs: Int = DEFAULT_TIMEOUT_MS): Int =
-        withContext(Dispatchers.IO) {
-            val p = port ?: throw IllegalStateException("Serial port not open")
-            p.read(buffer, timeoutMs)
-        }
-
-    /**
-     * Check if port is connected and ready
-     */
-    fun isReady(): Boolean = isConnected && port != null
-
-    /**
-     * Get available USB serial devices for debugging
-     */
-    fun getAvailableDevices(): List<String> {
-        val usb = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
-        val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usb)
-        return drivers.map { "${it.device.deviceName} - ${it.device.vendorId}:${it.device.productId}" }
     }
 
     /**
      * Close the serial connection
      */
-    suspend fun close() = withContext(Dispatchers.IO) {
+    fun close() {
         try {
-            port?.close()
-        } catch (e: Exception) {
-            // Log but don't throw - we want to ensure cleanup happens
-        } finally {
-            port = null
+            serialPort?.close()
             isConnected = false
+            serialPort = null
+            Log.d(TAG, "Serial connection closed")
+        } catch (e: Exception) {
+            Log.w(TAG, "Error closing connection: ${e.message}")
         }
+    }
+
+    /**
+     * Write command and read response with timeout
+     * @param command Command bytes to send
+     * @param expectedResponseSize Expected response length
+     * @param timeoutMs Read timeout in milliseconds
+     * @return Response bytes or empty array on error
+     */
+    suspend fun writeRead(command: ByteArray, expectedResponseSize: Int, timeoutMs: Long): ByteArray {
+        val port = serialPort ?: throw IOException("Serial port not open")
+
+        try {
+            // Clear any pending data
+            val clearBuffer = ByteArray(256)
+            while (port.read(clearBuffer, 10) > 0) { /* clear buffer */ }
+
+            // Send command
+            val bytesWritten = port.write(command, WRITE_TIMEOUT_MS)
+            Log.d(TAG, "Sent ${bytesWritten} bytes: ${toHexString(command)}")
+
+            // Read response with timeout
+            val response = ByteArray(expectedResponseSize)
+            val startTime = System.currentTimeMillis()
+            var totalBytesRead = 0
+
+            while (totalBytesRead < expectedResponseSize &&
+                (System.currentTimeMillis() - startTime) < timeoutMs) {
+
+                // Create temporary buffer for remaining bytes
+                val remainingBytes = expectedResponseSize - totalBytesRead
+                val tempBuffer = ByteArray(remainingBytes)
+
+                val bytesRead = port.read(tempBuffer, READ_TIMEOUT_MS)
+
+                if (bytesRead > 0) {
+                    // Copy received bytes to response buffer at correct offset
+                    System.arraycopy(tempBuffer, 0, response, totalBytesRead, bytesRead)
+                    totalBytesRead += bytesRead
+                } else {
+                    delay(10) // Small delay to prevent busy waiting
+                }
+            }
+
+            return if (totalBytesRead == expectedResponseSize) {
+                Log.d(TAG, "Received ${totalBytesRead} bytes: ${toHexString(response)}")
+                response
+            } else {
+                Log.w(TAG, "Timeout: expected $expectedResponseSize bytes, got $totalBytesRead")
+                ByteArray(0)
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Communication error: ${e.message}")
+            return ByteArray(0)
+        }
+    }
+
+    /**
+     * Check if serial port is connected
+     */
+    fun isOpen(): Boolean = isConnected && serialPort?.isOpen == true
+
+    /**
+     * Convert byte array to hex string for logging
+     */
+    private fun toHexString(bytes: ByteArray): String {
+        return bytes.joinToString(" ") { "%02X".format(it) }
     }
 }
