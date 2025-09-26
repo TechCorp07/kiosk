@@ -855,6 +855,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         availableDrivers: List<UsbSerialDriver>
     ) {
         runOnUiThread {
+            // Update the serialDevices list for connection purposes
             serialDevices = availableDrivers.map { driver ->
                 val device = driver.device
                 RS485CommunicationTester.SerialDevice(
@@ -873,20 +874,31 @@ class HardwareTestActivity : BaseKioskActivity() {
                 )
             }
 
-            val adapter = spSerialDevices.adapter as ArrayAdapter<String>
-            adapter.clear()
-
-            if (scanResults.isEmpty()) {
-                adapter.add("No compatible devices found")
-                btnConnectSerial.isEnabled = false
+            // Create a new adapter instead of clearing the old one
+            val displayItems = if (scanResults.isEmpty()) {
+                listOf("No compatible devices found")
             } else {
-                scanResults.forEach { result ->
-                    adapter.add(result)
-                }
-                btnConnectSerial.isEnabled = true
+                scanResults
             }
 
-            adapter.notifyDataSetChanged()
+            val newAdapter = ArrayAdapter(
+                this@HardwareTestActivity,
+                android.R.layout.simple_spinner_item,
+                displayItems.toMutableList()
+            )
+            newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+            // Set the new adapter
+            spSerialDevices.adapter = newAdapter
+
+            // Update button states
+            btnConnectSerial.isEnabled = scanResults.isNotEmpty()
+
+            // Log for debugging
+            Log.d(TAG, "Spinner updated with ${displayItems.size} items:")
+            displayItems.forEachIndexed { index, item ->
+                Log.d(TAG, "  [$index] $item")
+            }
         }
     }
 
