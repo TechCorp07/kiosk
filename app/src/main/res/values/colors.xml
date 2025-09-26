@@ -24,6 +24,7 @@
     <color name="text_secondary">#6C757D</color>
     <color name="text_hint">#ADB5BD</color>
     <color name="text_white">#FFFFFF</color>
+    <color name="text_disabled">#999999</color>
 
     <!-- Background Colors -->
     <color name="background_primary">#FFFFFF</color>
@@ -36,6 +37,7 @@
     <color name="button_primary_pressed">#16A073</color>
     <color name="button_secondary">#FFFFFF</color>
     <color name="button_secondary_border">#1DB584</color>
+    <color name="button_disabled">#CCCCCC</color>
 
     <!-- Input Field Colors -->
     <color name="input_background">#F8F9FA</color>

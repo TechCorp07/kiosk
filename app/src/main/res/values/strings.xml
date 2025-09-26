@@ -87,7 +87,8 @@
     <string name="enter_otp">Enter OTP</string>
     <string name="otp_placeholder">Enter 6-digit code</string>
     <string name="resend_otp">Resend OTP</string>
-    <string name="resend_in">Resend in %1$ss</string>
+    <string name="resend_in">Resend in %1$ds</string>
+    <string name="resend_in_minutes">Resend in %1$d:%2$02ds</string>
     <string name="verify">Verify</string>
     <string name="verifying">Verifying…</string>
     <string name="otp_resent">OTP has been resent</string>

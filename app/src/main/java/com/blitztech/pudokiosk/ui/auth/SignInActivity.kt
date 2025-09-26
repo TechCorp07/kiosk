@@ -142,11 +142,10 @@ class SignInActivity : BaseKioskActivity() {
                     when (response.status) {
                         AuthStatus.PENDING_OTP -> {
                             // For PENDING_OTP, accessToken will be null, so don't pass it
-                            navigateToOtpVerification(mobileNumber, null)
+                            navigateToOtpVerification(mobileNumber, pin, response.accessToken)
                         }
                         AuthStatus.AUTHENTICATED -> {
                             // First-time user - needs to change PIN
-                            // Ensure accessToken is not null before passing
                             response.accessToken?.let { token ->
                                 navigateToFirstTimePinChange(token)
                             } ?: run {
@@ -173,10 +172,10 @@ class SignInActivity : BaseKioskActivity() {
         }
     }
 
-    private fun navigateToOtpVerification(mobileNumber: String, accessToken: String?) {
+    private fun navigateToOtpVerification(mobileNumber: String, pin: String, accessToken: String?) {
         val intent = Intent(this, OtpVerificationActivity::class.java).apply {
             putExtra(OtpVerificationActivity.EXTRA_MOBILE_NUMBER, mobileNumber)
-            // Only pass accessToken if it's not null (though for PENDING_OTP it should be null)
+            putExtra(OtpVerificationActivity.EXTRA_PIN, pin)
             accessToken?.let {
                 putExtra(OtpVerificationActivity.EXTRA_ACCESS_TOKEN, it)
             }

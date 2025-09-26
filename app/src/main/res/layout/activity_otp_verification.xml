@@ -140,17 +140,22 @@
                 android:textColor="@color/zimpudo_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
+                android:clickable="false"
+                android:focusable="false"
                 android:background="?attr/selectableItemBackground"
                 android:padding="@dimen/spacing_md" />
 
             <Button
                 android:id="@+id/btnResend"
-                style="@style/Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/button_height"
-                android:text="Resend OTP" />
+                android:layout_marginTop="@dimen/spacing_md"
+                android:background="@drawable/button_resend_selector"
+                android:textColor="@drawable/button_resend_text_selector"
+                android:text="@string/resend_otp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:enabled="false" />
 
         </LinearLayout>
 
