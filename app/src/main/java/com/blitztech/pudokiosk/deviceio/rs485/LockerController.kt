@@ -4,68 +4,78 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.math.max
 
 /**
- * Locker Controller for STM32L412-based boards using Winnsen Protocol
+ * Production Locker Controller for STM32L412-based boards using Winnsen Protocol
  *
  * Configuration:
- * - 4 boards max (stations 0-3) based on DIP switch settings: 00, 01, 10, 11
- * - 16 locks per board (numbered 1-16)
- * - Total capacity: 64 locks (M1-M64)
+ * - Single board (station 0) with 16 locks
  * - Communication: RS485 at 9600 baud, 8N1
+ * - Device: VID:04E2 PID:1414 Port 2
  *
- * Default Mapping:
- * - Station 0 (DIP: 00): M1-M16   (locks 1-16)
- * - Station 1 (DIP: 01): M17-M32  (locks 1-16)
- * - Station 2 (DIP: 10): M33-M48  (locks 1-16)
- * - Station 3 (DIP: 11): M49-M64  (locks 1-16)
+ * Locker Mapping:
+ * - M1-M16 -> Lock numbers 1-16 on station 0
  */
 class LockerController(
     private val ctx: Context,
-    private val simulate: Boolean = false,
-    private val customMapping: Map<String, Pair<Int, Int>>? = null
+    private val simulate: Boolean = false
 ) {
-    private val serial by lazy { SerialRs485(ctx) }
+    private val rs485Driver by lazy { RS485Driver(ctx) }
 
     companion object {
         private const val TAG = "LockerController"
-        private const val LOCKS_PER_BOARD = 16
-        private const val MAX_STATIONS = 4
+        private const val STATION_ADDRESS = 0  // Single board configuration
+        private const val MIN_LOCK = 1
+        private const val MAX_LOCK = 16
         private const val COMMUNICATION_TIMEOUT_MS = 800
         private const val MAX_RETRIES = 2
     }
 
     /**
-     * Map locker ID to (station, lockNumber) pair
+     * Map locker ID to lock number
      * Examples:
-     * - "M1" -> (0, 1)   - Station 0, Lock 1
-     * - "M16" -> (0, 16) - Station 0, Lock 16
-     * - "M17" -> (1, 1)  - Station 1, Lock 1
-     * - "M64" -> (3, 16) - Station 3, Lock 16
+     * - "M1" -> 1
+     * - "M16" -> 16
      */
-    private fun mapToStationLock(lockerId: String): Pair<Int, Int> {
-        // Check custom mapping first
-        customMapping?.get(lockerId)?.let { return it }
-
-        // Default range-based mapping
+    private fun mapToLockNumber(lockerId: String): Int {
         val numericPart = lockerId.filter { it.isDigit() }.toIntOrNull()
             ?: throw IllegalArgumentException("Invalid locker ID format: $lockerId")
 
-        require(numericPart in 1..64) {
-            "Locker number must be 1-64, got $numericPart in ID: $lockerId"
+        require(numericPart in MIN_LOCK..MAX_LOCK) {
+            "Locker number must be $MIN_LOCK-$MAX_LOCK, got $numericPart in ID: $lockerId"
         }
 
-        // Calculate station and lock number
-        val station = (numericPart - 1) / LOCKS_PER_BOARD  // 0-3
-        val lockNumber = ((numericPart - 1) % LOCKS_PER_BOARD) + 1  // 1-16
+        return numericPart
+    }
 
-        return Pair(station, lockNumber)
+    /**
+     * Initialize the locker controller
+     * @return true if initialization successful
+     */
+    suspend fun initialize(): Boolean = withContext(Dispatchers.IO) {
+        if (simulate) {
+            Log.d(TAG, "SIMULATED: Locker controller initialized")
+            return@withContext true
+        }
+
+        try {
+            val connected = rs485Driver.connect()
+            if (connected) {
+                Log.i(TAG, "✅ Locker controller initialized - ${rs485Driver.getDeviceInfo()}")
+                return@withContext true
+            } else {
+                Log.e(TAG, "❌ Failed to connect to STM32L412 board")
+                return@withContext false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Initialization error: ${e.message}", e)
+            return@withContext false
+        }
     }
 
     /**
      * Open a specific locker
-     * @param lockerId Locker identifier (e.g., "M12", "M25")
+     * @param lockerId Locker identifier (e.g., "M1", "M16")
      * @param retries Number of retry attempts on failure
      * @return true if unlock was successful, false otherwise
      */
@@ -77,175 +87,185 @@ class LockerController(
             }
 
             try {
-                val (station, lockNumber) = mapToStationLock(lockerId)
-                Log.d(TAG, "Opening locker $lockerId -> Station $station, Lock $lockNumber")
-
-                serial.open(baud = 9600)
+                val lockNumber = mapToLockNumber(lockerId)
+                Log.d(TAG, "Opening locker $lockerId -> Lock $lockNumber")
 
                 repeat(retries + 1) { attempt ->
                     try {
-                        val command = WinnsenProtocol.createUnlockCommand(station, lockNumber)
-                        Log.d(TAG, "Attempt ${attempt + 1}: Sending unlock command: ${WinnsenProtocol.toHexString(command)}")
+                        val command = WinnsenProtocol.createUnlockCommand(STATION_ADDRESS, lockNumber)
+                        Log.d(TAG, "Attempt ${attempt + 1}: Sending unlock command for lock $lockNumber")
 
-                        val response = serial.writeRead(
+                        val response = rs485Driver.writeRead(
                             command = command,
                             expectedResponseSize = 7,
                             timeoutMs = COMMUNICATION_TIMEOUT_MS
                         )
 
-                        Log.d(TAG, "Received response: ${WinnsenProtocol.toHexString(response)}")
-
-                        // Validate and parse response
                         if (WinnsenProtocol.validateResponse(command, response)) {
                             val result = WinnsenProtocol.parseUnlockResponse(response)
                             if (result != null && result.success) {
-                                Log.i(TAG, "Successfully opened locker $lockerId (Station ${result.station}, Lock ${result.lockNumber})")
+                                Log.i(TAG, "✅ Locker $lockerId opened successfully")
                                 return@withContext true
-                            } else {
-                                Log.w(TAG, "Unlock command failed for locker $lockerId: ${result?.success}")
                             }
-                        } else {
-                            Log.w(TAG, "Invalid response for locker $lockerId on attempt ${attempt + 1}")
                         }
 
+                        Log.w(TAG, "Attempt ${attempt + 1} failed for locker $lockerId")
+
                     } catch (e: Exception) {
-                        Log.w(TAG, "Communication error on attempt ${attempt + 1} for locker $lockerId: ${e.message}")
-                        if (attempt < retries) {
-                            kotlinx.coroutines.delay(150) // Wait before retry
-                        }
+                        Log.w(TAG, "Attempt ${attempt + 1} error for locker $lockerId: ${e.message}")
                     }
                 }
 
-                Log.e(TAG, "Failed to open locker $lockerId after ${retries + 1} attempts")
-                return@withContext false
-
             } catch (e: Exception) {
                 Log.e(TAG, "Error opening locker $lockerId: ${e.message}", e)
-                return@withContext false
             }
+
+            Log.e(TAG, "❌ Failed to open locker $lockerId after $retries retries")
+            return@withContext false
         }
 
     /**
-     * Check if a locker is closed (door sensor status)
-     * @param lockerId Locker identifier
-     * @return true if door is closed, false if open
+     * Check the status of a specific locker
+     * @param lockerId Locker identifier (e.g., "M1", "M16")
+     * @param retries Number of retry attempts on failure
+     * @return true if locker is closed/locked, false if open or error
      */
-    suspend fun isClosed(lockerId: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun checkLockerStatus(lockerId: String, retries: Int = MAX_RETRIES): Boolean =
+        withContext(Dispatchers.IO) {
+            if (simulate) {
+                Log.d(TAG, "SIMULATED: Checking locker $lockerId status")
+                return@withContext true
+            }
+
+            try {
+                val lockNumber = mapToLockNumber(lockerId)
+                Log.d(TAG, "Checking locker $lockerId status -> Lock $lockNumber")
+
+                repeat(retries + 1) { attempt ->
+                    try {
+                        val command = WinnsenProtocol.createStatusCommand(STATION_ADDRESS, lockNumber)
+                        Log.d(TAG, "Attempt ${attempt + 1}: Sending status command for lock $lockNumber")
+
+                        val response = rs485Driver.writeRead(
+                            command = command,
+                            expectedResponseSize = 7,
+                            timeoutMs = COMMUNICATION_TIMEOUT_MS
+                        )
+
+                        if (WinnsenProtocol.validateResponse(command, response)) {
+                            val result = WinnsenProtocol.parseStatusResponse(response)
+                            if (result != null) {
+                                val isClosed = !result.isOpen
+                                Log.d(TAG, "Locker $lockerId status: ${if (isClosed) "CLOSED" else "OPEN"}")
+                                return@withContext isClosed
+                            }
+                        }
+
+                        Log.w(TAG, "Attempt ${attempt + 1} failed for locker $lockerId status")
+
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Attempt ${attempt + 1} error for locker $lockerId status: ${e.message}")
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking locker $lockerId status: ${e.message}", e)
+            }
+
+            // On any error, assume closed to prevent system deadlock
+            Log.d(TAG, "Defaulting to CLOSED status for locker $lockerId (error fallback)")
+            return@withContext true
+        }
+
+    /**
+     * Test communication with the locker board
+     * @return true if board responds correctly
+     */
+    suspend fun testCommunication(): Boolean = withContext(Dispatchers.IO) {
         if (simulate) {
-            Log.d(TAG, "SIMULATED: Checking locker $lockerId status")
+            Log.d(TAG, "SIMULATED: Communication test successful")
             return@withContext true
         }
 
         try {
-            val (station, lockNumber) = mapToStationLock(lockerId)
-            Log.d(TAG, "Checking locker $lockerId status -> Station $station, Lock $lockNumber")
-
-            serial.open(baud = 9600)
-
-            val command = WinnsenProtocol.createStatusCommand(station, lockNumber)
-            Log.d(TAG, "Sending status command: ${WinnsenProtocol.toHexString(command)}")
-
-            val response = serial.writeRead(
-                command = command,
-                expectedResponseSize = 7,
-                timeoutMs = COMMUNICATION_TIMEOUT_MS
-            )
-
-            Log.d(TAG, "Received status response: ${WinnsenProtocol.toHexString(response)}")
-
-            if (WinnsenProtocol.validateResponse(command, response)) {
-                val result = WinnsenProtocol.parseStatusResponse(response)
-                if (result != null) {
-                    val isClosed = !result.isOpen
-                    Log.d(TAG, "Locker $lockerId status: ${if (isClosed) "CLOSED" else "OPEN"}")
-                    return@withContext isClosed
-                }
-            }
-
-            Log.w(TAG, "Invalid status response for locker $lockerId")
+            val result = rs485Driver.testCommunication()
+            Log.d(TAG, if (result) "✅ Communication test successful" else "❌ Communication test failed")
+            return@withContext result
 
         } catch (e: Exception) {
-            Log.w(TAG, "Error checking locker $lockerId status: ${e.message}")
-        }
-
-        // On any error, assume closed to prevent system deadlock
-        Log.d(TAG, "Defaulting to CLOSED status for locker $lockerId (error fallback)")
-        return@withContext true
-    }
-
-    /**
-     * Test communication with a specific station
-     * @param station Station number (0-3)
-     * @return true if station responds correctly
-     */
-    suspend fun testStation(station: Int): Boolean = withContext(Dispatchers.IO) {
-        require(station in 0 until MAX_STATIONS) { "Station must be 0-${MAX_STATIONS-1}, got $station" }
-
-        try {
-            serial.open(baud = 9600)
-
-            // Test with lock 1 status check
-            val command = WinnsenProtocol.createStatusCommand(station, 1)
-            val response = serial.writeRead(
-                command = command,
-                expectedResponseSize = 7,
-                timeoutMs = COMMUNICATION_TIMEOUT_MS
-            )
-
-            val isValid = WinnsenProtocol.validateResponse(command, response)
-            Log.d(TAG, "Station $station test: ${if (isValid) "PASS" else "FAIL"}")
-
-            return@withContext isValid
-
-        } catch (e: Exception) {
-            Log.w(TAG, "Station $station test failed: ${e.message}")
+            Log.e(TAG, "Communication test error: ${e.message}", e)
             return@withContext false
         }
     }
 
     /**
-     * Get system status for all configured stations
-     * @return Map of station number to online status
+     * Get system status information
      */
-    suspend fun getSystemStatus(): Map<Int, Boolean> = withContext(Dispatchers.IO) {
-        val status = mutableMapOf<Int, Boolean>()
-
-        for (station in 0 until MAX_STATIONS) {
-            status[station] = testStation(station)
+    suspend fun getSystemStatus(): SystemStatus = withContext(Dispatchers.IO) {
+        if (simulate) {
+            return@withContext SystemStatus(
+                isConnected = true,
+                deviceInfo = "SIMULATED STM32L412 Board",
+                totalLocks = MAX_LOCK,
+                communicationTest = true,
+                message = "Simulation mode active"
+            )
         }
 
-        return@withContext status
+        val isConnected = rs485Driver.isConnected()
+        val deviceInfo = rs485Driver.getDeviceInfo() ?: "Not connected"
+        val commTest = if (isConnected) testCommunication() else false
+
+        return@withContext SystemStatus(
+            isConnected = isConnected,
+            deviceInfo = deviceInfo,
+            totalLocks = MAX_LOCK,
+            communicationTest = commTest,
+            message = when {
+                !isConnected -> "Device not connected"
+                !commTest -> "Communication failed"
+                else -> "System operational"
+            }
+        )
     }
 
     /**
-     * Get mapping information for debugging
+     * Close the connection
      */
-    fun getLockerMapping(lockerId: String): String {
+    suspend fun close() = withContext(Dispatchers.IO) {
+        if (!simulate) {
+            rs485Driver.disconnect()
+        }
+        Log.d(TAG, "Locker controller closed")
+    }
+
+    /**
+     * Get all valid locker IDs for this system
+     */
+    fun getValidLockerIds(): List<String> {
+        return (MIN_LOCK..MAX_LOCK).map { "M$it" }
+    }
+
+    /**
+     * Check if a locker ID is valid
+     */
+    fun isValidLockerId(lockerId: String): Boolean {
         return try {
-            val (station, lockNumber) = mapToStationLock(lockerId)
-            "Locker $lockerId -> Station $station (DIP: ${getDipSetting(station)}), Lock $lockNumber"
+            val lockNumber = mapToLockNumber(lockerId)
+            lockNumber in MIN_LOCK..MAX_LOCK
         } catch (e: Exception) {
-            "Invalid locker ID: $lockerId (${e.message})"
-        }
-    }
-
-    private fun getDipSetting(station: Int): String = when (station) {
-        0 -> "00"
-        1 -> "01"
-        2 -> "10"
-        3 -> "11"
-        else -> "??"
-    }
-
-    /**
-     * Close serial connection and cleanup resources
-     */
-    suspend fun close() {
-        try {
-            serial.close()
-            Log.d(TAG, "Locker controller closed")
-        } catch (e: Exception) {
-            Log.w(TAG, "Error closing locker controller: ${e.message}")
+            false
         }
     }
 }
+
+/**
+ * System status data class
+ */
+data class SystemStatus(
+    val isConnected: Boolean,
+    val deviceInfo: String,
+    val totalLocks: Int,
+    val communicationTest: Boolean,
+    val message: String
+)

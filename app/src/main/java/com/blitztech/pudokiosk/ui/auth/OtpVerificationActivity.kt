@@ -74,8 +74,8 @@ class OtpVerificationActivity : BaseKioskActivity() {
     private fun setupViews() {
         binding.tvTitle.text = getString(R.string.verify_otp)
         binding.tvSubtitle.text  = getString(R.string.otp_sent)
-        binding.tvMobileNumber.text  = getString(R.string.mobile_number)
-        binding.etOtp.text = Editable.Factory.getInstance().newEditable(getString(R.string.otp_placeholder))
+        binding.tvMobileNumber.text  = mobileNumber
+        binding.etOtp.hint = getString(R.string.otp_placeholder)
         binding.btnVerify.text = getString(R.string.verify)
         binding.btnResend.text  = getString(R.string.resend_otp)
     }

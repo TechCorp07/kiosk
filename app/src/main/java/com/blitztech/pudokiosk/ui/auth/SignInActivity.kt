@@ -141,19 +141,29 @@ class SignInActivity : BaseKioskActivity() {
                     val response = result.data
                     when (response.status) {
                         AuthStatus.PENDING_OTP -> {
-                            navigateToOtpVerification(mobileNumber, response.accessToken)
+                            // For PENDING_OTP, accessToken will be null, so don't pass it
+                            navigateToOtpVerification(mobileNumber, null)
                         }
                         AuthStatus.AUTHENTICATED -> {
                             // First-time user - needs to change PIN
-                            navigateToFirstTimePinChange(response.accessToken)
+                            // Ensure accessToken is not null before passing
+                            response.accessToken?.let { token ->
+                                navigateToFirstTimePinChange(token)
+                            } ?: run {
+                                showError("Authentication error: Missing access token")
+                            }
                         }
                         AuthStatus.FAILED -> {
-                            showError(getString(R.string.error_login_failed))
+                            showError("Invalid mobile number or PIN. Please try again.")
+                        }
+                        else -> {
+                            showError("Unknown authentication status")
                         }
                     }
                 }
                 is NetworkResult.Error -> {
-                    showError(result.message)
+                    // Handle different error types based on HTTP status codes
+                    handleLoginError(result.message)
                 }
                 is NetworkResult.Loading -> {
                     // Handle loading state if needed
@@ -163,10 +173,13 @@ class SignInActivity : BaseKioskActivity() {
         }
     }
 
-    private fun navigateToOtpVerification(mobileNumber: String, accessToken: String) {
+    private fun navigateToOtpVerification(mobileNumber: String, accessToken: String?) {
         val intent = Intent(this, OtpVerificationActivity::class.java).apply {
             putExtra(OtpVerificationActivity.EXTRA_MOBILE_NUMBER, mobileNumber)
-            putExtra(OtpVerificationActivity.EXTRA_ACCESS_TOKEN, accessToken)
+            // Only pass accessToken if it's not null (though for PENDING_OTP it should be null)
+            accessToken?.let {
+                putExtra(OtpVerificationActivity.EXTRA_ACCESS_TOKEN, it)
+            }
             putExtra(OtpVerificationActivity.EXTRA_USER_TYPE, userType.name)
         }
         startActivity(intent)
@@ -195,24 +208,31 @@ class SignInActivity : BaseKioskActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToMainMenu() {
-        // Save user authentication data
-        prefs.saveAuthData(
-            accessToken = "dummy_token", // Replace with actual token
-            refreshToken = "dummy_refresh",
-            userType = userType.name,
-            mobileNumber = binding.etMobileNumber.text.toString().trim(),
-            userName = null
-        )
-
-        val intent = when (userType) {
-            UserType.CUSTOMER -> Intent(this, CustomerMainActivity::class.java)
-            UserType.COURIER -> Intent(this, CourierMainActivity::class.java)
+    private fun handleLoginError(errorMessage: String) {
+        when {
+            errorMessage.contains("400", ignoreCase = true) -> {
+                showError("Invalid request. Please check your mobile number and PIN.")
+            }
+            errorMessage.contains("401", ignoreCase = true) -> {
+                showError("Invalid credentials. Please check your mobile number and PIN.")
+            }
+            errorMessage.contains("403", ignoreCase = true) -> {
+                showError("Access denied. Please contact support.")
+            }
+            errorMessage.contains("404", ignoreCase = true) -> {
+                showError("User not found. Please check your mobile number.")
+            }
+            errorMessage.contains("500", ignoreCase = true) -> {
+                showError("Server error. Please try again later.")
+            }
+            errorMessage.contains("timeout", ignoreCase = true) ||
+                    errorMessage.contains("network", ignoreCase = true) -> {
+                showError("Network error. Please check your connection and try again.")
+            }
+            else -> {
+                showError("Login failed. Please try again.")
+            }
         }
-
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
     }
 
     private fun setLoading(loading: Boolean) {

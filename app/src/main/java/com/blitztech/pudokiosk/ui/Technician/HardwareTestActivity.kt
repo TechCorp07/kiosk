@@ -207,10 +207,6 @@ class HardwareTestActivity : BaseKioskActivity() {
             testStationCommunication(station)
         }
 
-        btnSystemDiagnostics.setOnClickListener {
-            runSystemDiagnostics()
-        }
-
         // RS485 Communication Events
         btnScanSerial.setOnClickListener { scanSerialDevices() }
         btnConnectSerial.setOnClickListener { connectToSelectedDevice() }
@@ -301,13 +297,11 @@ class HardwareTestActivity : BaseKioskActivity() {
         lifecycleScope.launch {
             try {
                 val success = lockerController.openLocker(lockerId)
-                val mapping = lockerController.getLockerMapping(lockerId)
 
                 if (success) {
-                    updateLockerStatus("✅ Successfully opened $lockerId\n$mapping")
                     showToast("Locker $lockerId opened successfully!")
                 } else {
-                    updateLockerStatus("❌ Failed to open $lockerId\n$mapping")
+                    showToast("❌ Failed to open $lockerId ")
                 }
             } catch (e: Exception) {
                 updateLockerStatus("❌ Error opening $lockerId: ${e.message}")
@@ -324,11 +318,9 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
-                val isClosed = lockerController.isClosed(lockerId)
-                val mapping = lockerController.getLockerMapping(lockerId)
-                val status = if (isClosed) "CLOSED" else "OPEN"
+                val status = lockerController.checkLockerStatus(lockerId)
 
-                updateLockerStatus("📋 Locker $lockerId is $status\n$mapping")
+                updateLockerStatus("Locker $lockerId is $status")
             } catch (e: Exception) {
                 updateLockerStatus("❌ Error checking $lockerId status: ${e.message}")
                 Log.e(TAG, "Error checking locker status", e)
@@ -344,7 +336,7 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
-                val success = lockerController.testStation(station)
+                val success = lockerController.testCommunication()
                 val dipSetting = when (station) {
                     0 -> "00"
                     1 -> "01"
@@ -361,69 +353,6 @@ class HardwareTestActivity : BaseKioskActivity() {
             } catch (e: Exception) {
                 updateLockerStatus("❌ Error testing station $station: ${e.message}")
                 Log.e(TAG, "Error testing station", e)
-            } finally {
-                showProgress(false)
-            }
-        }
-    }
-
-    private fun runSystemDiagnostics() {
-        showProgress(true)
-        updateLockerStatus("Running system diagnostics...")
-
-        lifecycleScope.launch {
-            try {
-                val systemStatus = lockerController.getSystemStatus()
-
-                val statusBuilder = StringBuilder().apply {
-                    appendLine("🔧 SYSTEM DIAGNOSTICS REPORT")
-                    appendLine("=" * 30)
-                    appendLine("Total Stations: 4")
-                    appendLine("Expected Capacity: 64 lockers")
-                    appendLine()
-
-                    systemStatus.forEach { (station, isOnline) ->
-                        val dipSetting = when (station) {
-                            0 -> "00"
-                            1 -> "01"
-                            2 -> "10"
-                            3 -> "11"
-                            else -> "??"
-                        }
-                        val status = if (isOnline) "✅ ONLINE" else "❌ OFFLINE"
-                        appendLine("Station $station (DIP: $dipSetting): $status")
-
-                        if (isOnline) {
-                            val lockerRange = "${station * 16 + 1}-${(station + 1) * 16}"
-                            appendLine("  → Controls lockers M$lockerRange")
-                        }
-                    }
-
-                    appendLine()
-                    val onlineCount = systemStatus.values.count { it }
-                    appendLine("Summary: $onlineCount/4 stations online")
-
-                    if (onlineCount == 4) {
-                        appendLine("🟢 All systems operational!")
-                    } else {
-                        appendLine("🟡 Some stations offline - check connections")
-                    }
-
-                    appendLine()
-                    appendLine("Configuration:")
-                    appendLine("• Protocol: Winnsen Custom over RS485")
-                    appendLine("• Baud Rate: 9600")
-                    appendLine("• Data Format: 8N1")
-                    appendLine("• Locks per Board: 16")
-                    appendLine("• Simulation Mode: ${swSimulateLockers.isChecked}")
-                }
-
-                tvSystemStatus.text = statusBuilder.toString()
-                updateLockerStatus("System diagnostics completed")
-
-            } catch (e: Exception) {
-                updateLockerStatus("❌ Error running diagnostics: ${e.message}")
-                Log.e(TAG, "Error running diagnostics", e)
             } finally {
                 showProgress(false)
             }
@@ -761,7 +690,6 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         return 0 // Default to first port
     }
-
     private fun disconnectFromDevice() {
         lifecycleScope.launch {
             try {
@@ -1507,8 +1435,6 @@ class HardwareTestActivity : BaseKioskActivity() {
                 // Test locker system
                 try {
                     val systemStatus = lockerController.getSystemStatus()
-                    val onlineStations = systemStatus.values.count { it }
-                    results.add("Locker System: $onlineStations/4 stations online")
                 } catch (e: Exception) {
                     results.add("Locker System: ERROR - ${e.message}")
                 }

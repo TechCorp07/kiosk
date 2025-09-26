@@ -61,6 +61,8 @@
     <string name="mobile_placeholder">+2637XXXXXXXX</string>
     <string name="pin">PIN</string>
     <string name="pin_placeholder">Enter your PIN</string>
+    <string name="forgot_pin_subtitle">Enter your mobile number and we\'ll send you instructions to reset your PIN</string>
+
 
     <!-- Registration Form -->
     <string name="personal_information" translatable="false">Personal Information</string>

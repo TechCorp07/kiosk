@@ -147,46 +147,48 @@ class ApiRepository(
         }
     }
 
-    // Generic safe API call wrapper
     private suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): NetworkResult<T> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiCall()
-                Log.d(TAG, "API Response: ${response.code()} - ${response.message()}")
 
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
+                    response.body()?.let { body ->
                         NetworkResult.Success(body)
-                    } else {
-                        NetworkResult.Error("Empty response body")
-                    }
+                    } ?: NetworkResult.Error("Empty response body")
                 } else {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "API Error: ${response.code()} - $errorBody")
-
-                    // Try to parse error response
-                    val errorMessage = try {
-                        if (errorBody != null) {
-                            val adapter = moshi.adapter(ApiResponse::class.java)
-                            val errorResponse = adapter.fromJson(errorBody)
-                            errorResponse?.message ?: "Unknown error occurred"
-                        } else {
-                            "Network error occurred"
-                        }
-                    } catch (e: Exception) {
-                        "Failed to parse error response"
-                    }
-
+                    // Parse error response
+                    val errorMessage = parseErrorResponse(response)
                     NetworkResult.Error(errorMessage)
                 }
-            } catch (e: IOException) {
-                Log.e(TAG, "Network error", e)
-                NetworkResult.Error("Network connection error. Please check your internet connection.")
-            } catch (e: Exception) {
-                Log.e(TAG, "Unexpected error", e)
-                NetworkResult.Error("An unexpected error occurred: ${e.message}")
+            } catch (exception: Exception) {
+                Log.e(TAG, "API call failed", exception)
+
+                val errorMessage = when (exception) {
+                    is IOException -> "Network error. Please check your connection."
+                    is retrofit2.HttpException -> "Server error: ${exception.code()}"
+                    is com.squareup.moshi.JsonDataException -> "Invalid response format"
+                    else -> "An unexpected error occurred: ${exception.message}"
+                }
+
+                NetworkResult.Error(errorMessage)
             }
+        }
+    }
+
+    private fun <T> parseErrorResponse(response: Response<T>): String {
+        return try {
+            val errorBody = response.errorBody()?.string()
+            if (errorBody != null) {
+                val errorAdapter = moshi.adapter(ErrorResponse::class.java)
+                val errorResponse = errorAdapter.fromJson(errorBody)
+                errorResponse?.getUserFriendlyMessage() ?: "Server error: ${response.code()}"
+            } else {
+                "Server error: ${response.code()}"
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse error response", e)
+            "Server error: ${response.code()}"
         }
     }
 

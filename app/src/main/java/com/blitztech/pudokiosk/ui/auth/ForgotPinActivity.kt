@@ -1,7 +1,6 @@
 package com.blitztech.pudokiosk.ui.auth
 
 import android.os.Bundle
-import android.text.Editable
 import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
@@ -9,7 +8,6 @@ import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
-import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityForgotPinBinding
 import com.blitztech.pudokiosk.prefs.Prefs
@@ -48,8 +46,8 @@ class ForgotPinActivity : BaseKioskActivity() {
 
     private fun setupViews() {
         binding.tvTitle.text = getString(R.string.forgot_pin)
-        binding.tvSubtitle.text = getString(R.string.sign_in)
-        binding.etMobileNumber.text = Editable.Factory.getInstance().newEditable(getString(R.string.mobile_placeholder))
+        binding.tvSubtitle.text = getString(R.string.forgot_pin_subtitle)
+        binding.etMobileNumber.hint = getString(R.string.mobile_placeholder)
         binding.btnSendInstructions.text = getString(R.string.send_instructions)
     }
 
