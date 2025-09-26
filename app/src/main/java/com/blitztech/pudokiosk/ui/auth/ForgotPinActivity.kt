@@ -51,7 +51,6 @@ class ForgotPinActivity : BaseKioskActivity() {
         binding.tvSubtitle.text = getString(R.string.sign_in)
         binding.etMobileNumber.text = Editable.Factory.getInstance().newEditable(getString(R.string.mobile_placeholder))
         binding.btnSendInstructions.text = getString(R.string.send_instructions)
-        binding.btnBackToSignIn.text = getString(R.string.content_description_back_button)
     }
 
     private fun setupClickListeners() {
@@ -63,10 +62,6 @@ class ForgotPinActivity : BaseKioskActivity() {
             if (!isLoading) {
                 sendForgotPinRequest()
             }
-        }
-
-        binding.btnBackToSignIn.setOnClickListener {
-            finish()
         }
     }
 

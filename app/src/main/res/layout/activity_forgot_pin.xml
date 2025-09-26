@@ -114,14 +114,6 @@
                     android:indeterminateTint="@color/white" />
             </FrameLayout>
 
-            <!-- Back to Sign In Button -->
-            <Button
-                android:id="@+id/btnBackToSignIn"
-                style="@style/Button.Secondary"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height"
-                android:text="Back to Sign In" />
-
         </LinearLayout>
 
     </LinearLayout>
