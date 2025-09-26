@@ -10,6 +10,7 @@ import com.hoho.android.usbserial.driver.UsbSerialProber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -113,36 +114,76 @@ class RS485CommunicationTester(private val ctx: Context) {
                 return@withContext false
             }
 
-            // Select the specific port (important for multi-port devices like CDC)
+            // Select the specific port
             val availablePorts = serialDevice.driver.ports
             if (portNumber >= availablePorts.size) {
                 log("❌ Port $portNumber not available (device has ${availablePorts.size} ports)")
+                connection.close()
                 return@withContext false
             }
 
             val selectedPort = availablePorts[portNumber]
             log("📡 Using port: ${selectedPort.javaClass.simpleName} (Port ${portNumber + 1})")
 
-            port = selectedPort.apply {
-                open(connection)
-                setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
-                dtr = true
-                rts = true
-                purgeHwBuffers(true, true)
+            // Handle the "Already open" issue
+            var portReady = false
+
+            // First, try to close the port if it might be open
+            try {
+                selectedPort.close()
+                delay(150) // Give time to close
+                log("🔧 Closed existing port connection")
+            } catch (e: Exception) {
+                // Ignore - port probably wasn't open
             }
 
-            currentDevice = serialDevice.device
-
-            if (port != null) {
-                log("✅ Connected successfully to Port ${portNumber + 1}!")
-                log("📡 Device: ${serialDevice.device.deviceName}")
-                log("🔧 Driver: ${serialDevice.driver.javaClass.simpleName}")
-                delay(100) // Allow port to stabilize
-                return@withContext true
-            } else {
-                log("❌ Failed to open serial port")
-                return@withContext false
+            // Now try to open the port
+            try {
+                selectedPort.open(connection)
+                portReady = true
+                log("✅ Port opened successfully")
+            } catch (e: IOException) {
+                if (e.message?.contains("Already open") == true) {
+                    log("⚠️ Port already open - will try to configure existing connection")
+                    portReady = true
+                } else {
+                    log("❌ Failed to open port: ${e.message}")
+                    connection.close()
+                    return@withContext false
+                }
             }
+
+            if (portReady) {
+                try {
+                    // Configure the port
+                    selectedPort.setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
+                    selectedPort.dtr = true
+                    selectedPort.rts = true
+                    selectedPort.purgeHwBuffers(true, true)
+
+                    port = selectedPort
+                    currentDevice = serialDevice.device
+
+                    log("✅ Connected successfully to Port ${portNumber + 1}!")
+                    log("📡 Device: ${serialDevice.device.deviceName}")
+                    log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
+
+                    delay(100) // Allow port to stabilize
+                    return@withContext true
+
+                } catch (configException: Exception) {
+                    log("❌ Error configuring port: ${configException.message}")
+                    try {
+                        selectedPort.close()
+                        connection.close()
+                    } catch (closeEx: Exception) {
+                        // Ignore cleanup errors
+                    }
+                    return@withContext false
+                }
+            }
+
+            return@withContext false
 
         } catch (e: Exception) {
             log("❌ Connection error: ${e.message}")
