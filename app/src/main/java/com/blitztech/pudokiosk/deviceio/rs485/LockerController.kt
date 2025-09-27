@@ -188,7 +188,7 @@ class LockerController(
         }
 
         try {
-            val result = rs485Driver.testCommunication()
+            val result = rs485Driver.testConnection()
             Log.d(TAG, if (result) "✅ Communication test successful" else "❌ Communication test failed")
             return@withContext result
 

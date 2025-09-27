@@ -43,7 +43,7 @@ object WinnsenProtocol {
             FRAME_HEADER,
             CMD_LENGTH,
             FUNC_UNLOCK,
-            station.toByte(),
+            0x00,
             lockNumber.toByte(),
             FRAME_END
         )
@@ -61,7 +61,7 @@ object WinnsenProtocol {
             FRAME_HEADER,
             CMD_LENGTH,
             FUNC_STATUS,
-            station.toByte(),
+            0x00,
             lockNumber.toByte(),
             FRAME_END
         )
