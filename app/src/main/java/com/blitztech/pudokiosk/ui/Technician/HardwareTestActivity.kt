@@ -558,38 +558,182 @@ class HardwareTestActivity : BaseKioskActivity() {
     }
 
     private fun startListening() {
-        if (!rs485Tester.isConnected()) {
-            updateSerialStatus("❌ Not connected - connect to a device first")
+        if (rs485Driver.connectionState.value != RS485Driver.ConnectionState.CONNECTED) {
+            updateSerialStatus("❌ STM32L412 not connected")
             return
         }
 
-        isListening = true
-        btnStartListening.text = "Stop Listening"
-        updateSerialStatus("👂 Listening for incoming data...")
+        if (isListening) {
+            Log.d(TAG, "Already listening to STM32L412")
+            return
+        }
 
-        lifecycleScope.launch {
-            try {
-                rs485Tester.startListening(10000) // Listen for 10 seconds
-                updateCommLogFromTester()
+        try {
+            Log.d(TAG, "Starting STM32L412 direct listening...")
 
-            } catch (e: Exception) {
-                updateSerialStatus("❌ Error during listening: ${e.message}")
-                Log.e(TAG, "Error during listening", e)
-            } finally {
-                stopListening()
+            isListening = true
+            updateListeningButton(true)
+            updateSerialStatus("👂 Listening for STM32L412 responses...")
+
+            // Add initial log message
+            updateCommLog("👂 Started listening for STM32L412 data...")
+            updateCommLog("📡 Device: ${rs485Driver.getDeviceInfo()}")
+            updateCommLog("⏰ ${getCurrentTimestamp()}")
+            updateCommLog("=" * 40)
+
+            // Start continuous listening using the connected RS485Driver
+            lifecycleScope.launch(Dispatchers.IO) {
+                startDirectListening()
             }
+
+            Log.i(TAG, "STM32L412 direct listening started")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start STM32L412 listening", e)
+            updateSerialStatus("❌ Failed to start listening: ${e.message}")
+            isListening = false
+            updateListeningButton(rs485Driver.connectionState.value == RS485Driver.ConnectionState.CONNECTED)
         }
     }
 
     private fun stopListening() {
-        isListening = false
-        btnStartListening.text = "Start Listening"
-        updateSerialStatus("👂 Listening stopped")
+        if (!isListening) {
+            Log.d(TAG, "Not currently listening to STM32L412")
+            return
+        }
+
+        try {
+            Log.d(TAG, "Stopping STM32L412 listener...")
+
+            isListening = false
+            updateListeningButton(rs485Driver.connectionState.value == RS485Driver.ConnectionState.CONNECTED)
+            updateSerialStatus("⏹️ Stopped listening to STM32L412")
+
+            // Add stop message to log
+            updateCommLog("⏹️ Stopped listening at ${getCurrentTimestamp()}")
+            updateCommLog("=" * 40)
+
+            Log.i(TAG, "STM32L412 listening stopped")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping STM32L412 listening", e)
+            updateSerialStatus("❌ Error stopping listening: ${e.message}")
+        }
+    }
+
+    private suspend fun startDirectListening() = withContext(Dispatchers.IO) {
+        updateCommLog("🔄 Direct listening mode active...")
+
+        while (isListening && rs485Driver.connectionState.value == RS485Driver.ConnectionState.CONNECTED) {
+            try {
+                // Use the RS485Driver's readData method or direct port access
+                val receivedData = rs485Driver.readRawData(100) // 100ms timeout
+
+                if (receivedData.isNotEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        handleReceivedData(receivedData)
+                    }
+                }
+
+                delay(50) // Small delay to prevent tight loop
+
+            } catch (e: Exception) {
+                if (isListening) { // Only log if we're still supposed to be listening
+                    Log.w(TAG, "Error during direct listening: ${e.message}")
+                    withContext(Dispatchers.Main) {
+                        updateCommLog("⚠️ Listening error: ${e.message}")
+                    }
+                }
+                delay(200) // Longer delay on error
+            }
+        }
+
+        withContext(Dispatchers.Main) {
+            updateCommLog("👂 Direct listening stopped")
+        }
+    }
+
+    private fun handleReceivedData(data: ByteArray) {
+        val timestamp = getCurrentTimestamp()
+        val hexString = data.joinToString(" ") { "%02X".format(it) }
+
+        updateCommLog("📥 [$timestamp] Received ${data.size} bytes:")
+        updateCommLog("   HEX: $hexString")
+
+        // Try to parse as Winnsen protocol
+        if (data.size >= 6 && data[0] == 0x90.toByte()) {
+            parseWinnsenResponse(data)
+        } else {
+            // Try ASCII interpretation
+            val asciiData = data.toString(Charsets.UTF_8).filter {
+                it.isLetterOrDigit() || it.isWhitespace() || it in ".,!?-_"
+            }
+            if (asciiData.isNotEmpty()) {
+                updateCommLog("   ASCII: '$asciiData'")
+            }
+        }
+
+        updateCommLog("") // Empty line for readability
+    }
+
+    private fun parseWinnsenResponse(data: ByteArray) {
+        try {
+            when (data[2]) {
+                0x85.toByte() -> { // Unlock response
+                    if (data.size >= 7) {
+                        val station = data[3].toInt() and 0xFF
+                        val lock = data[4].toInt() and 0xFF
+                        val status = data[5].toInt() and 0xFF
+                        updateCommLog("   🔓 UNLOCK RESPONSE:")
+                        updateCommLog("      Station: $station, Lock: $lock")
+                        updateCommLog("      Result: ${if (status == 1) "SUCCESS (Door Open)" else "FAILED (Door Closed)"}")
+                    }
+                }
+                0x92.toByte() -> { // Status response
+                    if (data.size >= 7) {
+                        val station = data[3].toInt() and 0xFF
+                        val status = data[4].toInt() and 0xFF
+                        val lock = data[5].toInt() and 0xFF
+                        updateCommLog("   📋 STATUS RESPONSE:")
+                        updateCommLog("      Station: $station, Lock: $lock")
+                        updateCommLog("      Door: ${if (status == 1) "OPEN" else "CLOSED"}")
+                    }
+                }
+                else -> {
+                    updateCommLog("   📦 Winnsen Protocol (Function: 0x${"%02X".format(data[2])})")
+                }
+            }
+        } catch (e: Exception) {
+            updateCommLog("   ⚠️ Error parsing Winnsen response: ${e.message}")
+        }
+    }
+
+    private fun updateCommLog(message: String) {
+        runOnUiThread {
+            val currentText = tvCommLog.text.toString()
+            val newText = if (currentText.isEmpty() || currentText == "Click 'Scan Serial' to discover connected devices") {
+                message
+            } else {
+                "$currentText\n$message"
+            }
+
+            tvCommLog.text = newText
+
+            // Auto-scroll to bottom
+            scrollCommLog.post {
+                scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
+            }
+        }
+    }
+
+    private fun getCurrentTimestamp(): String {
+        return SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
     }
 
     private fun clearCommunicationLog() {
-        rs485Tester.clearLog()
-        tvCommLog.text = "Communication log cleared\n"
+        tvCommLog.text = ""
+        updateCommLog("🧹 Communication log cleared")
+        updateCommLog("⏰ ${getCurrentTimestamp()}")
         updateSerialStatus("🧹 Log cleared")
     }
 
@@ -1205,17 +1349,6 @@ class HardwareTestActivity : BaseKioskActivity() {
         runOnUiThread {
             tvSerialStatus.text = "$message\n\nTime: ${SimpleDateFormat("HH:mm:ss").format(Date())}"
             Log.d(TAG, "Serial Status: $message")
-        }
-    }
-
-    private fun updateCommLog(message: String) {
-        runOnUiThread {
-            val timestamp = SimpleDateFormat("HH:mm:ss.SSS").format(Date())
-            tvCommLog.append("[$timestamp] $message\n")
-
-            scrollCommLog.post {
-                scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
-            }
         }
     }
 

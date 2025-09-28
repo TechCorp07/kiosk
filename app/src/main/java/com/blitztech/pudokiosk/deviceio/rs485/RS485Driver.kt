@@ -299,6 +299,27 @@ class RS485Driver(private val ctx: Context) {
     }
 
     /**
+     * Read raw data from the port (for listening)
+     */
+    suspend fun readRawData(timeoutMs: Int = 100): ByteArray = withContext(Dispatchers.IO) {
+        val p = port ?: return@withContext ByteArray(0)
+
+        try {
+            val buffer = ByteArray(256)
+            val bytesRead = p.read(buffer, timeoutMs)
+
+            return@withContext if (bytesRead > 0) {
+                buffer.copyOf(bytesRead)
+            } else {
+                ByteArray(0)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error reading raw data: ${e.message}")
+            return@withContext ByteArray(0)
+        }
+    }
+
+    /**
      * Test connection by sending a simple status command
      * @return true if communication test successful
      */
