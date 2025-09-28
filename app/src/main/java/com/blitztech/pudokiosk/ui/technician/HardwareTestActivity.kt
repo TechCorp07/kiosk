@@ -162,7 +162,7 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
-                rs485Driver.connectToDevice(baudRate = 9600, portNumber = 1)
+                rs485Driver.connect(baudRate = 9600, portNumber = 1)
                 updateCommLogFromTester()
 
             } catch (e: Exception) {
