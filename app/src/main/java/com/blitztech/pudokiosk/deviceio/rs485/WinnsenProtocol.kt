@@ -134,13 +134,6 @@ object WinnsenProtocol {
     }
 
     /**
-     * Convert byte array to hex string for logging
-     */
-    fun toHexString(bytes: ByteArray): String {
-        return bytes.joinToString(" ") { "%02X".format(it) }
-    }
-
-    /**
      * Data class for unlock operation result
      */
     data class UnlockResult(

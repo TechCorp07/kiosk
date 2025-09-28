@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-09-18T16:29:31.127510500Z">
+        <DropdownSelection timestamp="2025-09-28T11:24:32.398766300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\LENOVO\.android\avd\Smart_Locker.avd" />
+              <DeviceId pluginId="Default" identifier="serial=192.168.1.2:5555;connection=01ddcc90" />
             </handle>
           </Target>
         </DropdownSelection>

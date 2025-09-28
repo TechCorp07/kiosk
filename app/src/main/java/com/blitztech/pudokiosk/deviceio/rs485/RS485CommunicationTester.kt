@@ -6,7 +6,6 @@ import android.hardware.usb.UsbManager
 import android.util.Log
 import com.hoho.android.usbserial.driver.UsbSerialDriver
 import com.hoho.android.usbserial.driver.UsbSerialPort
-import com.hoho.android.usbserial.driver.UsbSerialProber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -40,57 +39,6 @@ class RS485CommunicationTester(private val ctx: Context) {
     )
 
     /**
-     * Scan for available USB serial devices that could be RS485 adapters
-     */
-    suspend fun scanForSerialDevices(): List<SerialDevice> = withContext(Dispatchers.IO) {
-        val devices = mutableListOf<SerialDevice>()
-
-        try {
-            val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
-            val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
-
-            log("🔍 Scanning for USB serial devices...")
-            log("Found ${availableDrivers.size} potential serial device(s)")
-
-            availableDrivers.forEach { driver ->
-                val device = driver.device
-                val vendorId = String.format("%04X", device.vendorId)
-                val productId = String.format("%04X", device.productId)
-
-                // Build device info string
-                val deviceInfo = buildString {
-                    append("${device.deviceName} - ")
-                    append("VID:$vendorId PID:$productId")
-                    device.manufacturerName?.let { append(" ($it)") }
-                    device.productName?.let { append(" - $it") }
-                }
-
-                devices.add(SerialDevice(
-                    device = device,
-                    driver = driver,
-                    deviceInfo = deviceInfo,
-                    vendorId = vendorId,
-                    productId = productId,
-                    deviceName = device.deviceName
-                ))
-
-                log("📱 Device: $deviceInfo")
-            }
-
-            if (devices.isEmpty()) {
-                log("⚠️ No USB serial devices found!")
-                log("Check connections and ensure RS485-USB adapter is connected")
-            }
-
-        } catch (e: Exception) {
-            log("❌ Error scanning devices: ${e.message}")
-            Log.e(TAG, "Error scanning for devices", e)
-        }
-
-        devices
-    }
-
-    /**
      * Connect to a specific serial device
      */
     suspend fun connectToDevice(
@@ -99,7 +47,6 @@ class RS485CommunicationTester(private val ctx: Context) {
         portNumber: Int = 0
     ): Boolean = withContext(Dispatchers.IO) {
         try {
-            // Close existing connection if any
             disconnect()
 
             log("🔌 Connecting to: ${serialDevice.deviceInfo}")
@@ -125,10 +72,8 @@ class RS485CommunicationTester(private val ctx: Context) {
             val selectedPort = availablePorts[portNumber]
             log("📡 Using port: ${selectedPort.javaClass.simpleName} (Port ${portNumber + 1})")
 
-            // Handle the "Already open" issue
             var portReady = false
 
-            // First, try to close the port if it might be open
             try {
                 selectedPort.close()
                 delay(150) // Give time to close
@@ -136,8 +81,6 @@ class RS485CommunicationTester(private val ctx: Context) {
             } catch (e: Exception) {
                 // Ignore - port probably wasn't open
             }
-
-            // Now try to open the port
             try {
                 selectedPort.open(connection)
                 portReady = true
@@ -155,36 +98,6 @@ class RS485CommunicationTester(private val ctx: Context) {
 
             if (portReady) {
                 var configSuccess = false
-
-                // Method 1: Try full configuration (works for most devices)
-                try {
-                    log("🔧 Attempting full configuration...")
-                    selectedPort.setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
-                    selectedPort.dtr = true
-                    selectedPort.rts = true
-                    selectedPort.purgeHwBuffers(true, true)
-                    log("✅ Full configuration successful")
-                    configSuccess = true
-                } catch (e: Exception) {
-                    log("⚠️ Full config failed: ${e.message ?: "null"}")
-                }
-
-                // Method 2: Try without setParameters (CDC devices often work without this)
-                if (!configSuccess) {
-                    try {
-                        log("🔧 Attempting CDC-style configuration...")
-                        selectedPort.dtr = true
-                        selectedPort.rts = true
-                        selectedPort.purgeHwBuffers(true, true)
-                        log("✅ CDC configuration successful")
-                        configSuccess = true
-                    } catch (e: Exception) {
-                        log("⚠️ CDC config failed: ${e.message ?: "null"}")
-                    }
-                }
-
-                // Method 3: Try minimal configuration (just control signals)
-                if (!configSuccess) {
                     try {
                         log("🔧 Attempting minimal configuration...")
                         selectedPort.dtr = true
@@ -194,13 +107,6 @@ class RS485CommunicationTester(private val ctx: Context) {
                     } catch (e: Exception) {
                         log("⚠️ Minimal config failed: ${e.message ?: "null"}")
                     }
-                }
-
-                // Method 4: No configuration at all (last resort)
-                if (!configSuccess) {
-                    log("🔧 Using device with no configuration (raw mode)")
-                    configSuccess = true
-                }
 
                 if (configSuccess) {
                     port = selectedPort
@@ -434,15 +340,6 @@ class RS485CommunicationTester(private val ctx: Context) {
      * Get connection status
      */
     fun isConnected(): Boolean = port != null && currentDevice != null
-
-    /**
-     * Get current device info
-     */
-    fun getCurrentDeviceInfo(): String? {
-        return currentDevice?.let { device ->
-            "${device.deviceName} - VID:${String.format("%04X", device.vendorId)} PID:${String.format("%04X", device.productId)}"
-        }
-    }
 
     /**
      * Disconnect from current device
