@@ -1,4 +1,4 @@
-package com.blitztech.pudokiosk.ui.Technician
+package com.blitztech.pudokiosk.ui.technician
 
 import android.os.Bundle
 import android.widget.Button

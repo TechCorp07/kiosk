@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.blitztech.pudokiosk.databinding.ActivityMainBinding
 import com.blitztech.pudokiosk.service.KioskModeService
-import com.blitztech.pudokiosk.ui.Technician.TechnicianAccessActivity
+import com.blitztech.pudokiosk.ui.technician.TechnicianAccessActivity
 import com.blitztech.pudokiosk.ui.onboarding.LanguageSelectionActivity
 
 

@@ -196,7 +196,7 @@
 
         <!-- Technician Access Activities -->
         <activity
-            android:name=".ui.Technician.HardwareTestActivity"
+            android:name=".ui.technician.HardwareTestActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ZimpudoKiosk">
@@ -210,40 +210,40 @@
                 android:resource="@xml/device_filter"/>
         </activity>
 
-        <activity android:name=".ui.Technician.TechnicianAccessActivity"
+        <activity android:name=".ui.technician.TechnicianAccessActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ZimpudoKiosk"
             android:parentActivityName=".ui.main.MainActivity" />
 
-        <activity android:name=".ui.Technician.TechnicianMenuActivity"
+        <activity android:name=".ui.technician.TechnicianMenuActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ZimpudoKiosk" />
 
         <!-- Diagnostic Activities -->
-        <activity android:name=".ui.Technician.SystemLogsActivity"
+        <activity android:name=".ui.technician.SystemLogsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.Technician.NetworkDiagnosticsActivity"
+        <activity android:name=".ui.technician.NetworkDiagnosticsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.Technician.SystemInfoActivity"
+        <activity android:name=".ui.technician.SystemInfoActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.Technician.DataManagementActivity"
+        <activity android:name=".ui.technician.DataManagementActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".ui.Technician.RemoteSupportActivity"
+        <activity android:name=".ui.technician.RemoteSupportActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 
         <!-- Legacy Activities (for reference/reuse) -->
-        <activity android:name=".ui.Technician.DevSettingsActivity"
+        <activity android:name=".ui.technician.DevSettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

@@ -1,4 +1,4 @@
-package com.blitztech.pudokiosk.ui.Technician
+package com.blitztech.pudokiosk.ui.technician
 
 import android.app.ActivityManager
 import android.content.Intent

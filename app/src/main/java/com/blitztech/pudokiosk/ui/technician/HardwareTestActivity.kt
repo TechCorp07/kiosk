@@ -1,4 +1,4 @@
-package com.blitztech.pudokiosk.ui.Technician
+package com.blitztech.pudokiosk.ui.technician
 
 import android.os.Bundle
 import android.util.Log
@@ -11,9 +11,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 // Hardware component imports
-import com.blitztech.pudokiosk.deviceio.rs485.RS485CommunicationTester
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
+import com.blitztech.pudokiosk.deviceio.rs485.RS485Driver
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 
 /**
@@ -28,14 +28,9 @@ class HardwareTestActivity : BaseKioskActivity() {
     }
 
     // === RS485 COMMUNICATION TEST COMPONENTS ===
-    private lateinit var rs485Tester: RS485CommunicationTester
-    private lateinit var btnTestComm: Button
-    private lateinit var btnSendRaw: Button
+    private lateinit var rs485Driver: RS485Driver
     private lateinit var btnStartListening: Button
     private lateinit var btnClearCommLog: Button
-    private lateinit var etRawHexInput: EditText
-    private lateinit var etCommStation: EditText
-    private lateinit var etCommLock: EditText
     private lateinit var tvSerialStatus: TextView
     private lateinit var tvCommLog: TextView
     private lateinit var scrollCommLog: ScrollView
@@ -83,13 +78,8 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun initializeViews() {
         // RS485 Communication Test UI
-        btnTestComm = findViewById(R.id.btnTestComm)
-        btnSendRaw = findViewById(R.id.btnSendRaw)
         btnStartListening = findViewById(R.id.btnStartListening)
         btnClearCommLog = findViewById(R.id.btnClearCommLog)
-        etRawHexInput = findViewById(R.id.etRawHexInput)
-        etCommStation = findViewById(R.id.etCommStation)
-        etCommLock = findViewById(R.id.etCommLock)
         tvSerialStatus = findViewById(R.id.tvSerialStatus)
         tvCommLog = findViewById(R.id.tvCommLog)
         scrollCommLog = findViewById(R.id.scrollCommLog)
@@ -119,7 +109,6 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun setupEventListeners() {
         // RS485 Communication Events
-        btnTestComm.setOnClickListener { testBasicCommunication() }
         btnStartListening.setOnClickListener {
             if (isListening) stopListening() else startListening()
         }
@@ -168,12 +157,12 @@ class HardwareTestActivity : BaseKioskActivity() {
     // === RS485 COMMUNICATION TEST METHODS ===
 
     private fun initializeRS485Tester() {
-        rs485Tester = RS485CommunicationTester(this)
+        rs485Driver = RS485Driver(this)
         rs485Initialized = true
 
         lifecycleScope.launch {
             try {
-                rs485Tester.connectToDevice(baudRate = 9600, portNumber = 1)
+                rs485Driver.connectToDevice(baudRate = 9600, portNumber = 1)
                 updateCommLogFromTester()
 
             } catch (e: Exception) {
@@ -190,49 +179,8 @@ class HardwareTestActivity : BaseKioskActivity() {
         Log.i(TAG, "RS485 Communication Tester initialized")
     }
 
-    private fun disconnectFromDevice() {
-        lifecycleScope.launch {
-            try {
-                rs485Tester.disconnect()
-                updateSerialStatus("🔌 Disconnected")
-
-                btnTestComm.isEnabled = false
-                btnSendRaw.isEnabled = false
-                btnStartListening.isEnabled = false
-
-                updateCommLogFromTester()
-
-            } catch (e: Exception) {
-                updateSerialStatus("❌ Error disconnecting: ${e.message}")
-                Log.e(TAG, "Error disconnecting", e)
-            }
-        }
-    }
-
-    private fun testBasicCommunication() {
-        if (!rs485Tester.isConnected()) {
-            updateSerialStatus("❌ Not connected - connect to a device first")
-            return
-        }
-
-        showProgress(true)
-        updateSerialStatus("📡 Testing basic communication...")
-
-        lifecycleScope.launch {
-            try {
-                updateCommLogFromTester()
-
-            } catch (e: Exception) {
-                updateSerialStatus("❌ Communication test failed: ${e.message}")
-                Log.e(TAG, "Error in communication test", e)
-            } finally {
-                showProgress(false)
-            }
-        }
-    }
-
     private fun startListening() {
-        if (!rs485Tester.isConnected()) {
+        if (!rs485Driver.isConnected()) {
             updateSerialStatus("❌ Not connected - connect to a device first")
             return
         }
@@ -243,7 +191,7 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
-                rs485Tester.startListening(10000) // Listen for 10 seconds
+                rs485Driver.startListening(10000) // Listen for 10 seconds
                 updateCommLogFromTester()
 
             } catch (e: Exception) {
@@ -262,13 +210,13 @@ class HardwareTestActivity : BaseKioskActivity() {
     }
 
     private fun clearCommunicationLog() {
-        rs485Tester.clearLog()
+        rs485Driver.clearLog()
         tvCommLog.text = "Communication log cleared\n"
         updateSerialStatus("🧹 Log cleared")
     }
 
     private fun updateCommLogFromTester() {
-        val logMessages = rs485Tester.getLogMessages()
+        val logMessages = rs485Driver.getLogMessages()
         val logText = logMessages.joinToString("\n")
 
         runOnUiThread {
@@ -644,8 +592,8 @@ class HardwareTestActivity : BaseKioskActivity() {
     private fun resetAllSystems() {
         lifecycleScope.launch {
             try {
-                if (rs485Initialized && rs485Tester.isConnected()) {
-                    rs485Tester.disconnect()
+                if (rs485Initialized && rs485Driver.isConnected()) {
+                    rs485Driver.disconnect()
                 }
 
                 updateStatus("All systems reset")
@@ -674,8 +622,6 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun setButtonsEnabled(enabled: Boolean) {
         runOnUiThread {
-            btnTestComm.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
-            btnSendRaw.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
             btnStartListening.isEnabled = true
             btnClearCommLog.isEnabled = enabled && rs485Initialized
 
@@ -745,7 +691,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         try {
             if (rs485Initialized) {
                 lifecycleScope.launch {
-                    rs485Tester.disconnect()
+                    rs485Driver.disconnect()
                 }
             }
         } catch (e: Exception) {
