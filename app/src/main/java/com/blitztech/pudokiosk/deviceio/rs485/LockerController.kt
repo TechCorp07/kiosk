@@ -95,20 +95,6 @@ class LockerController(
                         val command = WinnsenProtocol.createUnlockCommand(STATION_ADDRESS, lockNumber)
                         Log.d(TAG, "Attempt ${attempt + 1}: Sending unlock command for lock $lockNumber")
 
-                        val response = rs485Driver.writeRead(
-                            command = command,
-                            expectedResponseSize = 7,
-                            timeoutMs = COMMUNICATION_TIMEOUT_MS
-                        )
-
-                        if (WinnsenProtocol.validateResponse(command, response)) {
-                            val result = WinnsenProtocol.parseUnlockResponse(response)
-                            if (result != null && result.success) {
-                                Log.i(TAG, "✅ Locker $lockerId opened successfully")
-                                return@withContext true
-                            }
-                        }
-
                         Log.w(TAG, "Attempt ${attempt + 1} failed for locker $lockerId")
 
                     } catch (e: Exception) {
@@ -123,112 +109,6 @@ class LockerController(
             Log.e(TAG, "❌ Failed to open locker $lockerId after $retries retries")
             return@withContext false
         }
-
-    /**
-     * Check the status of a specific locker
-     * @param lockerId Locker identifier (e.g., "M1", "M16")
-     * @param retries Number of retry attempts on failure
-     * @return true if locker is closed/locked, false if open or error
-     */
-    suspend fun checkLockerStatus(lockerId: String, retries: Int = MAX_RETRIES): Boolean =
-        withContext(Dispatchers.IO) {
-            if (simulate) {
-                Log.d(TAG, "SIMULATED: Checking locker $lockerId status")
-                return@withContext true
-            }
-
-            try {
-                val lockNumber = mapToLockNumber(lockerId)
-                Log.d(TAG, "Checking locker $lockerId status -> Lock $lockNumber")
-
-                repeat(retries + 1) { attempt ->
-                    try {
-                        val command = WinnsenProtocol.createStatusCommand(STATION_ADDRESS, lockNumber)
-                        Log.d(TAG, "Attempt ${attempt + 1}: Sending status command for lock $lockNumber")
-
-                        val response = rs485Driver.writeRead(
-                            command = command,
-                            expectedResponseSize = 7,
-                            timeoutMs = COMMUNICATION_TIMEOUT_MS
-                        )
-
-                        if (WinnsenProtocol.validateResponse(command, response)) {
-                            val result = WinnsenProtocol.parseStatusResponse(response)
-                            if (result != null) {
-                                val isClosed = !result.isOpen
-                                Log.d(TAG, "Locker $lockerId status: ${if (isClosed) "CLOSED" else "OPEN"}")
-                                return@withContext isClosed
-                            }
-                        }
-
-                        Log.w(TAG, "Attempt ${attempt + 1} failed for locker $lockerId status")
-
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Attempt ${attempt + 1} error for locker $lockerId status: ${e.message}")
-                    }
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Error checking locker $lockerId status: ${e.message}", e)
-            }
-
-            // On any error, assume closed to prevent system deadlock
-            Log.d(TAG, "Defaulting to CLOSED status for locker $lockerId (error fallback)")
-            return@withContext true
-        }
-
-    /**
-     * Test communication with the locker board
-     * @return true if board responds correctly
-     */
-    suspend fun testCommunication(): Boolean = withContext(Dispatchers.IO) {
-        if (simulate) {
-            Log.d(TAG, "SIMULATED: Communication test successful")
-            return@withContext true
-        }
-
-        try {
-            val result = rs485Driver.testConnection()
-            Log.d(TAG, if (result) "✅ Communication test successful" else "❌ Communication test failed")
-            return@withContext result
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Communication test error: ${e.message}", e)
-            return@withContext false
-        }
-    }
-
-    /**
-     * Get system status information
-     */
-    suspend fun getSystemStatus(): SystemStatus = withContext(Dispatchers.IO) {
-        if (simulate) {
-            return@withContext SystemStatus(
-                isConnected = true,
-                deviceInfo = "SIMULATED STM32L412 Board",
-                totalLocks = MAX_LOCK,
-                communicationTest = true,
-                message = "Simulation mode active"
-            )
-        }
-
-        val isConnected = rs485Driver.isConnected()
-        val deviceInfo = rs485Driver.getDeviceInfo() ?: "Not connected"
-        val commTest = if (isConnected) testCommunication() else false
-
-        return@withContext SystemStatus(
-            isConnected = isConnected,
-            deviceInfo = deviceInfo,
-            totalLocks = MAX_LOCK,
-            communicationTest = commTest,
-            message = when {
-                !isConnected -> "Device not connected"
-                !commTest -> "Communication failed"
-                else -> "System operational"
-            }
-        )
-    }
-
     /**
      * Close the connection
      */

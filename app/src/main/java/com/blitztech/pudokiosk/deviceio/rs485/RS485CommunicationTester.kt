@@ -6,6 +6,7 @@ import android.hardware.usb.UsbManager
 import android.util.Log
 import com.hoho.android.usbserial.driver.UsbSerialDriver
 import com.hoho.android.usbserial.driver.UsbSerialPort
+import com.hoho.android.usbserial.driver.UsbSerialProber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -42,19 +43,38 @@ class RS485CommunicationTester(private val ctx: Context) {
      * Connect to a specific serial device
      */
     suspend fun connectToDevice(
-        serialDevice: SerialDevice,
         baudRate: Int = DEFAULT_BAUD_RATE,
         portNumber: Int = 0
     ): Boolean = withContext(Dispatchers.IO) {
         try {
             disconnect()
 
-            log("🔌 Connecting to: ${serialDevice.deviceInfo}")
-            log("📍 Port: ${portNumber + 1} of ${serialDevice.driver.ports.size}")
-            log("⚙️ Settings: $baudRate baud, 8N1")
-
             val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
-            val connection = usbManager.openDevice(serialDevice.device)
+
+            // Find the hardcoded USB device (VID:1250, PID:5140)
+            val deviceList = usbManager.deviceList
+            var targetDevice: UsbDevice? = null
+
+            for (device in deviceList.values) {
+                if (device.vendorId == 1250 && device.productId == 5140) {
+                    targetDevice = device
+                    break
+                }
+            }
+
+            if (targetDevice == null) {
+                log("❌ Hardcoded device (VID:1250, PID:5140) not found")
+                return@withContext false
+            }
+
+            // Probe the device to get the driver
+            val driver = UsbSerialProber.getDefaultProber().probeDevice(targetDevice)
+            if (driver == null) {
+                log("❌ No suitable driver found for device")
+                return@withContext false
+            }
+
+            val connection = usbManager.openDevice(targetDevice)
 
             if (connection == null) {
                 log("❌ Failed to open device - permission denied")
@@ -62,7 +82,7 @@ class RS485CommunicationTester(private val ctx: Context) {
             }
 
             // Select the specific port
-            val availablePorts = serialDevice.driver.ports
+            val availablePorts = driver.ports
             if (portNumber >= availablePorts.size) {
                 log("❌ Port $portNumber not available (device has ${availablePorts.size} ports)")
                 connection.close()
@@ -71,8 +91,6 @@ class RS485CommunicationTester(private val ctx: Context) {
 
             val selectedPort = availablePorts[portNumber]
             log("📡 Using port: ${selectedPort.javaClass.simpleName} (Port ${portNumber + 1})")
-
-            var portReady = false
 
             try {
                 selectedPort.close()
@@ -83,12 +101,10 @@ class RS485CommunicationTester(private val ctx: Context) {
             }
             try {
                 selectedPort.open(connection)
-                portReady = true
                 log("✅ Port opened successfully")
             } catch (e: IOException) {
                 if (e.message?.contains("Already open") == true) {
                     log("⚠️ Port already open - will try to configure existing connection")
-                    portReady = true
                 } else {
                     log("❌ Failed to open port: ${e.message}")
                     connection.close()
@@ -96,39 +112,35 @@ class RS485CommunicationTester(private val ctx: Context) {
                 }
             }
 
-            if (portReady) {
-                var configSuccess = false
-                    try {
-                        log("🔧 Attempting minimal configuration...")
-                        selectedPort.dtr = true
-                        selectedPort.rts = false  // Some devices prefer RTS low
-                        log("✅ Minimal configuration successful")
-                        configSuccess = true
-                    } catch (e: Exception) {
-                        log("⚠️ Minimal config failed: ${e.message ?: "null"}")
-                    }
+            var configSuccess = false
+            try {
+                selectedPort.dtr = true
+                selectedPort.rts = false  // Some devices prefer RTS low
+                configSuccess = true
+            } catch (e: Exception) {
+                log("⚠️ Minimal config failed: ${e.message ?: "null"}")
+            }
 
-                if (configSuccess) {
-                    port = selectedPort
-                    currentDevice = serialDevice.device
+            if (configSuccess) {
+                port = selectedPort
+                currentDevice = targetDevice
 
-                    log("✅ Connected successfully to Port ${portNumber + 1}!")
-                    log("📡 Device: ${serialDevice.device.deviceName}")
-                    log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
-                    log("🎯 Ready for communication testing")
+                log("✅ Connected successfully to Port ${portNumber + 1}!")
+                log("📡 Device: ${targetDevice.deviceName}")
+                log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
+                log("🎯 Ready for communication testing")
 
-                    delay(100) // Allow port to stabilize
-                    return@withContext true
-                } else {
-                    log("❌ All configuration methods failed")
-                    try {
-                        selectedPort.close()
-                        connection.close()
-                    } catch (closeEx: Exception) {
-                        // Ignore cleanup errors
-                    }
-                    return@withContext false
+                delay(100) // Allow port to stabilize
+                return@withContext true
+            } else {
+                log("❌ All configuration methods failed")
+                try {
+                    selectedPort.close()
+                    connection.close()
+                } catch (closeEx: Exception) {
+                    // Ignore cleanup errors
                 }
+                return@withContext false
             }
 
             return@withContext false
@@ -137,167 +149,6 @@ class RS485CommunicationTester(private val ctx: Context) {
             log("❌ Connection error: ${e.message}")
             Log.e(TAG, "Error connecting to device", e)
             return@withContext false
-        }
-    }
-
-    /**
-     * Send basic test commands following Winnsen protocol format
-     */
-    suspend fun sendBasicTest(station: Int = 1, lockNumber: Int = 1): Boolean =
-        withContext(Dispatchers.IO) {
-            val p = port ?: run {
-                log("❌ No connection - please connect to a device first")
-                return@withContext false
-            }
-
-            try {
-                log("📤 Testing basic communication...")
-
-                // Test 1: Send unlock command (Winnsen format)
-                val unlockCommand = byteArrayOf(
-                    0x90.toByte(), 0x06, 0x05,
-                    station.toByte(), lockNumber.toByte(), 0x03
-                )
-
-                log("📤 Sending unlock command: ${toHexString(unlockCommand)}")
-                log("📤 Station: $station, Lock: $lockNumber")
-
-                val written = p.write(unlockCommand, TEST_TIMEOUT_MS)
-                log("📤 Wrote $written bytes")
-
-                delay(100) // Wait for response
-
-                // Try to read response
-                val buffer = ByteArray(32)
-                val bytesRead = p.read(buffer, TEST_TIMEOUT_MS)
-
-                if (bytesRead > 0) {
-                    val response = buffer.copyOf(bytesRead)
-                    log("📥 Received ${bytesRead} bytes: ${toHexString(response)}")
-                    parseResponse(response)
-                    return@withContext true
-                } else {
-                    log("⏱️ No response received (timeout)")
-
-                    // Test 2: Send status command
-                    val statusCommand = byteArrayOf(
-                        0x90.toByte(), 0x06, 0x12,
-                        station.toByte(), lockNumber.toByte(), 0x03
-                    )
-
-                    log("📤 Trying status command: ${toHexString(statusCommand)}")
-                    p.write(statusCommand, TEST_TIMEOUT_MS)
-                    delay(100)
-
-                    val statusRead = p.read(buffer, TEST_TIMEOUT_MS)
-                    if (statusRead > 0) {
-                        val statusResponse = buffer.copyOf(statusRead)
-                        log("📥 Status response: ${toHexString(statusResponse)}")
-                        parseResponse(statusResponse)
-                        return@withContext true
-                    } else {
-                        log("⏱️ No response to status command either")
-                    }
-                }
-
-                return@withContext false
-
-            } catch (e: Exception) {
-                log("❌ Communication error: ${e.message}")
-                Log.e(TAG, "Error during basic test", e)
-                return@withContext false
-            }
-        }
-
-    /**
-     * Send raw hex data for custom testing
-     */
-    suspend fun sendRawHex(hexString: String): Boolean = withContext(Dispatchers.IO) {
-        val p = port ?: run {
-            log("❌ No connection - please connect to a device first")
-            return@withContext false
-        }
-
-        try {
-            val cleanHex = hexString.replace(" ", "").replace("0x", "")
-            if (cleanHex.length % 2 != 0) {
-                log("❌ Invalid hex string - must have even number of characters")
-                return@withContext false
-            }
-
-            val bytes = cleanHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-            log("📤 Sending raw data: ${toHexString(bytes)}")
-
-            val written = p.write(bytes, TEST_TIMEOUT_MS)
-            log("📤 Wrote $written bytes")
-
-            delay(100)
-
-            val buffer = ByteArray(64)
-            val bytesRead = p.read(buffer, TEST_TIMEOUT_MS)
-
-            if (bytesRead > 0) {
-                val response = buffer.copyOf(bytesRead)
-                log("📥 Raw response: ${toHexString(response)}")
-                return@withContext true
-            } else {
-                log("⏱️ No response to raw command")
-                return@withContext false
-            }
-
-        } catch (e: Exception) {
-            log("❌ Error sending raw hex: ${e.message}")
-            return@withContext false
-        }
-    }
-
-    /**
-     * Parse received response and provide interpretation
-     */
-    private fun parseResponse(response: ByteArray) {
-        if (response.isEmpty()) return
-
-        try {
-            when {
-                response.size >= 6 && response[0] == 0x90.toByte() -> {
-                    log("🔍 Winnsen protocol frame detected:")
-                    log("   Header: 0x${String.format("%02X", response[0])}")
-                    log("   Length: ${response[1].toInt() and 0xFF}")
-
-                    if (response.size >= 3) {
-                        val funcCode = response[2].toInt() and 0xFF
-                        when (funcCode) {
-                            0x85 -> {
-                                log("   Function: 0x85 (Unlock Response)")
-                                if (response.size >= 7) {
-                                    val station = response[3].toInt() and 0xFF
-                                    val lock = response[4].toInt() and 0xFF
-                                    val status = response[5].toInt() and 0xFF
-                                    log("   Station: $station, Lock: $lock")
-                                    log("   Status: ${if (status == 1) "SUCCESS (Open)" else "FAILED (Closed)"}")
-                                }
-                            }
-                            0x92 -> {
-                                log("   Function: 0x92 (Status Response)")
-                                if (response.size >= 7) {
-                                    val station = response[3].toInt() and 0xFF
-                                    val status = response[4].toInt() and 0xFF
-                                    val lock = response[5].toInt() and 0xFF
-                                    log("   Station: $station, Lock: $lock")
-                                    log("   Door Status: ${if (status == 1) "OPEN" else "CLOSED"}")
-                                }
-                            }
-                            else -> log("   Function: 0x${String.format("%02X", funcCode)} (Unknown)")
-                        }
-                    }
-                }
-                else -> {
-                    log("🔍 Raw data (not Winnsen protocol):")
-                    log("   ASCII: ${response.toString(Charsets.UTF_8).filter { it.isLetterOrDigit() || it.isWhitespace() }}")
-                }
-            }
-        } catch (e: Exception) {
-            log("⚠️ Error parsing response: ${e.message}")
         }
     }
 

@@ -1,8 +1,5 @@
 package com.blitztech.pudokiosk.ui.Technician
 
-import android.content.Context
-import android.hardware.usb.UsbDevice
-import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
@@ -18,8 +15,6 @@ import com.blitztech.pudokiosk.deviceio.rs485.RS485CommunicationTester
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
-import com.hoho.android.usbserial.driver.UsbSerialDriver
-import com.hoho.android.usbserial.driver.UsbSerialProber
 
 /**
  * Tests the three actual hardware components:
@@ -34,10 +29,6 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     // === RS485 COMMUNICATION TEST COMPONENTS ===
     private lateinit var rs485Tester: RS485CommunicationTester
-    private lateinit var spSerialDevices: Spinner
-    private lateinit var btnScanSerial: Button
-    private lateinit var btnConnectSerial: Button
-    private lateinit var btnDisconnectSerial: Button
     private lateinit var btnTestComm: Button
     private lateinit var btnSendRaw: Button
     private lateinit var btnStartListening: Button
@@ -48,7 +39,6 @@ class HardwareTestActivity : BaseKioskActivity() {
     private lateinit var tvSerialStatus: TextView
     private lateinit var tvCommLog: TextView
     private lateinit var scrollCommLog: ScrollView
-    private var serialDevices = listOf<RS485CommunicationTester.SerialDevice>()
 
     // === BARCODE SCANNER COMPONENTS ===
     private lateinit var btnScannerFocus: Button
@@ -79,6 +69,7 @@ class HardwareTestActivity : BaseKioskActivity() {
     private var scannerInitialized = false
     private var printerInitialized = false
     private var isListening = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hardware_test)
@@ -92,10 +83,6 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun initializeViews() {
         // RS485 Communication Test UI
-        spSerialDevices = findViewById(R.id.spSerialDevices)
-        btnScanSerial = findViewById(R.id.btnScanSerial)
-        btnConnectSerial = findViewById(R.id.btnConnectSerial)
-        btnDisconnectSerial = findViewById(R.id.btnDisconnectSerial)
         btnTestComm = findViewById(R.id.btnTestComm)
         btnSendRaw = findViewById(R.id.btnSendRaw)
         btnStartListening = findViewById(R.id.btnStartListening)
@@ -128,24 +115,11 @@ class HardwareTestActivity : BaseKioskActivity() {
         progressBar = findViewById(R.id.progressBar)
         btnRunAllTests = findViewById(R.id.btnRunAllTests)
         btnResetAll = findViewById(R.id.btnResetAll)
-
-        setupSpinners()
     }
 
-    private fun setupSpinners() {
-        // Serial devices spinner (initially empty)
-        val serialAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item,
-            mutableListOf<String>())
-        serialAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spSerialDevices.adapter = serialAdapter
-    }
     private fun setupEventListeners() {
         // RS485 Communication Events
-        btnScanSerial.setOnClickListener { scanSerialDevices() }
-        btnConnectSerial.setOnClickListener { connectToSelectedDevice() }
-        btnDisconnectSerial.setOnClickListener { disconnectFromDevice() }
         btnTestComm.setOnClickListener { testBasicCommunication() }
-        btnSendRaw.setOnClickListener { sendRawHexData() }
         btnStartListening.setOnClickListener {
             if (isListening) stopListening() else startListening()
         }
@@ -197,148 +171,9 @@ class HardwareTestActivity : BaseKioskActivity() {
         rs485Tester = RS485CommunicationTester(this)
         rs485Initialized = true
 
-        updateSerialStatus("RS485 Communication Tester initialized")
-        updateCommLog("📋 RS485 Communication Tester ready")
-        updateCommLog("📌 Click 'Scan Serial' to discover connected devices")
-
-        // Set default values
-        etCommStation.setText("1")
-        etCommLock.setText("1")
-        etRawHexInput.setText("90 06 05 00 01 03")
-
-        Log.i(TAG, "RS485 Communication Tester initialized")
-    }
-
-    private fun scanSerialDevices() {
-        showProgress(true)
-        updateSerialStatus("🔍 Comprehensive device scanning...")
-
         lifecycleScope.launch {
             try {
-                Log.i(TAG, "=== COMPREHENSIVE USB/SERIAL DEVICE SCAN ===")
-
-                val scanResults = mutableListOf<String>()
-                val logBuilder = StringBuilder()
-
-                logBuilder.appendLine("🔍 COMPREHENSIVE DEVICE SCAN STARTED")
-                logBuilder.appendLine("=" * 40)
-
-                // 1. GET USB MANAGER
-                val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
-
-                // 3. SCAN USB SERIAL DRIVERS (Detected by usb-serial library)
-                Log.d(TAG, "Scanning USB serial drivers...")
-                logBuilder.appendLine("🔌 USB SERIAL DRIVERS:")
-
-                val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
-                Log.i(TAG, "Found ${availableDrivers.size} USB serial drivers")
-
-                if (availableDrivers.isEmpty()) {
-                    logBuilder.appendLine("❌ No USB serial drivers detected!")
-                    Log.w(TAG, "No USB serial drivers found - RS485 adapter may not be compatible")
-                } else {
-                    availableDrivers.forEachIndexed { index, driver ->
-                        val device = driver.device
-                        val driverInfo = buildString {
-                            append("Driver ${index + 1}: ")
-                            append("${driver.javaClass.simpleName} ")
-                            append("Device:${device.deviceName} ")
-                            append("VID:${String.format("%04X", device.vendorId)} ")
-                            append("PID:${String.format("%04X", device.productId)} ")
-                            append("Ports:${driver.ports.size}")
-                        }
-
-                        Log.i(TAG, "Serial Driver: $driverInfo")
-                        logBuilder.appendLine("  • $driverInfo")
-
-                        // Check each port
-                        driver.ports.forEachIndexed { portIndex, port ->
-                            val portInfo = "    Port $portIndex: ${port.javaClass.simpleName} " +
-                                    "PortNumber:${port.portNumber}"
-                            Log.d(TAG, "  $portInfo")
-                            logBuilder.appendLine("  $portInfo")
-                        }
-
-                        scanResults.add(driverInfo)
-                        logBuilder.appendLine("")
-                    }
-                }
-
-                // 7. UPDATE UI COMPONENTS
-                updateSpinnerWithResults(scanResults, availableDrivers)
-
-                // 8. UPDATE COMMUNICATION LOG
-                updateCommLog("📋 DEVICE SCAN COMPLETED")
-                updateCommLogFromScanResults(logBuilder.toString())
-
-                // 9. FINAL LOG SUMMARY
-                Log.i(TAG, "=== SCAN SUMMARY ===")
-                Log.i(TAG, "USB Serial Drivers: ${availableDrivers.size}")
-                Log.i(TAG, "Compatible Devices: ${scanResults.size}")
-                Log.i(TAG, "=== END SCAN ===")
-
-            } catch (e: Exception) {
-                val errorMsg = "❌ Error during device scan: ${e.message}"
-                updateSerialStatus(errorMsg)
-                updateCommLog(errorMsg)
-                Log.e(TAG, "Device scan error", e)
-            } finally {
-                showProgress(false)
-            }
-        }
-    }
-
-    private fun connectToSelectedDevice() {
-        val selectedIndex = spSerialDevices.selectedItemPosition
-        val selectedText = spSerialDevices.selectedItem as? String ?: ""
-
-        Log.d(TAG, "Selected device index: $selectedIndex")
-        Log.d(TAG, "Selected device text: $selectedText")
-
-        if (selectedIndex < 0) {
-            updateSerialStatus("❌ Please select a device first")
-            return
-        }
-
-        showProgress(true)
-        updateSerialStatus("🔌 Attempting connection to: ${selectedText.take(50)}...")
-
-        lifecycleScope.launch {
-            try {
-                // Check if this is a recognized serial device/port
-                if (selectedText.startsWith("✅ SERIAL:") && selectedIndex < serialDevices.size) {
-                    val selectedDevice = serialDevices[selectedIndex]
-                    Log.d(TAG, "Connecting to serial device: ${selectedDevice.deviceInfo}")
-
-                    // For multi-port devices, we need to specify which port to use
-                    val portNumber = extractPortNumber(selectedText)
-                    Log.d(TAG, "Extracted port number: $portNumber")
-
-                    val connected = rs485Tester.connectToDevice(selectedDevice, portNumber = portNumber)
-
-                    if (connected) {
-                        updateSerialStatus("✅ Connected successfully!")
-                        updateSerialStatus("📡 Device: ${selectedDevice.deviceName}")
-                        updateSerialStatus("🔌 Port: $portNumber")
-                        updateSerialStatus("⚙️ Baud: 9600, 8N1")
-
-                        btnConnectSerial.isEnabled = false
-                        btnDisconnectSerial.isEnabled = true
-                        btnTestComm.isEnabled = true
-                        btnSendRaw.isEnabled = true
-                        btnStartListening.isEnabled = true
-
-                        updateCommLog("✅ CONNECTION ESTABLISHED")
-                        updateCommLog("📡 Ready for RS485 communication testing")
-                        updateCommLog("🎯 Try 'Test Basic' with Station:1 Lock:1")
-                    } else {
-                        updateSerialStatus("❌ Failed to connect - check device permissions")
-                    }
-
-                } else {
-                    updateSerialStatus("❌ Invalid selection")
-                }
-
+                rs485Tester.connectToDevice(baudRate = 9600, portNumber = 1)
                 updateCommLogFromTester()
 
             } catch (e: Exception) {
@@ -349,33 +184,18 @@ class HardwareTestActivity : BaseKioskActivity() {
                 showProgress(false)
             }
         }
+        updateSerialStatus("RS485 Communication Tester initialized & Ready")
+        updateCommLog("📌 Click 'Scan Serial' to discover connected devices")
+
+        Log.i(TAG, "RS485 Communication Tester initialized")
     }
 
-    private fun extractPortNumber(deviceText: String): Int {
-        try {
-            // Look for "Port X" pattern
-            val portPattern = "Port (\\d+)".toRegex()
-            val match = portPattern.find(deviceText)
-
-            if (match != null) {
-                val portNum = match.groupValues[1].toInt()
-                Log.d(TAG, "Extracted port number: $portNum")
-                return portNum - 1 // Convert to 0-based index
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Error extracting port number: ${e.message}")
-        }
-
-        return 0 // Default to first port
-    }
     private fun disconnectFromDevice() {
         lifecycleScope.launch {
             try {
                 rs485Tester.disconnect()
                 updateSerialStatus("🔌 Disconnected")
 
-                btnConnectSerial.isEnabled = true
-                btnDisconnectSerial.isEnabled = false
                 btnTestComm.isEnabled = false
                 btnSendRaw.isEnabled = false
                 btnStartListening.isEnabled = false
@@ -400,58 +220,11 @@ class HardwareTestActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
-                val station = etCommStation.text.toString().toIntOrNull() ?: 1
-                val lock = etCommLock.text.toString().toIntOrNull() ?: 1
-
-                val success = rs485Tester.sendBasicTest(station, lock)
-
-                if (success) {
-                    updateSerialStatus("✅ Communication test successful!")
-                } else {
-                    updateSerialStatus("⚠️ No response received - check connections")
-                }
-
                 updateCommLogFromTester()
 
             } catch (e: Exception) {
                 updateSerialStatus("❌ Communication test failed: ${e.message}")
                 Log.e(TAG, "Error in communication test", e)
-            } finally {
-                showProgress(false)
-            }
-        }
-    }
-
-    private fun sendRawHexData() {
-        if (!rs485Tester.isConnected()) {
-            updateSerialStatus("❌ Not connected - connect to a device first")
-            return
-        }
-
-        val hexInput = etRawHexInput.text.toString().trim()
-        if (hexInput.isEmpty()) {
-            updateSerialStatus("❌ Please enter hex data to send")
-            return
-        }
-
-        showProgress(true)
-        updateSerialStatus("📤 Sending raw hex data...")
-
-        lifecycleScope.launch {
-            try {
-                val success = rs485Tester.sendRawHex(hexInput)
-
-                if (success) {
-                    updateSerialStatus("✅ Raw data sent and response received")
-                } else {
-                    updateSerialStatus("⚠️ Data sent but no response")
-                }
-
-                updateCommLogFromTester()
-
-            } catch (e: Exception) {
-                updateSerialStatus("❌ Error sending raw data: ${e.message}")
-                Log.e(TAG, "Error sending raw data", e)
             } finally {
                 showProgress(false)
             }
@@ -504,167 +277,6 @@ class HardwareTestActivity : BaseKioskActivity() {
             scrollCommLog.post {
                 scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
             }
-        }
-    }
-
-    private fun updateSpinnerWithResults(
-        scanResults: List<String>,
-        availableDrivers: List<UsbSerialDriver>
-    ) {
-        runOnUiThread {
-            try {
-                Log.d(TAG, "=== ENHANCED CDC/MULTI-PORT DEVICE SCAN ===")
-
-                val usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
-                val allUsbDevices = usbManager.deviceList
-
-                Log.d(TAG, "Total USB devices found: ${allUsbDevices.size}")
-                Log.d(TAG, "Recognized serial drivers: ${availableDrivers.size}")
-
-                val allDeviceItems = mutableListOf<String>()
-                val allSerialDevices = mutableListOf<RS485CommunicationTester.SerialDevice>()
-
-                // First, add ALL ports from recognized serial drivers
-                availableDrivers.forEach { driver ->
-                    val device = driver.device
-
-                    Log.d(TAG, "Processing driver: ${driver.javaClass.simpleName} with ${driver.ports.size} ports")
-
-                    // Add each port separately
-                    driver.ports.forEachIndexed { portIndex, port ->
-                        val deviceInfo = buildString {
-                            append("✅ SERIAL: ")
-                            append("${device.deviceName} - ")
-                            append("Port ${portIndex + 1}/${driver.ports.size} - ")
-                            append("VID:${String.format("%04X", device.vendorId)} ")
-                            append("PID:${String.format("%04X", device.productId)} - ")
-                            append(identifyDeviceType(device.vendorId, device.productId, device.manufacturerName, device.productName))
-
-                            // Add CDC identification
-                            if (isCdcDevice(device)) {
-                                append(" [CDC]")
-                            }
-                        }
-
-                        allDeviceItems.add(deviceInfo)
-
-                        // Create a serial device object for this specific port
-                        allSerialDevices.add(RS485CommunicationTester.SerialDevice(
-                            device = device,
-                            driver = driver,
-                            deviceInfo = deviceInfo,
-                            vendorId = String.format("%04X", device.vendorId),
-                            productId = String.format("%04X", device.productId),
-                            deviceName = "${device.deviceName}_Port${portIndex + 1}"
-                        ))
-
-                        Log.d(TAG, "Added serial port: $deviceInfo")
-                    }
-                }
-
-                // Update serialDevices list for connection
-                serialDevices = allSerialDevices
-
-                // Create adapter
-                val displayItems = if (allDeviceItems.isEmpty()) {
-                    listOf("❌ No USB devices detected")
-                } else {
-                    allDeviceItems
-                }
-
-                val newAdapter = ArrayAdapter(
-                    this@HardwareTestActivity,
-                    android.R.layout.simple_spinner_item,
-                    displayItems
-                )
-                newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                spSerialDevices.adapter = newAdapter
-                btnConnectSerial.isEnabled = allDeviceItems.isNotEmpty()
-
-                Log.d(TAG, "Populated spinner with ${displayItems.size} total device ports")
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Error in enhanced CDC scan: ${e.message}", e)
-            }
-        }
-    }
-
-    private fun isCdcDevice(device: UsbDevice): Boolean {
-        try {
-            // Check device class (CDC devices can have class 2)
-            if (device.deviceClass == 2) return true
-
-            // Check interfaces for CDC classes
-            for (i in 0 until device.interfaceCount) {
-                try {
-                    val intf = device.getInterface(i)
-                    // CDC Communication Interface Class = 2
-                    // CDC Data Interface Class = 10
-                    if (intf.interfaceClass == 2 || intf.interfaceClass == 10) {
-                        return true
-                    }
-                } catch (e: Exception) {
-                    continue
-                }
-            }
-
-            // Check product name for CDC indicators
-            device.productName?.let { productName ->
-                if (productName.contains("CDC", ignoreCase = true) ||
-                    productName.contains("Communication", ignoreCase = true) ||
-                    productName.contains("Serial", ignoreCase = true)) {
-                    return true
-                }
-            }
-
-            return false
-        } catch (e: Exception) {
-            return false
-        }
-    }
-    /**
-     * Update communication log with scan results
-     */
-    private fun updateCommLogFromScanResults(scanText: String) {
-        runOnUiThread {
-            // Split into lines and add to log
-            scanText.lines().forEach { line ->
-                if (line.trim().isNotEmpty()) {
-                    updateCommLog(line)
-                }
-            }
-
-            // Scroll to bottom
-            scrollCommLog.post {
-                scrollCommLog.fullScroll(ScrollView.FOCUS_DOWN)
-            }
-        }
-    }
-
-    private fun identifyDeviceType(vendorId: Int, productId: Int, manufacturerName: String?, productName: String?): String {
-        val vid = String.format("%04X", vendorId)
-        val pid = String.format("%04X", productId)
-
-        return when {
-            // STMicroelectronics devices
-            vendorId == 0x0483 -> "🎯 STM32/STMicroelectronics"
-
-            // CDC-specific identification
-            productName?.contains("CDC", ignoreCase = true) == true -> "📡 CDC Serial Device"
-
-            // Common USB-Serial adapters used with RS485
-            vendorId == 0x0403 && productId == 0x6001 -> "🔌 FTDI FT232R"
-            vendorId == 0x0403 && productId == 0x6011 -> "🔌 FTDI FT4232H"
-            vendorId == 0x10C4 && productId == 0xEA60 -> "🔌 CP2102 USB-UART"
-            vendorId == 0x1A86 && productId == 0x7523 -> "🔌 CH340 USB-Serial"
-            vendorId == 0x067B && productId == 0x2303 -> "🔌 PL2303 USB-Serial"
-
-            // Generic patterns
-            manufacturerName?.contains("FTDI", ignoreCase = true) == true -> "🔌 FTDI Device"
-            productName?.contains("USB", ignoreCase = true) == true &&
-                    productName?.contains("Serial", ignoreCase = true) == true -> "🔌 USB-Serial"
-
-            else -> "❓ Unknown (VID:$vid PID:$pid)"
         }
     }
 
@@ -761,17 +373,6 @@ class HardwareTestActivity : BaseKioskActivity() {
             Log.e(TAG, "Failed to trigger scan", e)
             updateScannerStatus("❌ Failed to trigger scan")
         }
-    }
-
-    private fun focusScannerInput() {
-        etScannerResults.requestFocus()
-        updateScannerStatus("📱 Input area focused - Ready for scans")
-    }
-
-    private fun clearScanResults() {
-        etScannerResults.setText("")
-        updateScannerStatus("🗑️ Scan results cleared")
-        showToast("Results cleared")
     }
 
     private fun reconnectScanner() {
@@ -1073,12 +674,9 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun setButtonsEnabled(enabled: Boolean) {
         runOnUiThread {
-            btnScanSerial.isEnabled = enabled && rs485Initialized
-            btnConnectSerial.isEnabled = enabled && rs485Initialized && serialDevices.isNotEmpty() && !rs485Tester.isConnected()
-            btnDisconnectSerial.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
             btnTestComm.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
             btnSendRaw.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
-            btnStartListening.isEnabled = enabled && rs485Initialized && rs485Tester.isConnected()
+            btnStartListening.isEnabled = true
             btnClearCommLog.isEnabled = enabled && rs485Initialized
 
             btnScannerFocus.isEnabled = true

@@ -13,8 +13,6 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /**
- * Fixed RS485 Driver for STM32L412 Locker Controller
- *
  * System Architecture:
  * Android Box → RS232 → RS485 Converter → MAX3485 → STM32L412
  *
@@ -45,10 +43,6 @@ class RS485Driver(private val ctx: Context) {
         private const val STOP_BITS = UsbSerialPort.STOPBITS_1
         private const val PARITY = UsbSerialPort.PARITY_NONE
 
-        // Timing constants optimized for STM32L412
-        private const val CONNECT_TIMEOUT_MS = 2000
-        private const val READ_TIMEOUT_MS = 800
-        private const val WRITE_DELAY_MS = 50L
         private const val CONNECTION_RETRY_DELAY_MS = 200L
     }
 
@@ -152,122 +146,6 @@ class RS485Driver(private val ctx: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error during connection: ${e.message}", e)
             cleanup()
-            return@withContext false
-        }
-    }
-
-    /**
-     * Send command and read response with corrected API usage
-     * @param command Command bytes to send
-     * @param expectedResponseSize Expected response length (7 bytes for Winnsen protocol)
-     * @param timeoutMs Read timeout in milliseconds
-     * @return Response bytes or empty array on failure
-     */
-    suspend fun writeRead(
-        command: ByteArray,
-        expectedResponseSize: Int,
-        timeoutMs: Int = READ_TIMEOUT_MS
-    ): ByteArray = withContext(Dispatchers.IO) {
-        if (!isConnected || port == null) {
-            Log.e(TAG, "Not connected to RS232-to-USB converter")
-            return@withContext ByteArray(0)
-        }
-
-        try {
-            val currentPort = port!!
-
-            // Clear any pending data with correct API
-            try {
-                val clearBuffer = ByteArray(64)
-                currentPort.read(clearBuffer, 10) // Short timeout for clearing
-            } catch (e: Exception) {
-                // Ignore timeout on clear operation
-            }
-
-            // Send command
-            Log.d(TAG, "Sending: ${command.joinToString(" ") { "0x%02X".format(it) }}")
-
-            currentPort.write(command, timeoutMs)
-            Log.d(TAG, "Command sent successfully")
-
-            delay(WRITE_DELAY_MS) // Allow STM32 to process
-
-            // Read response with correct API usage
-            val response = ByteArray(expectedResponseSize)
-            var totalRead = 0
-            val startTime = System.currentTimeMillis()
-
-            while (totalRead < expectedResponseSize &&
-                (System.currentTimeMillis() - startTime) < timeoutMs) {
-
-                try {
-                    // Read remaining bytes needed
-                    val remainingBytes = expectedResponseSize - totalRead
-                    val tempBuffer = ByteArray(remainingBytes)
-
-                    val bytesRead = currentPort.read(tempBuffer, 100)
-
-                    if (bytesRead > 0) {
-                        // Copy read bytes to response buffer at correct offset
-                        System.arraycopy(tempBuffer, 0, response, totalRead, bytesRead)
-                        totalRead += bytesRead
-                    } else {
-                        delay(10) // Short delay if no data available
-                    }
-                } catch (e: IOException) {
-                    if (totalRead == 0) {
-                        Log.w(TAG, "No response received within timeout")
-                        break
-                    } else {
-                        // Partial response received, continue waiting
-                        delay(10)
-                    }
-                }
-            }
-
-            if (totalRead == expectedResponseSize) {
-                Log.d(TAG, "Received: ${response.joinToString(" ") { "0x%02X".format(it) }}")
-                return@withContext response
-            } else {
-                Log.w(TAG, "Incomplete response: $totalRead/$expectedResponseSize bytes")
-                if (totalRead > 0) {
-                    Log.d(TAG, "Partial data: ${response.sliceArray(0 until totalRead).joinToString(" ") { "0x%02X".format(it) }}")
-                }
-                return@withContext ByteArray(0)
-            }
-
-        } catch (e: IOException) {
-            Log.e(TAG, "Communication error: ${e.message}", e)
-            return@withContext ByteArray(0)
-        } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error during communication: ${e.message}", e)
-            return@withContext ByteArray(0)
-        }
-    }
-
-    /**
-     * Test connection by sending a simple status command
-     * @return true if communication test successful
-     */
-    suspend fun testConnection(): Boolean = withContext(Dispatchers.IO) {
-        if (!isConnected) {
-            return@withContext false
-        }
-
-        try {
-            // Send status command for lock 1 as a connectivity test
-            val testCommand = byteArrayOf(0x90.toByte(), 0x06, 0x12, 0x00, 0x01, 0x03)
-            val response = writeRead(testCommand, 7, 500)
-
-            val isValid = response.size == 7 &&
-                    response[0] == 0x90.toByte() &&
-                    response[6] == 0x03.toByte()
-
-            Log.d(TAG, "Connection test: ${if (isValid) "PASS" else "FAIL"}")
-            return@withContext isValid
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Connection test failed: ${e.message}", e)
             return@withContext false
         }
     }
