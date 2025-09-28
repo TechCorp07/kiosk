@@ -7,10 +7,16 @@ import android.util.Log
 import com.hoho.android.usbserial.driver.CdcAcmSerialDriver
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Fixed RS485 Driver for STM32L412 Locker Controller
@@ -52,19 +58,39 @@ class RS485Driver(private val ctx: Context) {
         private const val CONNECTION_RETRY_DELAY_MS = 200L
     }
 
+    enum class ConnectionState {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED,
+        ERROR,
+        PERMISSION_DENIED
+    }
+
+    private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
+    val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var reconnectAttempts = 0
+    private val maxReconnectAttempts = 5
+    private var autoReconnectEnabled = true
     /**
      * Initialize and connect to the RS232-to-USB converter
      * @return true if connection successful
      */
+    /**
+     * Auto-connect to STM32L412 RS485 device - no scanning required
+     * @return true if connection successful
+     */
     suspend fun connect(): Boolean = withContext(Dispatchers.IO) {
-        if (isConnected) {
-            Log.d(TAG, "Already connected to RS232-to-USB converter")
+        if (isConnected && port != null) {
+            Log.d(TAG, "Already connected to STM32L412")
             return@withContext true
         }
 
-        try {
-            Log.d(TAG, "Connecting to RS232-to-USB converter (VID:04E2 PID:1414)...")
+        _connectionState.value = ConnectionState.CONNECTING
+        Log.d(TAG, "Auto-connecting to STM32L412 (VID:04E2 PID:1414 Port:2)...")
 
+        try {
             val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
             val availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
 
@@ -75,85 +101,112 @@ class RS485Driver(private val ctx: Context) {
             }
 
             if (targetDriver == null) {
-                Log.e(TAG, "RS232-to-USB converter not found (VID:04E2 PID:1414)")
-                Log.d(TAG, "Available devices: ${availableDrivers.map {
-                    "VID:${String.format("%04X", it.device.vendorId)} PID:${String.format("%04X", it.device.productId)}"
-                }}")
+                Log.w(TAG, "STM32L412 RS232-to-USB converter not found")
+                _connectionState.value = ConnectionState.ERROR
+                scheduleReconnect()
                 return@withContext false
             }
 
-            // Ensure it's a CDC device with multiple ports
-            if (targetDriver !is CdcAcmSerialDriver) {
-                Log.e(TAG, "Device is not a CDC-ACM device, got: ${targetDriver::class.simpleName}")
-                return@withContext false
-            }
-
-            val ports = targetDriver.ports
-            if (ports.size < TARGET_PORT + 1) {
-                Log.e(TAG, "Device doesn't have port $TARGET_PORT (has ${ports.size} ports)")
-                return@withContext false
-            }
-
-            // Get our specific working port (Port 2)
-            val targetPort = ports[TARGET_PORT]
             device = targetDriver.device
+            Log.d(TAG, "Found STM32L412 converter: ${device?.deviceName}")
 
-            // Close if already open to ensure clean state
-            if (targetPort.isOpen) {
-                try {
-                    targetPort.close()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Error closing already open port: ${e.message}")
-                }
-                delay(CONNECTION_RETRY_DELAY_MS)
-            }
-
-            // Request USB permission if needed
+            // Check USB permission
             if (!usbManager.hasPermission(device)) {
-                Log.e(TAG, "No USB permission for RS232-to-USB converter")
+                Log.d(TAG, "Requesting USB permission for STM32L412...")
+                // In production, you might want to handle permission requests
+                // For now, we'll treat this as an error and retry
+                _connectionState.value = ConnectionState.PERMISSION_DENIED
+                scheduleReconnect()
                 return@withContext false
             }
 
-            // Open the connection with proper error handling
+            // Get the specific port (Port 2 confirmed working)
+            if (targetDriver.ports.size <= TARGET_PORT) {
+                Log.e(TAG, "Port $TARGET_PORT not available (only ${targetDriver.ports.size} ports)")
+                _connectionState.value = ConnectionState.ERROR
+                scheduleReconnect()
+                return@withContext false
+            }
+
+            port = targetDriver.ports[TARGET_PORT]
+            Log.d(TAG, "Using Port $TARGET_PORT for STM32L412 communication")
+
+            // Open the connection
             val connection = usbManager.openDevice(device)
             if (connection == null) {
-                Log.e(TAG, "Failed to open USB connection to RS232-to-USB converter")
+                Log.e(TAG, "Failed to open USB device connection")
+                _connectionState.value = ConnectionState.ERROR
+                scheduleReconnect()
                 return@withContext false
             }
 
-            // Open and configure the serial port
-            targetPort.open(connection)
-            delay(100) // Allow port to stabilize
+            port?.open(connection)
+            port?.setParameters(
+                BAUD_RATE,
+                DATA_BITS,
+                STOP_BITS,
+                PARITY
+            )
 
-            // Configure communication parameters to match STM32
-            targetPort.setParameters(BAUD_RATE, DATA_BITS, STOP_BITS, PARITY)
-
-            // Set DTR and RTS for proper CDC-ACM operation
-            try {
-                targetPort.dtr = true
-                targetPort.rts = false
-                delay(50)
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not set DTR/RTS: ${e.message}")
-                // Continue anyway, might still work
-            }
-
-            port = targetPort
             isConnected = true
+            reconnectAttempts = 0
+            _connectionState.value = ConnectionState.CONNECTED
 
-            Log.i(TAG, "✅ Connected to RS232-to-USB converter on port $TARGET_PORT")
-            Log.d(TAG, "Device info: ${getDeviceInfo()}")
+            Log.i(TAG, "✅ STM32L412 connected successfully via Port $TARGET_PORT")
+            Log.d(TAG, "🔧 Settings: 9600 baud, 8N1, Timeout: ${READ_TIMEOUT_MS}ms")
+
             return@withContext true
 
-        } catch (e: IOException) {
-            Log.e(TAG, "IOException during connection: ${e.message}", e)
-            cleanup()
-            return@withContext false
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error during connection: ${e.message}", e)
-            cleanup()
+            Log.e(TAG, "STM32L412 connection failed: ${e.message}", e)
+            _connectionState.value = ConnectionState.ERROR
+            scheduleReconnect()
             return@withContext false
         }
+    }
+
+    /**
+     * Schedule automatic reconnection attempt
+     */
+    private fun scheduleReconnect() {
+        if (!autoReconnectEnabled || reconnectAttempts >= maxReconnectAttempts) {
+            if (reconnectAttempts >= maxReconnectAttempts) {
+                Log.w(TAG, "Max reconnection attempts ($maxReconnectAttempts) reached for STM32L412")
+            }
+            return
+        }
+
+        reconnectAttempts++
+        val delayMs = (reconnectAttempts * CONNECTION_RETRY_DELAY_MS).coerceAtMost(5000L)
+
+        Log.d(TAG, "Scheduling STM32L412 reconnection attempt $reconnectAttempts in ${delayMs}ms")
+
+        scope.launch {
+            delay(delayMs)
+            if (!isConnected && autoReconnectEnabled) {
+                Log.d(TAG, "Attempting STM32L412 reconnection $reconnectAttempts/$maxReconnectAttempts")
+                connect()
+            }
+        }
+    }
+
+    /**
+     * Enable/disable automatic reconnection
+     */
+    fun setAutoReconnect(enabled: Boolean) {
+        autoReconnectEnabled = enabled
+        Log.d(TAG, "STM32L412 auto-reconnect: ${if (enabled) "enabled" else "disabled"}")
+    }
+
+    /**
+     * Force manual reconnection attempt
+     */
+    suspend fun reconnect(): Boolean {
+        Log.i(TAG, "Manual STM32L412 reconnection requested")
+        reconnectAttempts = 0
+        disconnect()
+        delay(100) // Brief pause before reconnection
+        return connect()
     }
 
     /**
@@ -273,6 +326,20 @@ class RS485Driver(private val ctx: Context) {
     }
 
     /**
+     * Initialize STM32L412 connection on app startup
+     * Call this from Application.onCreate() or main activity
+     */
+    fun initializeOnStartup(context: Context) {
+        Log.i(TAG, "Initializing STM32L412 on app startup...")
+
+        scope.launch {
+            // Small delay to let USB system stabilize
+            delay(1000)
+            connect()
+        }
+    }
+
+    /**
      * Disconnect from the RS232-to-USB converter
      */
     suspend fun disconnect(): Boolean = withContext(Dispatchers.IO) {
@@ -292,14 +359,17 @@ class RS485Driver(private val ctx: Context) {
     fun isConnected(): Boolean = isConnected
 
     /**
-     * Get device information string
+     * Get current device connection information
      */
     fun getDeviceInfo(): String {
-        return if (device != null) {
-            "RS232-to-USB VID:${String.format("%04X", device!!.vendorId)} " +
-                    "PID:${String.format("%04X", device!!.productId)} Port:$TARGET_PORT"
-        } else {
-            "No device"
+        return when (_connectionState.value) {
+            ConnectionState.CONNECTED -> {
+                "STM32L412 via ${device?.deviceName ?: "Unknown"} Port:$TARGET_PORT (VID:04E2 PID:1414) @ 9600 baud"
+            }
+            ConnectionState.CONNECTING -> "Connecting to STM32L412..."
+            ConnectionState.PERMISSION_DENIED -> "USB permission denied"
+            ConnectionState.ERROR -> "Connection error"
+            ConnectionState.DISCONNECTED -> "Disconnected"
         }
     }
 

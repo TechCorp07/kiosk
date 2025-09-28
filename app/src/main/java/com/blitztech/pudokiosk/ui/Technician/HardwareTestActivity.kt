@@ -6,6 +6,7 @@ import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import kotlinx.coroutines.*
@@ -17,6 +18,7 @@ import java.util.*
 import com.blitztech.pudokiosk.deviceio.rs485.RS485CommunicationTester
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
+import com.blitztech.pudokiosk.deviceio.rs485.RS485Driver
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.hoho.android.usbserial.driver.UsbSerialDriver
 import com.hoho.android.usbserial.driver.UsbSerialProber
@@ -31,6 +33,8 @@ class HardwareTestActivity : BaseKioskActivity() {
     companion object {
         private const val TAG = "HardwareTest"
     }
+    // === STM32L412 RS485 DRIVER COMPONENTS ===
+    private lateinit var rs485Driver: RS485Driver
 
     // === RS485 COMMUNICATION TEST COMPONENTS ===
     private lateinit var rs485Tester: RS485CommunicationTester
@@ -178,6 +182,7 @@ class HardwareTestActivity : BaseKioskActivity() {
                 initializeRS485Tester()
                 initializeBarcodeScanner()
                 initializeThermalPrinter()
+                initializeSTM32Driver()
 
                 updateStatus("All hardware components initialized")
                 setButtonsEnabled(true)
@@ -187,6 +192,100 @@ class HardwareTestActivity : BaseKioskActivity() {
                 updateStatus("Hardware initialization failed: ${e.message}")
             } finally {
                 showProgress(false)
+            }
+        }
+    }
+
+    // === STM32L412 RS485 DRIVER METHODS ===
+
+    private fun initializeSTM32Driver() {
+        updateSerialStatus("🔌 Initializing STM32L412 RS485 Driver...")
+
+        try {
+            rs485Driver = RS485Driver(this)
+
+            // Initialize with auto-connect (like BarcodeScanner.initialize)
+            rs485Driver.initializeOnStartup(this)
+
+            // Monitor connection state
+            monitorRS485Connection()
+
+            rs485Initialized = true
+            updateSerialStatus("✅ STM32L412 driver initialized - Auto-connecting...")
+            Log.i(TAG, "STM32L412 RS485 driver initialized successfully")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "STM32L412 driver initialization failed", e)
+            updateSerialStatus("❌ STM32L412 init failed: ${e.message}")
+        }
+    }
+    private fun monitorRS485Connection() {
+        lifecycleScope.launch {
+            rs485Driver.connectionState.collectLatest { state ->
+                val statusMessage = when (state) {
+                    RS485Driver.ConnectionState.DISCONNECTED -> {
+                        // Stop listening if we were listening
+                        if (isListening) {
+                            stopListening()
+                        }
+                        "⚪ STM32L412 disconnected"
+                    }
+                    RS485Driver.ConnectionState.CONNECTING -> "🔄 STM32L412 connecting..."
+                    RS485Driver.ConnectionState.CONNECTED -> {
+                        // AUTO-START LISTENING when connected
+                        if (!isListening) {
+                            startListening()
+                        }
+                        "✅ STM32L412 connected - Auto-listening for responses!"
+                    }
+                    RS485Driver.ConnectionState.PERMISSION_DENIED -> "❌ USB permission denied"
+                    RS485Driver.ConnectionState.ERROR -> {
+                        // Stop listening on error
+                        if (isListening) {
+                            stopListening()
+                        }
+                        "❌ STM32L412 connection error"
+                    }
+                }
+
+                runOnUiThread {
+                    updateSerialStatus(statusMessage)
+
+                    val isConnected = (state == RS485Driver.ConnectionState.CONNECTED)
+                    btnTestComm.isEnabled = isConnected
+                    btnSendRaw.isEnabled = isConnected
+
+                    // Update listening button based on connection and listening state
+                    updateListeningButton(isConnected)
+
+                    if (isConnected) {
+                        val deviceInfo = rs485Driver.getDeviceInfo()
+                        showToast("STM32L412 ready - Auto-listening started!")
+                        Log.i(TAG, "STM32L412 device info: $deviceInfo")
+                    }
+                }
+
+                Log.i(TAG, "STM32L412 connection state: $state")
+            }
+        }
+    }
+
+    private fun updateListeningButton(isConnected: Boolean) {
+        when {
+            !isConnected -> {
+                btnStartListening.text = "Start Listening"
+                btnStartListening.isEnabled = false
+                btnStartListening.setBackgroundColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+            }
+            isListening -> {
+                btnStartListening.text = "Stop Listening"
+                btnStartListening.isEnabled = true
+                btnStartListening.setBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+            }
+            else -> {
+                btnStartListening.text = "Start Listening"
+                btnStartListening.isEnabled = true
+                btnStartListening.setBackgroundColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
             }
         }
     }
@@ -1105,6 +1204,7 @@ class HardwareTestActivity : BaseKioskActivity() {
     private fun updateSerialStatus(message: String) {
         runOnUiThread {
             tvSerialStatus.text = "$message\n\nTime: ${SimpleDateFormat("HH:mm:ss").format(Date())}"
+            Log.d(TAG, "Serial Status: $message")
         }
     }
 
