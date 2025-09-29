@@ -15,11 +15,15 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * RS485 Driver with Manual Direction Control
+ * System Architecture:
+ * Android Box → RS232 → RS485 Converter → MAX3485 → STM32L412
  *
- * CRITICAL FIX: Added RTS-based direction control for RS485 adapter
- * - RTS HIGH = Transmit mode (DE/RE enabled for TX)
- * - RTS LOW = Receive mode (DE/RE disabled for RX)
+ * Fixed Configuration:
+ * - Device: VID:04E2 PID:1414 (RS232-to-USB converter, NOT the STM32)
+ * - Port: 2 (of 4 available - working port as confirmed by testing)
+ * - Baud: 9600, 8N1
+ * - Protocol: Winnsen Smart Locker
+ * - Timeout: 800ms for read operations
  */
 class RS485Driver(private val ctx: Context) {
 
@@ -31,15 +35,45 @@ class RS485Driver(private val ctx: Context) {
         private const val TAG = "RS485Driver"
         private const val MAX_LOG_ENTRIES = 50
         private const val BAUD_RATE = 9600
-
-        // Critical timing for RS485 direction control
-        private const val TX_ENABLE_DELAY_MS = 2L      // Wait after enabling TX
-        private const val TX_COMPLETE_DELAY_MS = 5L    // Wait for transmission to complete
-        private const val RX_ENABLE_DELAY_MS = 1L      // Wait after enabling RX
     }
 
     /**
-     * Connect to RS485 device with proper initialization
+     * Test continuous listening for any incoming data
+     */
+    suspend fun startListening(durationMs: Long = 10000): List<ByteArray> = withContext(Dispatchers.IO) {
+        val p = port ?: run {
+            log("❌ No connection - please connect to a device first")
+            return@withContext emptyList()
+        }
+
+        val receivedData = mutableListOf<ByteArray>()
+        val startTime = System.currentTimeMillis()
+
+        log("👂 Listening for incoming data (${durationMs / 1000}s)...")
+
+        try {
+            while (System.currentTimeMillis() - startTime < durationMs) {
+                val buffer = ByteArray(256)
+                val bytesRead = p.read(buffer, 100) // Short timeout for polling
+
+                if (bytesRead > 0) {
+                    val data = buffer.copyOf(bytesRead)
+                    receivedData.add(data)
+                    log("📥 Received: ${toHexString(data)}")
+                }
+
+                delay(10) // Small delay to prevent tight loop
+            }
+        } catch (e: Exception) {
+            log("❌ Error during listening: ${e.message}")
+        }
+
+        log("👂 Listening completed. Received ${receivedData.size} messages")
+        receivedData
+    }
+
+    /**
+     * Connect to a specific serial device
      */
     suspend fun connect(
         baudRate: Int = BAUD_RATE,
@@ -49,112 +83,152 @@ class RS485Driver(private val ctx: Context) {
             disconnect()
 
             val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
+
+            // Find the hardcoded USB device (VID:1250, PID:5140)
             val deviceList = usbManager.deviceList
             var targetDevice: UsbDevice? = null
 
-            // Find the RS232-USB converter (VID:04E2 PID:1414)
             for (device in deviceList.values) {
-                if (device.vendorId == 0x04E2 && device.productId == 0x1414) {
+                if (device.vendorId == 1250 && device.productId == 5140) {
                     targetDevice = device
                     break
                 }
             }
 
             if (targetDevice == null) {
-                log("❌ RS485 device not found (VID:04E2 PID:1414)")
+                log("❌ Hardcoded device (VID:1250, PID:5140) not found")
+                return@withContext false
+            }
+
+            // Probe the device to get the driver
+            val driver = UsbSerialProber.getDefaultProber().probeDevice(targetDevice)
+            if (driver == null) {
+                log("❌ No suitable driver found for device")
                 return@withContext false
             }
 
             val connection = usbManager.openDevice(targetDevice)
+
             if (connection == null) {
-                log("❌ Failed to open device - check USB permissions")
+                log("❌ Failed to open device - permission denied")
                 return@withContext false
             }
 
-            val driver = UsbSerialProber.getDefaultProber().probeDevice(targetDevice)
-            if (driver == null) {
+            // Select the specific port
+            val availablePorts = driver.ports
+            if (portNumber >= availablePorts.size) {
+                log("❌ Port $portNumber not available (device has ${availablePorts.size} ports)")
                 connection.close()
-                log("❌ No compatible driver found")
                 return@withContext false
             }
 
-            if (driver.ports.size <= portNumber) {
-                connection.close()
-                log("❌ Port $portNumber not available")
-                return@withContext false
-            }
-
-            val selectedPort = driver.ports[portNumber]
+            val selectedPort = availablePorts[portNumber]
+            log("📡 Using port: ${selectedPort.javaClass.simpleName} (Port ${portNumber + 1})")
 
             try {
+                selectedPort.close()
+                delay(150) // Give time to close
+                log("🔧 Closed existing port connection")
+            } catch (e: Exception) {
+                // Ignore - port probably wasn't open
+            }
+            try {
                 selectedPort.open(connection)
-                selectedPort.setParameters(
-                    baudRate,
-                    8,
-                    UsbSerialPort.STOPBITS_1,
-                    UsbSerialPort.PARITY_NONE
-                )
+                log("✅ Port opened successfully")
+            } catch (e: IOException) {
+                if (e.message?.contains("Already open") == true) {
+                    log("⚠️ Port already open - will try to configure existing connection")
+                } else {
+                    log("❌ Failed to open port: ${e.message}")
+                    connection.close()
+                    return@withContext false
+                }
+            }
 
-                // CRITICAL: Initialize RS485 direction control
-                // Set RTS LOW = Receive mode (default state)
-                selectedPort.dtr = false
-                selectedPort.rts = false  // RTS LOW = RX mode
+            var configSuccess = false
+            try {
+                selectedPort.dtr = true
+                selectedPort.rts = false  // Some devices prefer RTS low
+                configSuccess = true
+            } catch (e: Exception) {
+                log("⚠️ Minimal config failed: ${e.message ?: "null"}")
+            }
 
-                delay(10) // Allow hardware to stabilize
-
+            if (configSuccess) {
                 port = selectedPort
                 currentDevice = targetDevice
 
-                log("✅ Connected to RS485 adapter")
-                log("📡 Port: ${portNumber + 1}, Baud: $baudRate")
-                log("🎯 Direction control: RTS-based")
-                log("🔽 Mode: RX (ready to receive)")
+                log("✅ Connected successfully to Port ${portNumber + 1}!")
+                log("📡 Device: ${targetDevice.deviceName}")
+                log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
+                log("🎯 Ready for communication testing")
 
+                delay(100) // Allow port to stabilize
                 return@withContext true
-
-            } catch (e: Exception) {
-                log("❌ Configuration failed: ${e.message}")
+            } else {
+                log("❌ All configuration methods failed")
                 try {
                     selectedPort.close()
                     connection.close()
-                } catch (ex: Exception) {
+                } catch (closeEx: Exception) {
                     // Ignore cleanup errors
                 }
                 return@withContext false
             }
 
+            return@withContext false
+
         } catch (e: Exception) {
             log("❌ Connection error: ${e.message}")
-            Log.e(TAG, "Error connecting", e)
+            Log.e(RS485Driver.Companion.TAG, "Error connecting to device", e)
             return@withContext false
         }
     }
 
     /**
-     * Enable RS485 transmit mode
+     * Internal logging
      */
-    private suspend fun enableTransmitMode() {
-        port?.let { p ->
-            p.rts = true  // RTS HIGH = TX mode
-            delay(TX_ENABLE_DELAY_MS)  // Wait for MAX3485 to switch
-            log("⬆️ TX mode enabled")
+    private fun log(message: String) {
+        val timestamp = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
+        val logEntry = "[$timestamp] $message"
+
+        logMessages.add(logEntry)
+        if (logMessages.size > RS485Driver.Companion.MAX_LOG_ENTRIES) {
+            logMessages.removeAt(0)
+        }
+
+        Log.d(RS485Driver.Companion.TAG, message)
+    }
+
+    /**
+     * Convert byte array to hex string
+     */
+    private fun toHexString(data: ByteArray): String {
+        return data.joinToString(" ") { "%02X".format(it) }
+    }
+
+    /**
+     * Get connection status
+     */
+    fun isConnected(): Boolean = port != null && currentDevice != null
+
+    /**
+     * Disconnect from current device
+     */
+    suspend fun disconnect() = withContext(Dispatchers.IO) {
+        try {
+            port?.close()
+            log("🔌 Disconnected")
+        } catch (e: Exception) {
+            log("⚠️ Error during disconnect: ${e.message}")
+        } finally {
+            port = null
+            currentDevice = null
         }
     }
 
     /**
-     * Enable RS485 receive mode
-     */
-    private suspend fun enableReceiveMode() {
-        port?.let { p ->
-            delay(TX_COMPLETE_DELAY_MS)  // Wait for last byte to transmit
-            p.rts = false  // RTS LOW = RX mode
-            delay(RX_ENABLE_DELAY_MS)  // Wait for MAX3485 to switch
-            log("⬇️ RX mode enabled")
-        }
-    }
-
-    /**
-     * Send data with proper RS485 direction control
+     * Send data to the connected device
      */
     suspend fun sendData(data: ByteArray): Boolean = withContext(Dispatchers.IO) {
         val p = port ?: run {
@@ -170,48 +244,28 @@ class RS485Driver(private val ctx: Context) {
         try {
             log("📤 Sending ${data.size} bytes: ${toHexString(data)}")
 
-            // STEP 1: Switch to transmit mode
-            enableTransmitMode()
+            // Send data - throws exception on failure
+            p.write(data, 1000) // 1 second timeout
 
-            // STEP 2: Send data
-            p.write(data, 1000)
-
-            // STEP 3: Wait for transmission to complete
-            // Calculate time needed: (bytes * 10 bits/byte * 1000ms/sec) / baud_rate
-            val transmitTimeMs = ((data.size * 10 * 1000) / BAUD_RATE).toLong() + 5
-            delay(transmitTimeMs)
-
-            // STEP 4: Switch back to receive mode
-            enableReceiveMode()
+            // Small delay to ensure data is transmitted
+            delay(10)
 
             log("✅ Send successful (${data.size} bytes)")
             return@withContext true
 
-        } catch (e: IOException) {
+        } catch (e: java.io.IOException) {
             log("❌ I/O error during send: ${e.message}")
-            // Try to restore RX mode even on error
-            try {
-                p.rts = false
-            } catch (ex: Exception) {
-                // Ignore
-            }
             Log.e(TAG, "I/O error sending data", e)
             return@withContext false
         } catch (e: Exception) {
             log("❌ Send error: ${e.message}")
-            // Try to restore RX mode even on error
-            try {
-                p.rts = false
-            } catch (ex: Exception) {
-                // Ignore
-            }
             Log.e(TAG, "Error sending data", e)
             return@withContext false
         }
     }
 
     /**
-     * Receive data (RS485 should already be in RX mode)
+     * Receive data from the connected device
      */
     suspend fun receiveData(timeoutMs: Int = 1000): ByteArray = withContext(Dispatchers.IO) {
         val p = port ?: run {
@@ -228,11 +282,12 @@ class RS485Driver(private val ctx: Context) {
                 log("📥 Received ${bytesRead} bytes: ${toHexString(data)}")
                 return@withContext data
             } else {
+                // No data received (timeout or no data available)
                 return@withContext ByteArray(0)
             }
 
-        } catch (e: IOException) {
-            // Timeout is normal, don't log
+        } catch (e: java.io.IOException) {
+            // Timeout exceptions are normal when no data is available
             if (e.message?.contains("timeout", ignoreCase = true) != true) {
                 log("❌ I/O error during receive: ${e.message}")
                 Log.e(TAG, "I/O error receiving data", e)
@@ -248,37 +303,44 @@ class RS485Driver(private val ctx: Context) {
     }
 
     /**
-     * Clear receive buffer
+     * Clear any pending data in the receive buffer
      */
     suspend fun clearReceiveBuffer() = withContext(Dispatchers.IO) {
         val p = port ?: return@withContext
 
         try {
+            // Read and discard any pending data
             val buffer = ByteArray(256)
             var totalCleared = 0
-            var attempts = 0
 
-            while (attempts < 10) {
+            // Keep reading until no more data (with very short timeout)
+            var attempts = 0
+            while (attempts < 10) { // Prevent infinite loop
                 try {
-                    val bytesRead = p.read(buffer, 50)
+                    val bytesRead = p.read(buffer, 50) // Very short timeout
                     if (bytesRead <= 0) break
                     totalCleared += bytesRead
                     attempts++
                 } catch (e: Exception) {
+                    // Timeout or no more data - exit loop
                     break
                 }
             }
 
             if (totalCleared > 0) {
-                log("🧹 Cleared $totalCleared bytes from buffer")
+                log("🧹 Cleared $totalCleared bytes from receive buffer")
             }
+
         } catch (e: Exception) {
-            // Ignore
+            // Ignore most exceptions when clearing buffer
+            if (e.message?.contains("timeout", ignoreCase = true) != true) {
+                Log.w(TAG, "Warning during buffer clear: ${e.message}")
+            }
         }
     }
 
     /**
-     * Send command and wait for response
+     * Send command and wait for response (convenience method)
      */
     suspend fun sendCommandAndReceive(
         command: ByteArray,
@@ -290,10 +352,10 @@ class RS485Driver(private val ctx: Context) {
             return@withContext ByteArray(0)
         }
 
-        // Clear any pending data
+        // Clear any pending data first
         clearReceiveBuffer()
 
-        // Send command (automatically handles TX/RX switching)
+        // Send command
         val sendSuccess = sendData(command)
         if (!sendSuccess) {
             log("❌ Failed to send command")
@@ -305,41 +367,43 @@ class RS485Driver(private val ctx: Context) {
         val responseData = mutableListOf<Byte>()
 
         while (System.currentTimeMillis() - startTime < responseTimeoutMs) {
-            val data = receiveData(100)
+            val data = receiveData(100) // Short timeout for polling
 
             if (data.isNotEmpty()) {
                 responseData.addAll(data.toList())
 
-                // Check for complete Winnsen frame (7 bytes)
+                // Check if we have a complete Winnsen frame (7 bytes starting with 0x90)
                 if (responseData.size >= 7) {
                     val frame = responseData.toByteArray()
+                    // Look for valid frame in the received data
                     for (i in 0..frame.size - 7) {
                         if (frame[i] == 0x90.toByte() &&
                             frame.size >= i + 7 &&
                             frame[i + 6] == 0x03.toByte() &&
-                            frame[i + 1] == 0x07.toByte()) {
+                            frame[i + 1] == 0x07.toByte()) { // Check length byte
+                            // Found complete valid frame
                             val completeFrame = frame.sliceArray(i until i + 7)
-                            log("✅ Complete response: ${toHexString(completeFrame)}")
+                            log("✅ Received complete response frame: ${toHexString(completeFrame)}")
                             return@withContext completeFrame
                         }
                     }
                 }
             }
 
-            delay(10)
+            delay(10) // Small delay to prevent tight loop
         }
 
         if (responseData.isNotEmpty()) {
-            log("⚠️ Partial response: ${responseData.size} bytes")
+            log("⚠️ Received partial response: ${responseData.size} bytes - ${toHexString(responseData.toByteArray())}")
             return@withContext responseData.toByteArray()
         } else {
-            log("❌ No response within ${responseTimeoutMs}ms")
+            log("❌ No response received within ${responseTimeoutMs}ms")
             return@withContext ByteArray(0)
         }
     }
 
     /**
-     * Test communication with STM32
+     * Test basic communication by sending a simple command
      */
     suspend fun testBasicCommunication(): Boolean = withContext(Dispatchers.IO) {
         if (!isConnected()) {
@@ -347,9 +411,9 @@ class RS485Driver(private val ctx: Context) {
             return@withContext false
         }
 
-        log("🧪 Testing STM32 communication...")
+        log("🧪 Testing basic communication...")
 
-        // Status check for lock 1, station 0
+        // Send a status check command for lock 1
         val testCommand = byteArrayOf(
             0x90.toByte(), // Header
             0x06.toByte(), // Length
@@ -366,100 +430,33 @@ class RS485Driver(private val ctx: Context) {
                 response[0] == 0x90.toByte() &&
                 response[1] == 0x07.toByte() &&
                 response[6] == 0x03.toByte()) {
-                log("✅ STM32 communication SUCCESS!")
-                log("📋 Lock status: ${if (response[4] == 0x01.toByte()) "OPEN" else "CLOSED"}")
+                log("✅ Communication test successful!")
+                log("📋 Response: ${toHexString(response)}")
                 return@withContext true
             } else if (response.isNotEmpty()) {
-                log("❌ Invalid response format")
+                log("❌ Invalid response format: ${toHexString(response)}")
                 return@withContext false
             } else {
-                log("❌ No response from STM32")
-                log("💡 Check: RS485 wiring, STM32 power, baud rate")
+                log("❌ No response received")
                 return@withContext false
             }
 
         } catch (e: Exception) {
-            log("❌ Test failed: ${e.message}")
+            log("❌ Communication test failed: ${e.message}")
             Log.e(TAG, "Communication test error", e)
             return@withContext false
         }
     }
 
     /**
-     * Listen for incoming data (for debugging)
+     * Get formatted log messages
      */
-    suspend fun startListening(durationMs: Long = 10000): List<ByteArray> = withContext(Dispatchers.IO) {
-        val p = port ?: run {
-            log("❌ No connection")
-            return@withContext emptyList()
-        }
-
-        val receivedData = mutableListOf<ByteArray>()
-        val startTime = System.currentTimeMillis()
-
-        log("👂 Listening for ${durationMs / 1000}s...")
-
-        try {
-            // Ensure we're in RX mode
-            p.rts = false
-            delay(10)
-
-            while (System.currentTimeMillis() - startTime < durationMs) {
-                val buffer = ByteArray(256)
-                val bytesRead = p.read(buffer, 100)
-
-                if (bytesRead > 0) {
-                    val data = buffer.copyOf(bytesRead)
-                    receivedData.add(data)
-                    log("📥 Received: ${toHexString(data)}")
-                }
-
-                delay(10)
-            }
-        } catch (e: Exception) {
-            log("❌ Listening error: ${e.message}")
-        }
-
-        log("👂 Listening complete. Received ${receivedData.size} messages")
-        receivedData
-    }
-
-    fun isConnected(): Boolean = port != null && currentDevice != null
-
-    suspend fun disconnect() = withContext(Dispatchers.IO) {
-        try {
-            port?.let { p ->
-                // Set back to RX mode before closing
-                p.rts = false
-                delay(10)
-                p.close()
-            }
-            log("🔌 Disconnected")
-        } catch (e: Exception) {
-            log("⚠️ Disconnect error: ${e.message}")
-        } finally {
-            port = null
-            currentDevice = null
-        }
-    }
-
     fun getLogMessages(): List<String> = logMessages.toList()
 
-    fun clearLog() = logMessages.clear()
-
-    private fun log(message: String) {
-        val timestamp = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date())
-        val logEntry = "[$timestamp] $message"
-
-        logMessages.add(logEntry)
-        if (logMessages.size > MAX_LOG_ENTRIES) {
-            logMessages.removeAt(0)
-        }
-
-        Log.d(TAG, message)
-    }
-
-    private fun toHexString(data: ByteArray): String {
-        return data.joinToString(" ") { "%02X".format(it) }
+    /**
+     * Clear log messages
+     */
+    fun clearLog() {
+        logMessages.clear()
     }
 }

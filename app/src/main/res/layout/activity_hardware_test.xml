@@ -95,28 +95,6 @@
                 android:layout_marginBottom="8dp">
 
                 <Button
-                    android:id="@+id/btnTestDirectionPin"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:text="DTS/RTS Test"
-                    android:background="#1976D2"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginEnd="4dp"
-                    android:textSize="11sp" />
-
-                <Button
-                    android:id="@+id/btnTestAutoDirection"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:text="Test Auto-Direction"
-                    android:background="#1976D2"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginEnd="4dp"
-                    android:textSize="11sp" />
-
-                <Button
                     android:id="@+id/btnConnectLocker"
                     android:layout_weight="1"
                     android:layout_width="0dp"

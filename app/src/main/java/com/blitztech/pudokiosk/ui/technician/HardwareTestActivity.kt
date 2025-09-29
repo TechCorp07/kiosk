@@ -15,8 +15,6 @@ import java.util.*
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
 import com.blitztech.pudokiosk.deviceio.rs485.LockerController
-import com.blitztech.pudokiosk.deviceio.rs485.RS485AutoDirectionTest
-import com.blitztech.pudokiosk.deviceio.rs485.RS485DirectionTester
 import com.blitztech.pudokiosk.deviceio.rs485.RS485Driver
 import com.blitztech.pudokiosk.deviceio.rs485.WinnsenProtocol
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
@@ -47,8 +45,7 @@ class HardwareTestActivity : BaseKioskActivity() {
     private lateinit var btnCheckAllStatus: Button
     private lateinit var btnClearLockerLog: Button
     private lateinit var btnEmergencyUnlock: Button
-    private lateinit var btnTestDirectionPin: Button
-    private lateinit var btnTestAutoDirection: Button
+
     //private lateinit var etLockNumber: EditText
     private lateinit var tvLockerStatus: TextView
     private lateinit var tvLockerLog: TextView
@@ -107,8 +104,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         btnCheckAllStatus = findViewById(R.id.btnCheckAllStatus)
         btnEmergencyUnlock = findViewById(R.id.btnEmergencyUnlock)
         btnClearLockerLog = findViewById(R.id.btnClearLockerLog)
-        btnTestDirectionPin = findViewById(R.id.btnTestDirectionPin)
-        btnTestAutoDirection = findViewById(R.id.btnTestAutoDirection)
+
         //etLockNumber = findViewById(R.id.etLockNumber)
         tvLockerStatus = findViewById(R.id.tvLockerStatus)
         tvLockerLog = findViewById(R.id.tvLockerLog)
@@ -157,8 +153,6 @@ class HardwareTestActivity : BaseKioskActivity() {
         btnCheckStatus.setOnClickListener { checkSingleLockStatus() }
         btnCheckAllStatus.setOnClickListener { checkAllLockStatuses() }
         btnEmergencyUnlock.setOnClickListener { emergencyUnlockAll() }
-        btnTestDirectionPin.setOnClickListener { testRS485DirectionPin() }
-        btnTestAutoDirection.setOnClickListener { testAutoDirection() }
 
         // Scanner Events
         btnScannerFocus.setOnClickListener { etScannerResults.requestFocus() }
@@ -221,20 +215,6 @@ class HardwareTestActivity : BaseKioskActivity() {
     }
 
     // === RS485 COMMUNICATION TEST METHODS ===
-    private fun testAutoDirection() {
-        lifecycleScope.launch {
-            val tester = RS485AutoDirectionTest(applicationContext)
-            val success = tester.testAutoDirection()
-
-            if (success) {
-                Toast.makeText(
-                    this@HardwareTestActivity,
-                    "✅ Auto-direction works! STM32 is responding!",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
-    }
     private fun connectToLockerController() {
         if (lockerConnected) {
             disconnectFromLockerController()
@@ -513,42 +493,6 @@ class HardwareTestActivity : BaseKioskActivity() {
             .setMessage(message.toString())
             .setPositiveButton("OK", null)
             .show()
-    }
-
-    private fun testRS485DirectionPin() {
-        lifecycleScope.launch {
-            updateCommLog("Testing RS485 direction control...")
-
-            val tester = RS485DirectionTester(applicationContext)
-            val result = tester.autoDetectDirectionPin()
-
-            //hideProgress()
-
-            val message = when (result) {
-                "RTS" -> {
-                    "✅ SUCCESS!\n\nYour adapter uses RTS for direction control.\n\nThe fixed RS485Driver I provided should work."
-                }
-                "DTR" -> {
-                    "✅ SUCCESS!\n\nYour adapter uses DTR instead of RTS.\n\nI'll modify the RS485Driver for you."
-                }
-                "RTS+DTR" -> {
-                    "✅ SUCCESS!\n\nYour adapter needs BOTH RTS and DTR HIGH to transmit."
-                }
-                null -> {
-                    "❌ FAILED\n\nNo control pin worked.\n\nCheck:\n1. STM32 powered?\n2. RS485 wiring correct?\n3. Station number = 0 in STM32?"
-                }
-                else -> "Unknown result"
-            }
-
-            AlertDialog.Builder(this@HardwareTestActivity)
-                .setTitle("Direction Pin Test Result")
-                .setMessage(message)
-                .setPositiveButton("OK", null)
-                .show()
-
-            // Also log to your text view
-            Log.i(TAG, "RS485 Direction Test: $result")
-        }
     }
 
     private fun updateLockerStatus(status: String) {
