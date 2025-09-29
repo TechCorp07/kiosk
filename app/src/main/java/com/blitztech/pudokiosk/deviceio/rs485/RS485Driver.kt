@@ -89,7 +89,7 @@ class RS485Driver(private val ctx: Context) {
             var targetDevice: UsbDevice? = null
 
             for (device in deviceList.values) {
-                if (device.vendorId == 1250 && device.productId == 5140) {
+                if (device.vendorId == 0x04E2 && device.productId == 0x1414) {
                     targetDevice = device
                     break
                 }
