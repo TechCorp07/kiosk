@@ -2,6 +2,7 @@ package com.blitztech.pudokiosk.deviceio.rs485
 
 import android.content.Context
 import android.hardware.usb.UsbDevice
+import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbManager
 import android.util.Log
 import com.hoho.android.usbserial.driver.UsbSerialPort
@@ -29,7 +30,9 @@ class RS485Driver(private val ctx: Context) {
 
     private var port: UsbSerialPort? = null
     private val logMessages = mutableListOf<String>()
+    //private var connection: UsbDeviceConnection? = null
     private var currentDevice: UsbDevice? = null
+    private var isFirstWrite = true
 
     companion object {
         private const val TAG = "RS485Driver"
@@ -96,7 +99,7 @@ class RS485Driver(private val ctx: Context) {
             }
 
             if (targetDevice == null) {
-                log("❌ Hardcoded device (VID:1250, PID:5140) not found")
+                log("❌ Hardcoded device (VID:04E2, PID:1414) not found")
                 return@withContext false
             }
 
@@ -127,7 +130,7 @@ class RS485Driver(private val ctx: Context) {
 
             try {
                 selectedPort.close()
-                delay(150) // Give time to close
+                delay(200) // Give time to close
                 log("🔧 Closed existing port connection")
             } catch (e: Exception) {
                 // Ignore - port probably wasn't open
@@ -154,23 +157,65 @@ class RS485Driver(private val ctx: Context) {
                     UsbSerialPort.PARITY_NONE
                 )
 
-                selectedPort.dtr = true
-                selectedPort.rts = true
+                //selectedPort.dtr = true
+                //selectedPort.rts = true
                 configSuccess = true
             } catch (e: Exception) {
                 log("⚠️ Minimal config failed: ${e.message ?: "null"}")
+            }
+            // CRITICAL: Set DTR and RTS - required for USB-serial transmission
+            try {
+                selectedPort.dtr = false
+                selectedPort.rts = false
+                delay(50) // Let lines settle
+
+                selectedPort.dtr = true
+                selectedPort.rts = true
+                log("✅ DTR/RTS enabled")
+
+                // Extra settling time for control lines
+                delay(100)
+            } catch (e: Exception) {
+                log("⚠️ DTR/RTS warning: ${e.message}")
+                // Continue anyway
+            }
+
+            // CRITICAL: Purge USB buffers to clear any stale data
+            try {
+                selectedPort.purgeHwBuffers(true, true) // Purge both TX and RX
+                log("✅ USB buffers purged")
+                delay(50)
+            } catch (e: Exception) {
+                log("⚠️ Buffer purge not supported: ${e.message}")
+            }
+
+            // Additional stabilization - read and discard any garbage
+            try {
+                val dummyBuffer = ByteArray(256)
+                var cleared = 0
+                for (i in 0..5) {
+                    val read = selectedPort.read(dummyBuffer, 50)
+                    if (read > 0) cleared += read
+                    if (read <= 0) break
+                }
+                if (cleared > 0) {
+                    log("🧹 Cleared $cleared bytes of stale data")
+                }
+            } catch (e: Exception) {
+                // Normal if no data to clear
             }
 
             if (configSuccess) {
                 port = selectedPort
                 currentDevice = targetDevice
+                isFirstWrite = true
 
                 log("✅ Connected successfully to Port ${portNumber}!")
                 log("📡 Device: ${targetDevice.deviceName}")
                 log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
                 log("🎯 Ready for communication testing")
 
-                delay(100) // Allow port to stabilize
+                delay(200) // Allow port to stabilize
                 return@withContext true
             } else {
                 log("❌ All configuration methods failed")
@@ -251,18 +296,40 @@ class RS485Driver(private val ctx: Context) {
         try {
             log("📤 Sending ${data.size} bytes: ${toHexString(data)}")
 
-            // Send data - throws exception on failure
-            p.write(data, 1000) // 1 second timeout
+            // CRITICAL FIX: For first write after connection, ensure USB endpoint is ready
+            if (isFirstWrite) {
+                log("🔧 First write - ensuring USB endpoint stability...")
 
-            // Small delay to ensure data is transmitted
-            delay(10)
+                // Extra purge before first write
+                try {
+                    p.purgeHwBuffers(true, false) // Purge TX buffer
+                } catch (e: Exception) {
+                    // Not critical if this fails
+                }
+
+                delay(100) // Extra delay for first transmission
+                isFirstWrite = false
+            }
+
+            // Write data with longer timeout for USB
+            val writeTimeout = 2000 // 2 seconds for USB transmission
+            p.write(data, writeTimeout)
+
+            // CRITICAL: Small delay to ensure USB packets are queued
+            delay(20)
 
             log("✅ Send successful (${data.size} bytes)")
             return@withContext true
 
-        } catch (e: java.io.IOException) {
+        } catch (e: IOException) {
             log("❌ I/O error during send: ${e.message}")
             Log.e(TAG, "I/O error sending data", e)
+
+            // If write fails, try to recover the connection
+            log("🔄 Attempting to recover USB connection...")
+            isFirstWrite = true // Reset first write flag
+            delay(100)
+
             return@withContext false
         } catch (e: Exception) {
             log("❌ Send error: ${e.message}")
@@ -397,7 +464,7 @@ class RS485Driver(private val ctx: Context) {
                 }
             }
 
-            delay(10) // Small delay to prevent tight loop
+            delay(50) // Small delay to prevent tight loop
         }
 
         if (responseData.isNotEmpty()) {
