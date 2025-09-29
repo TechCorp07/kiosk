@@ -228,6 +228,227 @@ class RS485Driver(private val ctx: Context) {
     }
 
     /**
+     * Send data to the connected device
+     */
+    suspend fun sendData(data: ByteArray): Boolean = withContext(Dispatchers.IO) {
+        val p = port ?: run {
+            log("❌ Cannot send - no connection")
+            return@withContext false
+        }
+
+        if (data.isEmpty()) {
+            log("⚠️ Cannot send empty data")
+            return@withContext false
+        }
+
+        try {
+            log("📤 Sending ${data.size} bytes: ${toHexString(data)}")
+
+            // Send data - throws exception on failure
+            p.write(data, 1000) // 1 second timeout
+
+            // Small delay to ensure data is transmitted
+            delay(10)
+
+            log("✅ Send successful (${data.size} bytes)")
+            return@withContext true
+
+        } catch (e: java.io.IOException) {
+            log("❌ I/O error during send: ${e.message}")
+            Log.e(TAG, "I/O error sending data", e)
+            return@withContext false
+        } catch (e: Exception) {
+            log("❌ Send error: ${e.message}")
+            Log.e(TAG, "Error sending data", e)
+            return@withContext false
+        }
+    }
+
+    /**
+     * Receive data from the connected device
+     */
+    suspend fun receiveData(timeoutMs: Int = 1000): ByteArray = withContext(Dispatchers.IO) {
+        val p = port ?: run {
+            log("❌ Cannot receive - no connection")
+            return@withContext ByteArray(0)
+        }
+
+        try {
+            val buffer = ByteArray(256)
+            val bytesRead = p.read(buffer, timeoutMs)
+
+            if (bytesRead > 0) {
+                val data = buffer.copyOf(bytesRead)
+                log("📥 Received ${bytesRead} bytes: ${toHexString(data)}")
+                return@withContext data
+            } else {
+                // No data received (timeout or no data available)
+                return@withContext ByteArray(0)
+            }
+
+        } catch (e: java.io.IOException) {
+            // Timeout exceptions are normal when no data is available
+            if (e.message?.contains("timeout", ignoreCase = true) != true) {
+                log("❌ I/O error during receive: ${e.message}")
+                Log.e(TAG, "I/O error receiving data", e)
+            }
+            return@withContext ByteArray(0)
+        } catch (e: Exception) {
+            if (e.message?.contains("timeout", ignoreCase = true) != true) {
+                log("❌ Receive error: ${e.message}")
+                Log.e(TAG, "Error receiving data", e)
+            }
+            return@withContext ByteArray(0)
+        }
+    }
+
+    /**
+     * Clear any pending data in the receive buffer
+     */
+    suspend fun clearReceiveBuffer() = withContext(Dispatchers.IO) {
+        val p = port ?: return@withContext
+
+        try {
+            // Read and discard any pending data
+            val buffer = ByteArray(256)
+            var totalCleared = 0
+
+            // Keep reading until no more data (with very short timeout)
+            var attempts = 0
+            while (attempts < 10) { // Prevent infinite loop
+                try {
+                    val bytesRead = p.read(buffer, 50) // Very short timeout
+                    if (bytesRead <= 0) break
+                    totalCleared += bytesRead
+                    attempts++
+                } catch (e: Exception) {
+                    // Timeout or no more data - exit loop
+                    break
+                }
+            }
+
+            if (totalCleared > 0) {
+                log("🧹 Cleared $totalCleared bytes from receive buffer")
+            }
+
+        } catch (e: Exception) {
+            // Ignore most exceptions when clearing buffer
+            if (e.message?.contains("timeout", ignoreCase = true) != true) {
+                Log.w(TAG, "Warning during buffer clear: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Send command and wait for response (convenience method)
+     */
+    suspend fun sendCommandAndReceive(
+        command: ByteArray,
+        responseTimeoutMs: Int = 2000
+    ): ByteArray = withContext(Dispatchers.IO) {
+
+        if (command.isEmpty()) {
+            log("❌ Cannot send empty command")
+            return@withContext ByteArray(0)
+        }
+
+        // Clear any pending data first
+        clearReceiveBuffer()
+
+        // Send command
+        val sendSuccess = sendData(command)
+        if (!sendSuccess) {
+            log("❌ Failed to send command")
+            return@withContext ByteArray(0)
+        }
+
+        // Wait for response
+        val startTime = System.currentTimeMillis()
+        val responseData = mutableListOf<Byte>()
+
+        while (System.currentTimeMillis() - startTime < responseTimeoutMs) {
+            val data = receiveData(100) // Short timeout for polling
+
+            if (data.isNotEmpty()) {
+                responseData.addAll(data.toList())
+
+                // Check if we have a complete Winnsen frame (7 bytes starting with 0x90)
+                if (responseData.size >= 7) {
+                    val frame = responseData.toByteArray()
+                    // Look for valid frame in the received data
+                    for (i in 0..frame.size - 7) {
+                        if (frame[i] == 0x90.toByte() &&
+                            frame.size >= i + 7 &&
+                            frame[i + 6] == 0x03.toByte() &&
+                            frame[i + 1] == 0x07.toByte()) { // Check length byte
+                            // Found complete valid frame
+                            val completeFrame = frame.sliceArray(i until i + 7)
+                            log("✅ Received complete response frame: ${toHexString(completeFrame)}")
+                            return@withContext completeFrame
+                        }
+                    }
+                }
+            }
+
+            delay(10) // Small delay to prevent tight loop
+        }
+
+        if (responseData.isNotEmpty()) {
+            log("⚠️ Received partial response: ${responseData.size} bytes - ${toHexString(responseData.toByteArray())}")
+            return@withContext responseData.toByteArray()
+        } else {
+            log("❌ No response received within ${responseTimeoutMs}ms")
+            return@withContext ByteArray(0)
+        }
+    }
+
+    /**
+     * Test basic communication by sending a simple command
+     */
+    suspend fun testBasicCommunication(): Boolean = withContext(Dispatchers.IO) {
+        if (!isConnected()) {
+            log("❌ Not connected")
+            return@withContext false
+        }
+
+        log("🧪 Testing basic communication...")
+
+        // Send a status check command for lock 1
+        val testCommand = byteArrayOf(
+            0x90.toByte(), // Header
+            0x06.toByte(), // Length
+            0x12.toByte(), // Status function
+            0x00.toByte(), // Station 0
+            0x01.toByte(), // Lock 1
+            0x03.toByte()  // End
+        )
+
+        try {
+            val response = sendCommandAndReceive(testCommand, 3000)
+
+            if (response.size == 7 &&
+                response[0] == 0x90.toByte() &&
+                response[1] == 0x07.toByte() &&
+                response[6] == 0x03.toByte()) {
+                log("✅ Communication test successful!")
+                log("📋 Response: ${toHexString(response)}")
+                return@withContext true
+            } else if (response.isNotEmpty()) {
+                log("❌ Invalid response format: ${toHexString(response)}")
+                return@withContext false
+            } else {
+                log("❌ No response received")
+                return@withContext false
+            }
+
+        } catch (e: Exception) {
+            log("❌ Communication test failed: ${e.message}")
+            Log.e(TAG, "Communication test error", e)
+            return@withContext false
+        }
+    }
+
+    /**
      * Get formatted log messages
      */
     fun getLogMessages(): List<String> = logMessages.toList()

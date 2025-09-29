@@ -3,6 +3,7 @@ package com.blitztech.pudokiosk.ui.technician
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import kotlinx.coroutines.*
@@ -13,7 +14,9 @@ import java.util.*
 // Hardware component imports
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
+import com.blitztech.pudokiosk.deviceio.rs485.LockerController
 import com.blitztech.pudokiosk.deviceio.rs485.RS485Driver
+import com.blitztech.pudokiosk.deviceio.rs485.WinnsenProtocol
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 
 /**
@@ -34,6 +37,19 @@ class HardwareTestActivity : BaseKioskActivity() {
     private lateinit var tvSerialStatus: TextView
     private lateinit var tvCommLog: TextView
     private lateinit var scrollCommLog: ScrollView
+    private lateinit var lockerController: LockerController
+    private lateinit var btnConnectLocker: Button
+    private lateinit var btnTestCommunication: Button
+    private lateinit var btnUnlockSingle: Button
+    private lateinit var btnCheckStatus: Button
+    private lateinit var btnCheckAllStatus: Button
+    private lateinit var btnClearLockerLog: Button
+    private lateinit var btnEmergencyUnlock: Button
+    //private lateinit var etLockNumber: EditText
+    private lateinit var tvLockerStatus: TextView
+    private lateinit var tvLockerLog: TextView
+    private lateinit var scrollLockerLog: ScrollView
+    private lateinit var spinnerLockNumber: Spinner
 
     // === BARCODE SCANNER COMPONENTS ===
     private lateinit var btnScannerFocus: Button
@@ -64,6 +80,7 @@ class HardwareTestActivity : BaseKioskActivity() {
     private var scannerInitialized = false
     private var printerInitialized = false
     private var isListening = false
+    private var lockerConnected = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,12 +89,25 @@ class HardwareTestActivity : BaseKioskActivity() {
         Log.i(TAG, "=== PUDO Kiosk Hardware Test Center Started ===")
 
         initializeViews()
-        setupEventListeners()
         initializeHardware()
+        setupEventListeners()
+        debugLayoutComponents()
     }
 
     private fun initializeViews() {
         // RS485 Communication Test UI
+        btnConnectLocker = findViewById(R.id.btnConnectLocker)
+        btnTestCommunication = findViewById(R.id.btnTestCommunication)
+        btnUnlockSingle = findViewById(R.id.btnUnlockSingle)
+        btnCheckStatus = findViewById(R.id.btnCheckStatus)
+        btnCheckAllStatus = findViewById(R.id.btnCheckAllStatus)
+        btnEmergencyUnlock = findViewById(R.id.btnEmergencyUnlock)
+        btnClearLockerLog = findViewById(R.id.btnClearLockerLog)
+        //etLockNumber = findViewById(R.id.etLockNumber)
+        tvLockerStatus = findViewById(R.id.tvLockerStatus)
+        tvLockerLog = findViewById(R.id.tvLockerLog)
+        scrollLockerLog = findViewById(R.id.scrollLockerLog)
+        spinnerLockNumber = findViewById(R.id.spinnerLockNumber)
         btnStartListening = findViewById(R.id.btnStartListening)
         btnClearCommLog = findViewById(R.id.btnClearCommLog)
         tvSerialStatus = findViewById(R.id.tvSerialStatus)
@@ -105,6 +135,8 @@ class HardwareTestActivity : BaseKioskActivity() {
         progressBar = findViewById(R.id.progressBar)
         btnRunAllTests = findViewById(R.id.btnRunAllTests)
         btnResetAll = findViewById(R.id.btnResetAll)
+
+        initializeLockerController()
     }
 
     private fun setupEventListeners() {
@@ -113,6 +145,12 @@ class HardwareTestActivity : BaseKioskActivity() {
             if (isListening) stopListening() else startListening()
         }
         btnClearCommLog.setOnClickListener { clearCommunicationLog() }
+        btnConnectLocker.setOnClickListener { connectToLockerController() }
+        btnTestCommunication.setOnClickListener { testLockerCommunication() }
+        btnUnlockSingle.setOnClickListener { unlockSingleLock() }
+        btnCheckStatus.setOnClickListener { checkSingleLockStatus() }
+        btnCheckAllStatus.setOnClickListener { checkAllLockStatuses() }
+        btnEmergencyUnlock.setOnClickListener { emergencyUnlockAll() }
 
         // Scanner Events
         btnScannerFocus.setOnClickListener { etScannerResults.requestFocus() }
@@ -129,6 +167,13 @@ class HardwareTestActivity : BaseKioskActivity() {
         // General Events
         btnRunAllTests.setOnClickListener { runComprehensiveTests() }
         btnResetAll.setOnClickListener { resetAllSystems() }
+
+        // Initially disable buttons until connected
+        btnTestCommunication.isEnabled = false
+        btnUnlockSingle.isEnabled = false
+        btnCheckStatus.isEnabled = false
+        btnCheckAllStatus.isEnabled = false
+        btnEmergencyUnlock.isEnabled = false
     }
 
     private fun initializeHardware() {
@@ -154,7 +199,324 @@ class HardwareTestActivity : BaseKioskActivity() {
         }
     }
 
+    private fun initializeLockerController() {
+        lockerController = LockerController(this)
+        updateLockerStatus("🔒 Locker Controller ready - Click 'Connect' to start")
+
+        // Setup lock number spinner
+        val lockNumbers = (1..16).map { "Lock $it" }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, lockNumbers)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerLockNumber.adapter = adapter
+
+        Log.i(TAG, "Locker Controller initialized")
+    }
+
     // === RS485 COMMUNICATION TEST METHODS ===
+    private fun connectToLockerController() {
+        if (lockerConnected) {
+            disconnectFromLockerController()
+            return
+        }
+
+        updateLockerStatus("🔄 Connecting to STM32L412 Locker Controller...")
+        showProgress(true)
+
+        lifecycleScope.launch {
+            try {
+                val success = lockerController.connect()
+
+                if (success) {
+                    lockerConnected = true
+                    btnConnectLocker.text = "Disconnect"
+                    updateLockerStatus("✅ Connected to Locker Controller")
+
+                    // Enable other buttons
+                    btnTestCommunication.isEnabled = true
+                    btnUnlockSingle.isEnabled = true
+                    btnCheckStatus.isEnabled = true
+                    btnCheckAllStatus.isEnabled = true
+                    btnEmergencyUnlock.isEnabled = true
+
+                    updateLockerLogFromController()
+                    showToast("Locker Controller connected!")
+
+                } else {
+                    updateLockerStatus("❌ Failed to connect to Locker Controller")
+                    showToast("Connection failed!")
+                }
+
+            } catch (e: Exception) {
+                updateLockerStatus("❌ Connection error: ${e.message}")
+                Log.e(TAG, "Locker connection error", e)
+                showToast("Connection error!")
+
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun disconnectFromLockerController() {
+        lifecycleScope.launch {
+            try {
+                lockerController.disconnect()
+                lockerConnected = false
+                btnConnectLocker.text = "Connect"
+                updateLockerStatus("🔌 Disconnected from Locker Controller")
+
+                // Disable other buttons
+                btnTestCommunication.isEnabled = false
+                btnUnlockSingle.isEnabled = false
+                btnCheckStatus.isEnabled = false
+                btnCheckAllStatus.isEnabled = false
+                btnEmergencyUnlock.isEnabled = false
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Disconnect error", e)
+            }
+        }
+    }
+
+    private fun testLockerCommunication() {
+        if (!lockerConnected) {
+            updateLockerStatus("❌ Not connected")
+            return
+        }
+
+        updateLockerStatus("🧪 Testing communication...")
+        showProgress(true)
+
+        lifecycleScope.launch {
+            try {
+                val success = lockerController.testCommunication()
+
+                if (success) {
+                    updateLockerStatus("✅ Communication test successful!")
+                    showToast("Communication test passed!")
+                } else {
+                    updateLockerStatus("❌ Communication test failed!")
+                    showToast("Communication test failed!")
+                }
+
+                updateLockerLogFromController()
+
+            } catch (e: Exception) {
+                updateLockerStatus("❌ Test error: ${e.message}")
+                Log.e(TAG, "Communication test error", e)
+
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun unlockSingleLock() {
+        if (!lockerConnected) {
+            updateLockerStatus("❌ Not connected")
+            return
+        }
+
+        val selectedPosition = spinnerLockNumber.selectedItemPosition
+        val lockNumber = selectedPosition + 1 // Locks are 1-16
+
+        updateLockerStatus("🔓 Unlocking lock $lockNumber...")
+        showProgress(true)
+
+        lifecycleScope.launch {
+            try {
+                val result = lockerController.unlockLock(lockNumber)
+
+                if (result.success) {
+                    updateLockerStatus("✅ Lock $lockNumber unlocked successfully! Status: ${result.status.displayName}")
+                    showToast("Lock $lockNumber unlocked!")
+                } else {
+                    updateLockerStatus("❌ Failed to unlock lock $lockNumber: ${result.errorMessage}")
+                    showToast("Unlock failed!")
+                }
+
+                updateLockerLogFromController()
+
+            } catch (e: Exception) {
+                updateLockerStatus("❌ Unlock error: ${e.message}")
+                Log.e(TAG, "Unlock error", e)
+
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun checkSingleLockStatus() {
+        if (!lockerConnected) {
+            updateLockerStatus("❌ Not connected")
+            return
+        }
+
+        val selectedPosition = spinnerLockNumber.selectedItemPosition
+        val lockNumber = selectedPosition + 1
+
+        updateLockerStatus("🔍 Checking status of lock $lockNumber...")
+        showProgress(true)
+
+        lifecycleScope.launch {
+            try {
+                val result = lockerController.checkLockStatus(lockNumber)
+
+                if (result.success) {
+                    val statusIcon = when (result.status) {
+                        WinnsenProtocol.LockStatus.OPEN -> "🔓"
+                        WinnsenProtocol.LockStatus.CLOSED -> "🔒"
+                        else -> "❓"
+                    }
+                    updateLockerStatus("$statusIcon Lock $lockNumber status: ${result.status.displayName}")
+                    showToast("Lock $lockNumber: ${result.status.displayName}")
+                } else {
+                    updateLockerStatus("❌ Failed to check lock $lockNumber: ${result.errorMessage}")
+                    showToast("Status check failed!")
+                }
+
+                updateLockerLogFromController()
+
+            } catch (e: Exception) {
+                updateLockerStatus("❌ Status check error: ${e.message}")
+                Log.e(TAG, "Status check error", e)
+
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun checkAllLockStatuses() {
+        if (!lockerConnected) {
+            updateLockerStatus("❌ Not connected")
+            return
+        }
+
+        updateLockerStatus("🔍 Checking status of all locks...")
+        showProgress(true)
+
+        lifecycleScope.launch {
+            try {
+                val results = lockerController.checkAllLockStatuses()
+
+                val openLocks = results.filter { it.value.status == WinnsenProtocol.LockStatus.OPEN }
+                val closedLocks = results.filter { it.value.status == WinnsenProtocol.LockStatus.CLOSED }
+                val unknownLocks = results.filter { it.value.status == WinnsenProtocol.LockStatus.UNKNOWN }
+
+                val summary = "📊 Status Summary: ${openLocks.size} open, ${closedLocks.size} closed, ${unknownLocks.size} unknown"
+                updateLockerStatus(summary)
+
+                // Show detailed results in a dialog
+                showLockStatusDialog(results)
+
+                updateLockerLogFromController()
+
+            } catch (e: Exception) {
+                updateLockerStatus("❌ Status check error: ${e.message}")
+                Log.e(TAG, "All status check error", e)
+
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun emergencyUnlockAll() {
+        if (!lockerConnected) {
+            updateLockerStatus("❌ Not connected")
+            return
+        }
+
+        // Show confirmation dialog for emergency unlock
+        AlertDialog.Builder(this)
+            .setTitle("⚠️ Emergency Unlock")
+            .setMessage("This will attempt to unlock ALL 16 locks. Continue?")
+            .setPositiveButton("YES, UNLOCK ALL") { _, _ ->
+                performEmergencyUnlock()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performEmergencyUnlock() {
+        updateLockerStatus("🚨 EMERGENCY: Unlocking all locks...")
+        showProgress(true)
+
+        lifecycleScope.launch {
+            try {
+                val results = lockerController.emergencyUnlockAll()
+
+                val successCount = results.values.count { it.success }
+                val failureCount = results.size - successCount
+
+                val summary = "🚨 Emergency unlock completed: $successCount succeeded, $failureCount failed"
+                updateLockerStatus(summary)
+
+                showToast("Emergency unlock: $successCount/16 locks unlocked")
+
+                // Show detailed results
+                showLockStatusDialog(results)
+
+                updateLockerLogFromController()
+
+            } catch (e: Exception) {
+                updateLockerStatus("❌ Emergency unlock error: ${e.message}")
+                Log.e(TAG, "Emergency unlock error", e)
+
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun showLockStatusDialog(results: Map<Int, WinnsenProtocol.LockOperationResult>) {
+        val message = StringBuilder()
+        message.append("Lock Status Details:\n\n")
+
+        for (lockNumber in 1..16) {
+            val result = results[lockNumber]
+            val statusIcon = when (result?.status) {
+                WinnsenProtocol.LockStatus.OPEN -> "🔓"
+                WinnsenProtocol.LockStatus.CLOSED -> "🔒"
+                else -> "❓"
+            }
+            val statusText = result?.status?.displayName ?: "Unknown"
+            message.append("Lock $lockNumber: $statusIcon $statusText\n")
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Lock Status Report")
+            .setMessage(message.toString())
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun clearLockerLog() {
+        lockerController.clearLog()
+        tvLockerLog.text = "Locker communication log cleared\n"
+        updateLockerStatus("🧹 Log cleared")
+    }
+
+    private fun updateLockerStatus(status: String) {
+        runOnUiThread {
+            tvLockerStatus.text = status
+        }
+    }
+
+    private fun updateLockerLogFromController() {
+        val logMessages = lockerController.getLogMessages()
+        val logText = logMessages.joinToString("\n")
+
+        runOnUiThread {
+            tvLockerLog.text = logText
+            // Scroll to bottom
+            scrollLockerLog.post {
+                scrollLockerLog.fullScroll(ScrollView.FOCUS_DOWN)
+            }
+        }
+    }
 
     private fun initializeRS485Tester() {
         rs485Driver = RS485Driver(this)
@@ -679,6 +1041,24 @@ class HardwareTestActivity : BaseKioskActivity() {
         runOnUiThread {
             Toast.makeText(this@HardwareTestActivity, message, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun debugLayoutComponents() {
+        Log.d(TAG, "=== LAYOUT COMPONENT DEBUG ===")
+
+        // Check existing components
+        Log.d(TAG, "RS485 components:")
+        Log.d(TAG, "  btnStartListening: ${findViewById<Button>(R.id.btnStartListening) != null}")
+        Log.d(TAG, "  btnClearCommLog: ${findViewById<Button>(R.id.btnClearCommLog) != null}")
+
+        // Check locker components
+        Log.d(TAG, "Locker components:")
+        Log.d(TAG, "  btnConnectLocker: ${findViewById<Button>(R.id.btnConnectLocker) != null}")
+        Log.d(TAG, "  btnTestCommunication: ${findViewById<Button>(R.id.btnTestCommunication) != null}")
+        Log.d(TAG, "  spinnerLockNumber: ${findViewById<Spinner>(R.id.spinnerLockNumber) != null}")
+        Log.d(TAG, "  tvLockerStatus: ${findViewById<TextView>(R.id.tvLockerStatus) != null}")
+
+        Log.d(TAG, "=== END LAYOUT DEBUG ===")
     }
 
     private operator fun String.times(count: Int): String = this.repeat(count)
