@@ -147,8 +147,15 @@ class RS485Driver(private val ctx: Context) {
 
             var configSuccess = false
             try {
+                selectedPort.setParameters(
+                    baudRate,
+                    8,
+                    UsbSerialPort.STOPBITS_1,
+                    UsbSerialPort.PARITY_NONE
+                )
+
                 selectedPort.dtr = true
-                selectedPort.rts = false  // Some devices prefer RTS low
+                selectedPort.rts = true
                 configSuccess = true
             } catch (e: Exception) {
                 log("⚠️ Minimal config failed: ${e.message ?: "null"}")
@@ -158,7 +165,7 @@ class RS485Driver(private val ctx: Context) {
                 port = selectedPort
                 currentDevice = targetDevice
 
-                log("✅ Connected successfully to Port ${portNumber + 1}!")
+                log("✅ Connected successfully to Port ${portNumber}!")
                 log("📡 Device: ${targetDevice.deviceName}")
                 log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
                 log("🎯 Ready for communication testing")
