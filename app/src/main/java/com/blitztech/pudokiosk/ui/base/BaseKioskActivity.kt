@@ -10,7 +10,6 @@ import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.ui.main.MainActivity
-import com.blitztech.pudokiosk.utils.AudioConfigHelper
 
 /**
  * Enhanced Base Activity for maintaining TRUE KIOSK MODE across all app activities
@@ -30,7 +29,6 @@ abstract class BaseKioskActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // Setup kiosk mode for this activity
-        AudioConfigHelper.initializeForKioskMode(this)
         setupKioskMode()
         setupBackButtonHandling()
     }
