@@ -15,6 +15,7 @@ import java.util.*
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner // Object, not class
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
 import com.blitztech.pudokiosk.deviceio.rs485.LockerController
+import com.blitztech.pudokiosk.deviceio.rs485.RS485AutoDirectionTest
 import com.blitztech.pudokiosk.deviceio.rs485.RS485DirectionTester
 import com.blitztech.pudokiosk.deviceio.rs485.RS485Driver
 import com.blitztech.pudokiosk.deviceio.rs485.WinnsenProtocol
@@ -47,6 +48,7 @@ class HardwareTestActivity : BaseKioskActivity() {
     private lateinit var btnClearLockerLog: Button
     private lateinit var btnEmergencyUnlock: Button
     private lateinit var btnTestDirectionPin: Button
+    private lateinit var btnTestAutoDirection: Button
     //private lateinit var etLockNumber: EditText
     private lateinit var tvLockerStatus: TextView
     private lateinit var tvLockerLog: TextView
@@ -106,6 +108,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         btnEmergencyUnlock = findViewById(R.id.btnEmergencyUnlock)
         btnClearLockerLog = findViewById(R.id.btnClearLockerLog)
         btnTestDirectionPin = findViewById(R.id.btnTestDirectionPin)
+        btnTestAutoDirection = findViewById(R.id.btnTestAutoDirection)
         //etLockNumber = findViewById(R.id.etLockNumber)
         tvLockerStatus = findViewById(R.id.tvLockerStatus)
         tvLockerLog = findViewById(R.id.tvLockerLog)
@@ -155,6 +158,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         btnCheckAllStatus.setOnClickListener { checkAllLockStatuses() }
         btnEmergencyUnlock.setOnClickListener { emergencyUnlockAll() }
         btnTestDirectionPin.setOnClickListener { testRS485DirectionPin() }
+        btnTestAutoDirection.setOnClickListener { testAutoDirection() }
 
         // Scanner Events
         btnScannerFocus.setOnClickListener { etScannerResults.requestFocus() }
@@ -217,6 +221,20 @@ class HardwareTestActivity : BaseKioskActivity() {
     }
 
     // === RS485 COMMUNICATION TEST METHODS ===
+    private fun testAutoDirection() {
+        lifecycleScope.launch {
+            val tester = RS485AutoDirectionTest(applicationContext)
+            val success = tester.testAutoDirection()
+
+            if (success) {
+                Toast.makeText(
+                    this@HardwareTestActivity,
+                    "✅ Auto-direction works! STM32 is responding!",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
     private fun connectToLockerController() {
         if (lockerConnected) {
             disconnectFromLockerController()
