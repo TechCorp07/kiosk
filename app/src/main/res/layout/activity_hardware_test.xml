@@ -34,6 +34,15 @@
         <!-- ===== LOCKER CONTROLLER SECTION ===== -->
         <!-- Add this section to your existing activity_hardware_test.xml -->
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:text="📋 Locker Communication Log"
+            android:textColor="#333333"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,6 +51,24 @@
             android:padding="16dp"
             android:layout_marginBottom="16dp"
             android:elevation="3dp">
+
+            <ScrollView
+                android:id="@+id/scrollLockerLog"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="#F8F8F8"
+                android:padding="2dp">
+
+                <TextView
+                    android:id="@+id/tvLockerLog"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:padding="8dp"
+                    android:text="Locker communication log will appear here"
+                    android:textColor="#333333"
+                    android:textSize="10sp" />
+            </ScrollView>
 
             <TextView
                 android:layout_width="match_parent"
@@ -66,6 +93,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp">
+
+                <Button
+                    android:id="@+id/btnTestDirectionPin"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="DTS/RTS Test"
+                    android:background="#1976D2"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginEnd="4dp"
+                    android:textSize="11sp" />
 
                 <Button
                     android:id="@+id/btnConnectLocker"
@@ -199,14 +237,6 @@
                 android:textColor="#2E7D32" />
 
             <!-- Locker Communication Log Display -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="📋 Locker Communication Log"
-                android:textStyle="bold"
-                android:textSize="13sp"
-                android:textColor="#333333"
-                android:layout_marginBottom="4dp" />
 
             <LinearLayout
                 android:orientation="horizontal"
@@ -234,23 +264,6 @@
                     android:gravity="end|center_vertical" />
             </LinearLayout>
 
-            <ScrollView
-                android:id="@+id/scrollLockerLog"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:background="#F8F8F8"
-                android:padding="2dp">
-
-                <TextView
-                    android:id="@+id/tvLockerLog"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Locker communication log will appear here"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace"
-                    android:padding="8dp"
-                    android:textColor="#333333" />
-            </ScrollView>
         </LinearLayout>
 
         <!-- ===== LOCKER CONTROLLER SECTION ===== -->
