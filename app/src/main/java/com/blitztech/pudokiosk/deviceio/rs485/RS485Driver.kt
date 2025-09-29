@@ -44,19 +44,22 @@ class RS485Driver(private val ctx: Context) {
 
         // XR21V1414 Register Blocks
         private const val BLOCK_UART_MANAGER = 0  // UART Manager (FIFO enables)
-        private const val BLOCK_CHANNEL_A = 1
-        private const val BLOCK_CHANNEL_B = 2     // Port 1 uses Channel B
-        private const val BLOCK_CHANNEL_C = 3
-        private const val BLOCK_CHANNEL_D = 4
+        private const val BLOCK_CHANNEL_A = 1    // Port 1 uses Channel B
 
-        // Register addresses
-        private const val REG_UART_ENABLE = 0x03
+        // Register addresses - UART Manager
+        private const val REG_FIFO_ENABLE_CHA = 0x10
         private const val REG_FIFO_ENABLE_CHB = 0x11  // Port 1
+        private const val REG_FIFO_ENABLE_CHC = 0x12
+        private const val REG_FIFO_ENABLE_CHD = 0x13
+        private const val REG_TX_FIFO_RESET_CHA = 0x1C
+        private const val REG_TX_FIFO_RESET_CHB = 0x1D  // Port 1
+        private const val REG_TX_FIFO_RESET_CHC = 0x1E
+        private const val REG_TX_FIFO_RESET_CHD = 0x1F
+
+        // Register addresses - UART Channel
+        private const val REG_UART_ENABLE = 0x03
     }
 
-    /**
-     * Send XR21V1414 vendor-specific register write command
-     */
     private suspend fun writeXR21Register(
         connection: UsbDeviceConnection,
         block: Int,
@@ -75,15 +78,15 @@ class RS485Driver(private val ctx: Context) {
             )
 
             if (result >= 0) {
-                log("✅ XR21 Reg Write: Block=$block, Reg=0x${reg.toString(16)}, Val=0x${value.toString(16)}")
+                log("✅ XR21 Write: B=$block, R=0x${reg.toString(16)}, V=0x${value.toString(16)}")
                 delay(10) // Small delay between register writes
                 return@withContext true
             } else {
-                log("❌ XR21 Reg Write failed: rc=$result")
+                log("❌ XR21 Write failed: rc=$result")
                 return@withContext false
             }
         } catch (e: Exception) {
-            log("❌ XR21 Reg Write error: ${e.message}")
+            log("❌ XR21 Write error: ${e.message}")
             return@withContext false
         }
     }
@@ -110,21 +113,21 @@ class RS485Driver(private val ctx: Context) {
 
             if (result == 1) {
                 val value = buffer[0].toInt() and 0xFF
-                log("📖 XR21 Reg Read: Block=$block, Reg=0x${reg.toString(16)}, Val=0x${value.toString(16)}")
+                log("📖 XR21 Read: B=$block, R=0x${reg.toString(16)}, V=0x${value.toString(16)}")
                 return@withContext value
             } else {
-                log("❌ XR21 Reg Read failed: rc=$result")
+                log("❌ XR21 Read failed: rc=$result")
                 return@withContext -1
             }
         } catch (e: Exception) {
-            log("❌ XR21 Reg Read error: ${e.message}")
+            log("❌ XR21 Read error: ${e.message}")
             return@withContext -1
         }
     }
 
     /**
-     * Initialize XR21V1414 Channel B (Port 1) for transmission
-     * CRITICAL: This is the missing initialization that prevents "rc=-1" errors
+     * Initialize XR21V1414 Channel for transmission
+     * MUST be called AFTER port is opened
      */
     private suspend fun initializeXR21Channel(
         connection: UsbDeviceConnection,
@@ -133,7 +136,14 @@ class RS485Driver(private val ctx: Context) {
         log("🔧 Initializing XR21V1414 Channel ${('A' + portNumber)}...")
 
         val block = BLOCK_CHANNEL_A + portNumber  // Port 0=A, 1=B, 2=C, 3=D
-        val fifoEnableReg = 0x10 + portNumber  // 0x10=CHA, 0x11=CHB, etc.
+        val fifoEnableReg = REG_FIFO_ENABLE_CHA + portNumber
+        val txFifoResetReg = REG_TX_FIFO_RESET_CHA + portNumber
+
+        // Step 0: Reset TX FIFO first to clear any state
+        if (!writeXR21Register(connection, BLOCK_UART_MANAGER, txFifoResetReg, 0xFF)) {
+            log("⚠️ TX FIFO reset failed (may not be critical)")
+        }
+        delay(50)
 
         // Step 1: Enable TX FIFO only
         if (!writeXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg, 0x01)) {
@@ -159,10 +169,10 @@ class RS485Driver(private val ctx: Context) {
         val uartStatus = readXR21Register(connection, block, REG_UART_ENABLE)
 
         if (fifoStatus == 0x03 && uartStatus == 0x03) {
-            log("✅ XR21V1414 Channel ${('A' + portNumber)} initialized successfully!")
+            log("✅ XR21V1414 Channel ${('A' + portNumber)} ready for transmission!")
             return@withContext true
         } else {
-            log("⚠️ XR21 verify: FIFO=0x${fifoStatus.toString(16)}, UART=0x${uartStatus.toString(16)}")
+            log("⚠️ Verify: FIFO=0x${fifoStatus.toString(16)}, UART=0x${uartStatus.toString(16)}")
             // Continue anyway - some devices don't support read back
             return@withContext true
         }
@@ -185,7 +195,7 @@ class RS485Driver(private val ctx: Context) {
         try {
             while (System.currentTimeMillis() - startTime < durationMs) {
                 val buffer = ByteArray(256)
-                val bytesRead = p.read(buffer, 100) // Short timeout for polling
+                val bytesRead = p.read(buffer, 100)
 
                 if (bytesRead > 0) {
                     val data = buffer.copyOf(bytesRead)
@@ -193,7 +203,7 @@ class RS485Driver(private val ctx: Context) {
                     log("📥 Received: ${toHexString(data)}")
                 }
 
-                delay(10) // Small delay to prevent tight loop
+                delay(10)
             }
         } catch (e: Exception) {
             log("❌ Error during listening: ${e.message}")
@@ -244,12 +254,6 @@ class RS485Driver(private val ctx: Context) {
             if (usbConnection == null) {
                 log("❌ Failed to open device - permission denied")
                 return@withContext false
-            }
-
-            // *** CRITICAL FIX: Initialize XR21V1414 BEFORE opening serial port ***
-            log("🔧 Performing XR21V1414 vendor initialization...")
-            if (!initializeXR21Channel(usbConnection, portNumber)) {
-                log("⚠️ XR21 initialization had issues, continuing anyway...")
             }
 
             // Select the specified port
@@ -306,6 +310,12 @@ class RS485Driver(private val ctx: Context) {
                 delay(100)
             } catch (e: Exception) {
                 log("⚠️ DTR/RTS warning: ${e.message}")
+            }
+
+            // *** CRITICAL FIX: Initialize XR21V1414 AFTER port is opened ***
+            log("🔧 Performing XR21V1414 FIFO initialization...")
+            if (!initializeXR21Channel(usbConnection, portNumber)) {
+                log("⚠️ XR21 initialization had issues, continuing anyway...")
             }
 
             // Purge buffers if supported
