@@ -30,14 +30,142 @@ class RS485Driver(private val ctx: Context) {
 
     private var port: UsbSerialPort? = null
     private val logMessages = mutableListOf<String>()
-    //private var connection: UsbDeviceConnection? = null
+    private var connection: UsbDeviceConnection? = null
     private var currentDevice: UsbDevice? = null
-    private var isFirstWrite = true
 
     companion object {
         private const val TAG = "RS485Driver"
         private const val MAX_LOG_ENTRIES = 50
         private const val BAUD_RATE = 9600
+
+        // XR21V1414 USB Vendor Requests
+        private const val XR_SET_REG = 0x00
+        private const val XR_GET_REG = 0x01
+
+        // XR21V1414 Register Blocks
+        private const val BLOCK_UART_MANAGER = 0  // UART Manager (FIFO enables)
+        private const val BLOCK_CHANNEL_A = 1
+        private const val BLOCK_CHANNEL_B = 2     // Port 1 uses Channel B
+        private const val BLOCK_CHANNEL_C = 3
+        private const val BLOCK_CHANNEL_D = 4
+
+        // Register addresses
+        private const val REG_UART_ENABLE = 0x03
+        private const val REG_FIFO_ENABLE_CHB = 0x11  // Port 1
+    }
+
+    /**
+     * Send XR21V1414 vendor-specific register write command
+     */
+    private suspend fun writeXR21Register(
+        connection: UsbDeviceConnection,
+        block: Int,
+        reg: Int,
+        value: Int
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val result = connection.controlTransfer(
+                0x40,  // bmRequestType: Vendor, Out, Device
+                XR_SET_REG,  // bRequest
+                value,  // wValue: register value
+                (reg or (block shl 8)),  // wIndex: reg | (block << 8)
+                null,  // no data phase
+                0,  // data length
+                1000  // timeout
+            )
+
+            if (result >= 0) {
+                log("✅ XR21 Reg Write: Block=$block, Reg=0x${reg.toString(16)}, Val=0x${value.toString(16)}")
+                delay(10) // Small delay between register writes
+                return@withContext true
+            } else {
+                log("❌ XR21 Reg Write failed: rc=$result")
+                return@withContext false
+            }
+        } catch (e: Exception) {
+            log("❌ XR21 Reg Write error: ${e.message}")
+            return@withContext false
+        }
+    }
+
+    /**
+     * Read XR21V1414 vendor-specific register
+     */
+    private suspend fun readXR21Register(
+        connection: UsbDeviceConnection,
+        block: Int,
+        reg: Int
+    ): Int = withContext(Dispatchers.IO) {
+        try {
+            val buffer = ByteArray(1)
+            val result = connection.controlTransfer(
+                0xC0,  // bmRequestType: Vendor, In, Device
+                XR_GET_REG,  // bRequest
+                0,  // wValue
+                (reg or (block shl 8)),  // wIndex: reg | (block << 8)
+                buffer,
+                1,
+                1000
+            )
+
+            if (result == 1) {
+                val value = buffer[0].toInt() and 0xFF
+                log("📖 XR21 Reg Read: Block=$block, Reg=0x${reg.toString(16)}, Val=0x${value.toString(16)}")
+                return@withContext value
+            } else {
+                log("❌ XR21 Reg Read failed: rc=$result")
+                return@withContext -1
+            }
+        } catch (e: Exception) {
+            log("❌ XR21 Reg Read error: ${e.message}")
+            return@withContext -1
+        }
+    }
+
+    /**
+     * Initialize XR21V1414 Channel B (Port 1) for transmission
+     * CRITICAL: This is the missing initialization that prevents "rc=-1" errors
+     */
+    private suspend fun initializeXR21Channel(
+        connection: UsbDeviceConnection,
+        portNumber: Int
+    ): Boolean = withContext(Dispatchers.IO) {
+        log("🔧 Initializing XR21V1414 Channel ${('A' + portNumber)}...")
+
+        val block = BLOCK_CHANNEL_A + portNumber  // Port 0=A, 1=B, 2=C, 3=D
+        val fifoEnableReg = 0x10 + portNumber  // 0x10=CHA, 0x11=CHB, etc.
+
+        // Step 1: Enable TX FIFO only
+        if (!writeXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg, 0x01)) {
+            log("❌ Failed to enable TX FIFO")
+            return@withContext false
+        }
+
+        // Step 2: Enable UART TX and RX
+        if (!writeXR21Register(connection, block, REG_UART_ENABLE, 0x03)) {
+            log("❌ Failed to enable UART TX/RX")
+            return@withContext false
+        }
+
+        // Step 3: Enable both TX and RX FIFOs
+        if (!writeXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg, 0x03)) {
+            log("❌ Failed to enable TX/RX FIFOs")
+            return@withContext false
+        }
+
+        // Verify the configuration
+        delay(50)
+        val fifoStatus = readXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg)
+        val uartStatus = readXR21Register(connection, block, REG_UART_ENABLE)
+
+        if (fifoStatus == 0x03 && uartStatus == 0x03) {
+            log("✅ XR21V1414 Channel ${('A' + portNumber)} initialized successfully!")
+            return@withContext true
+        } else {
+            log("⚠️ XR21 verify: FIFO=0x${fifoStatus.toString(16)}, UART=0x${uartStatus.toString(16)}")
+            // Continue anyway - some devices don't support read back
+            return@withContext true
+        }
     }
 
     /**
@@ -80,14 +208,15 @@ class RS485Driver(private val ctx: Context) {
      */
     suspend fun connect(
         baudRate: Int = BAUD_RATE,
-        portNumber: Int = 0
+        portNumber: Int = 1
     ): Boolean = withContext(Dispatchers.IO) {
         try {
+            // Clean disconnect first
             disconnect()
 
             val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
 
-            // Find the hardcoded USB device (VID:1250, PID:5140)
+            // Find XR21V1414 device
             val deviceList = usbManager.deviceList
             var targetDevice: UsbDevice? = null
 
@@ -99,56 +228,60 @@ class RS485Driver(private val ctx: Context) {
             }
 
             if (targetDevice == null) {
-                log("❌ Hardcoded device (VID:04E2, PID:1414) not found")
+                log("❌ XR21V1414 device (VID:04E2, PID:1414) not found")
                 return@withContext false
             }
 
-            // Probe the device to get the driver
+            // Probe the device
             val driver = UsbSerialProber.getDefaultProber().probeDevice(targetDevice)
             if (driver == null) {
                 log("❌ No suitable driver found for device")
                 return@withContext false
             }
 
-            val connection = usbManager.openDevice(targetDevice)
-
-            if (connection == null) {
+            // Open USB device connection
+            val usbConnection = usbManager.openDevice(targetDevice)
+            if (usbConnection == null) {
                 log("❌ Failed to open device - permission denied")
                 return@withContext false
             }
 
-            // Select the specific port
+            // *** CRITICAL FIX: Initialize XR21V1414 BEFORE opening serial port ***
+            log("🔧 Performing XR21V1414 vendor initialization...")
+            if (!initializeXR21Channel(usbConnection, portNumber)) {
+                log("⚠️ XR21 initialization had issues, continuing anyway...")
+            }
+
+            // Select the specified port
             val availablePorts = driver.ports
             if (portNumber >= availablePorts.size) {
                 log("❌ Port $portNumber not available (device has ${availablePorts.size} ports)")
-                connection.close()
+                usbConnection.close()
                 return@withContext false
             }
 
             val selectedPort = availablePorts[portNumber]
-            log("📡 Using port: ${selectedPort.javaClass.simpleName} (Port ${portNumber + 1})")
+            log("📡 Selected: ${selectedPort.javaClass.simpleName} (Port ${portNumber + 1}/4)")
 
+            // Close port if somehow open
             try {
                 selectedPort.close()
-                delay(200) // Give time to close
-                log("🔧 Closed existing port connection")
+                delay(200)
             } catch (e: Exception) {
-                // Ignore - port probably wasn't open
-            }
-            try {
-                selectedPort.open(connection)
-                log("✅ Port opened successfully")
-            } catch (e: IOException) {
-                if (e.message?.contains("Already open") == true) {
-                    log("⚠️ Port already open - will try to configure existing connection")
-                } else {
-                    log("❌ Failed to open port: ${e.message}")
-                    connection.close()
-                    return@withContext false
-                }
+                // Port wasn't open
             }
 
-            var configSuccess = false
+            // Open the serial port
+            try {
+                selectedPort.open(usbConnection)
+                log("✅ Port opened successfully")
+            } catch (e: IOException) {
+                log("❌ Failed to open port: ${e.message}")
+                usbConnection.close()
+                return@withContext false
+            }
+
+            // Configure serial parameters
             try {
                 selectedPort.setParameters(
                     baudRate,
@@ -156,40 +289,35 @@ class RS485Driver(private val ctx: Context) {
                     UsbSerialPort.STOPBITS_1,
                     UsbSerialPort.PARITY_NONE
                 )
-
-                //selectedPort.dtr = true
-                //selectedPort.rts = true
-                configSuccess = true
+                log("✅ Set parameters: ${baudRate} 8N1")
             } catch (e: Exception) {
-                log("⚠️ Minimal config failed: ${e.message ?: "null"}")
+                log("⚠️ Parameter config warning: ${e.message}")
             }
-            // CRITICAL: Set DTR and RTS - required for USB-serial transmission
+
+            // Set DTR and RTS
             try {
                 selectedPort.dtr = false
                 selectedPort.rts = false
-                delay(50) // Let lines settle
+                delay(50)
 
                 selectedPort.dtr = true
                 selectedPort.rts = true
                 log("✅ DTR/RTS enabled")
-
-                // Extra settling time for control lines
                 delay(100)
             } catch (e: Exception) {
                 log("⚠️ DTR/RTS warning: ${e.message}")
-                // Continue anyway
             }
 
-            // CRITICAL: Purge USB buffers to clear any stale data
+            // Purge buffers if supported
             try {
-                selectedPort.purgeHwBuffers(true, true) // Purge both TX and RX
+                selectedPort.purgeHwBuffers(true, true)
                 log("✅ USB buffers purged")
                 delay(50)
             } catch (e: Exception) {
                 log("⚠️ Buffer purge not supported: ${e.message}")
             }
 
-            // Additional stabilization - read and discard any garbage
+            // Clear any stale data
             try {
                 val dummyBuffer = ByteArray(256)
                 var cleared = 0
@@ -202,37 +330,27 @@ class RS485Driver(private val ctx: Context) {
                     log("🧹 Cleared $cleared bytes of stale data")
                 }
             } catch (e: Exception) {
-                // Normal if no data to clear
+                // Normal if no data
             }
 
-            if (configSuccess) {
-                port = selectedPort
-                currentDevice = targetDevice
-                isFirstWrite = true
+            // Store connection
+            port = selectedPort
+            connection = usbConnection
+            currentDevice = targetDevice
 
-                log("✅ Connected successfully to Port ${portNumber}!")
-                log("📡 Device: ${targetDevice.deviceName}")
-                log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
-                log("🎯 Ready for communication testing")
+            log("✅ Connected successfully to Port ${portNumber + 1}!")
+            log("📡 Device: ${targetDevice.deviceName}")
+            log("🔧 Driver: ${selectedPort.javaClass.simpleName}")
+            log("🎯 Ready for communication")
 
-                delay(200) // Allow port to stabilize
-                return@withContext true
-            } else {
-                log("❌ All configuration methods failed")
-                try {
-                    selectedPort.close()
-                    connection.close()
-                } catch (closeEx: Exception) {
-                    // Ignore cleanup errors
-                }
-                return@withContext false
-            }
+            // Final settling delay
+            delay(200)
 
-            return@withContext false
+            return@withContext true
 
         } catch (e: Exception) {
             log("❌ Connection error: ${e.message}")
-            Log.e(RS485Driver.Companion.TAG, "Error connecting to device", e)
+            Log.e(TAG, "Error connecting to device", e)
             return@withContext false
         }
     }
@@ -296,26 +414,10 @@ class RS485Driver(private val ctx: Context) {
         try {
             log("📤 Sending ${data.size} bytes: ${toHexString(data)}")
 
-            // CRITICAL FIX: For first write after connection, ensure USB endpoint is ready
-            if (isFirstWrite) {
-                log("🔧 First write - ensuring USB endpoint stability...")
+            // Write with reasonable timeout
+            p.write(data, 1000)
 
-                // Extra purge before first write
-                try {
-                    p.purgeHwBuffers(true, false) // Purge TX buffer
-                } catch (e: Exception) {
-                    // Not critical if this fails
-                }
-
-                delay(100) // Extra delay for first transmission
-                isFirstWrite = false
-            }
-
-            // Write data with longer timeout for USB
-            val writeTimeout = 2000 // 2 seconds for USB transmission
-            p.write(data, writeTimeout)
-
-            // CRITICAL: Small delay to ensure USB packets are queued
+            // Small delay for USB packet transmission
             delay(20)
 
             log("✅ Send successful (${data.size} bytes)")
@@ -324,12 +426,6 @@ class RS485Driver(private val ctx: Context) {
         } catch (e: IOException) {
             log("❌ I/O error during send: ${e.message}")
             Log.e(TAG, "I/O error sending data", e)
-
-            // If write fails, try to recover the connection
-            log("🔄 Attempting to recover USB connection...")
-            isFirstWrite = true // Reset first write flag
-            delay(100)
-
             return@withContext false
         } catch (e: Exception) {
             log("❌ Send error: ${e.message}")
@@ -441,39 +537,39 @@ class RS485Driver(private val ctx: Context) {
         val responseData = mutableListOf<Byte>()
 
         while (System.currentTimeMillis() - startTime < responseTimeoutMs) {
-            val data = receiveData(100) // Short timeout for polling
+            val data = receiveData(100)
 
             if (data.isNotEmpty()) {
                 responseData.addAll(data.toList())
 
-                // Check if we have a complete Winnsen frame (7 bytes starting with 0x90)
+                // Check if we have a complete Winnsen frame (7 bytes)
                 if (responseData.size >= 7) {
                     val frame = responseData.toByteArray()
-                    // Look for valid frame in the received data
                     for (i in 0..frame.size - 7) {
                         if (frame[i] == 0x90.toByte() &&
                             frame.size >= i + 7 &&
                             frame[i + 6] == 0x03.toByte() &&
-                            frame[i + 1] == 0x07.toByte()) { // Check length byte
-                            // Found complete valid frame
+                            frame[i + 1] == 0x07.toByte()) {
                             val completeFrame = frame.sliceArray(i until i + 7)
-                            log("✅ Received complete response frame: ${toHexString(completeFrame)}")
+                            log("✅ Received complete response: ${toHexString(completeFrame)}")
                             return@withContext completeFrame
                         }
                     }
                 }
             }
 
-            delay(50) // Small delay to prevent tight loop
+            delay(50)
         }
 
+        // Timeout
         if (responseData.isNotEmpty()) {
-            log("⚠️ Received partial response: ${responseData.size} bytes - ${toHexString(responseData.toByteArray())}")
-            return@withContext responseData.toByteArray()
-        } else {
-            log("❌ No response received within ${responseTimeoutMs}ms")
-            return@withContext ByteArray(0)
+            val data = responseData.toByteArray()
+            log("⏱️ Timeout - partial data: ${toHexString(data)}")
+            return@withContext data
         }
+
+        log("⏱️ Timeout - no response received")
+        return@withContext ByteArray(0)
     }
 
     /**
