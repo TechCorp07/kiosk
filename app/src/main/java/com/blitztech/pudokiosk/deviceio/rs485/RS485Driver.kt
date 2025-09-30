@@ -58,6 +58,9 @@ class RS485Driver(private val ctx: Context) {
 
         // Register addresses - UART Channel
         private const val REG_UART_ENABLE = 0x03
+        private const val REG_FLOW_CONTROL = 0x0C
+        private const val REG_RS485_DELAY = 0x15
+        private const val REG_GPIO_MODE = 0x1A
     }
 
     private suspend fun writeXR21Register(
@@ -139,25 +142,46 @@ class RS485Driver(private val ctx: Context) {
         val fifoEnableReg = REG_FIFO_ENABLE_CHA + portNumber
         val txFifoResetReg = REG_TX_FIFO_RESET_CHA + portNumber
 
-        // Step 0: Reset TX FIFO first to clear any state
+        // Step 0: CRITICAL - Disable hardware flow control
+        // CDC-ACM driver sets FLOW_CONTROL=0x01 which blocks transmission without CTS
+        if (!writeXR21Register(connection, block, REG_FLOW_CONTROL, 0x00)) {
+            log("❌ Failed to disable flow control")
+            return@withContext false
+        }
+
+        // Step 0b: Set GPIO_MODE to 0x03 for RS485 mode
+        // Bits[2:0] = 011 = RS485 half-duplex with GPIO5 automatic direction control
+        if (!writeXR21Register(connection, block, REG_GPIO_MODE, 0x03)) {
+            log("❌ Failed to enable RS485 mode")
+            return@withContext false
+        }
+
+        // Step 0c: Set RS485_DELAY for proper turnaround time
+        // Value = number of bit times to wait before de-asserting direction control
+        // At 9600 baud: 1 bit = ~104μs. Set 10 bit times = ~1ms delay
+        if (!writeXR21Register(connection, block, REG_RS485_DELAY, 0x0A)) {
+            log("⚠️ Failed to set RS485 delay (may not be critical)")
+        }
+
+        // Step 1: Reset TX FIFO to clear any state
         if (!writeXR21Register(connection, BLOCK_UART_MANAGER, txFifoResetReg, 0xFF)) {
             log("⚠️ TX FIFO reset failed (may not be critical)")
         }
         delay(50)
 
-        // Step 1: Enable TX FIFO only
+        // Step 2: Enable TX FIFO only
         if (!writeXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg, 0x01)) {
             log("❌ Failed to enable TX FIFO")
             return@withContext false
         }
 
-        // Step 2: Enable UART TX and RX
+        // Step 3: Enable UART TX and RX
         if (!writeXR21Register(connection, block, REG_UART_ENABLE, 0x03)) {
             log("❌ Failed to enable UART TX/RX")
             return@withContext false
         }
 
-        // Step 3: Enable both TX and RX FIFOs
+        // Step 4: Enable both TX and RX FIFOs
         if (!writeXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg, 0x03)) {
             log("❌ Failed to enable TX/RX FIFOs")
             return@withContext false
@@ -165,15 +189,17 @@ class RS485Driver(private val ctx: Context) {
 
         // Verify the configuration
         delay(50)
+        val flowControl = readXR21Register(connection, block, REG_FLOW_CONTROL)
         val fifoStatus = readXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg)
         val uartStatus = readXR21Register(connection, block, REG_UART_ENABLE)
 
-        if (fifoStatus == 0x03 && uartStatus == 0x03) {
-            log("✅ XR21V1414 Channel ${('A' + portNumber)} ready for transmission!")
+        log("📊 Flow=0x${flowControl.toString(16)}, FIFO=0x${fifoStatus.toString(16)}, UART=0x${uartStatus.toString(16)}")
+
+        if (flowControl == 0x00 && fifoStatus == 0x03 && uartStatus == 0x03) {
+            log("✅ XR21V1414 Channel ${('A' + portNumber)} ready - Flow control DISABLED!")
             return@withContext true
         } else {
-            log("⚠️ Verify: FIFO=0x${fifoStatus.toString(16)}, UART=0x${uartStatus.toString(16)}")
-            // Continue anyway - some devices don't support read back
+            log("⚠️ Partial success - continuing anyway")
             return@withContext true
         }
     }
