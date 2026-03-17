@@ -1,18 +1,24 @@
 package com.blitztech.pudokiosk.data.api.config
 
+/**
+ * Global API configuration for the Zimpudo kiosk application.
+ *
+ * The BASE_URL points to the API gateway which routes to individual services:
+ *   Auth    (8085), Core (4000), Locker (8084), Order (8081), Payment (8082)
+ */
 object ApiConfig {
-    // Global API Configuration
-    const val BASE_URL = "http://68.183.176.201:8222/api/v1/"
+    // Gateway base URL – all services behind the same gateway
+    const val BASE_URL = "https://api.zimpudo.com/"
 
-    // Request timeout configurations
-    const val CONNECT_TIMEOUT = 30L // seconds
-    const val READ_TIMEOUT = 30L // seconds
-    const val WRITE_TIMEOUT = 30L // seconds
+    // Request timeout configurations (seconds)
+    const val CONNECT_TIMEOUT = 30L
+    const val READ_TIMEOUT = 30L
+    const val WRITE_TIMEOUT = 30L
 
     // Fixed values for API requests
-    const val OTP_METHOD = "SMS_EMAIL"
+    const val OTP_METHOD = "SMS_EMAIL"        // or "TOTP"
     const val USER_ROLE = "USER"
-    const val KYC_TYPE = "NATIONAL_ID"
+    const val KYC_TYPE = "NATIONAL_ID"       // also: PASSPORT, DRIVERS_LICENSE
 
     // Phone number configuration
     const val PHONE_COUNTRY_CODE = "+263"

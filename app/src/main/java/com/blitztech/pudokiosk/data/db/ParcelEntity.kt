@@ -12,5 +12,8 @@ data class ParcelEntity(
     val status: String,          // CREATED | IN_LOCKER | READY_FOR_PICKUP | COLLECTED | EXCEPTION
     val lockerId: String?,
     val trackingCode: String,
-    val createdAt: Long
+    val createdAt: Long,
+    val lockNumber: Int = 0,       // Physical locker compartment (1-32); 0 = unassigned
+    val collectionCode: String? = null,   // OTP code for recipient pickup
+    val updatedAt: Long = 0L       // Last sync timestamp in epoch millis
 )

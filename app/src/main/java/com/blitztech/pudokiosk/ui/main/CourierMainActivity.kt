@@ -8,6 +8,8 @@ import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityCourierMainBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
+import com.blitztech.pudokiosk.ui.courier.CourierCollectActivity
+import com.blitztech.pudokiosk.ui.courier.CourierDeliverActivity
 
 /**
  * Main dashboard for courier users
@@ -58,19 +60,24 @@ class CourierMainActivity : BaseKioskActivity() {
             showLogoutDialog()
         }
 
+        binding.cardPickupPackages.setOnClickListener {
+            startActivity(Intent(this, CourierCollectActivity::class.java))
+        }
+
+        binding.cardDeliverPackages.setOnClickListener {
+            startActivity(Intent(this, CourierDeliverActivity::class.java))
+        }
+
         binding.cardViewRoute.setOnClickListener {
             // TODO: Navigate to route view
-            // startActivity(Intent(this, RouteViewActivity::class.java))
         }
 
         binding.cardUpdateStatus.setOnClickListener {
             // TODO: Navigate to status update
-            // startActivity(Intent(this, StatusUpdateActivity::class.java))
         }
 
         binding.cardCourierProfile.setOnClickListener {
             // TODO: Navigate to courier profile
-            // startActivity(Intent(this, CourierProfileActivity::class.java))
         }
     }
 

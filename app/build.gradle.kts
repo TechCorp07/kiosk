@@ -49,6 +49,10 @@ android {
             "META-INF/AL2.0", "META-INF/LGPL2.1"
         )
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -91,7 +95,13 @@ dependencies {
     // USB-Serial (for later phases)
     implementation(libs.usb.serial.for1.android)
 
+    // CameraX (USB webcam security photos)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

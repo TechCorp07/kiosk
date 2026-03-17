@@ -10,6 +10,13 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.USB_PERMISSION" />
     <uses-permission android:name="android.permission.ACCESS_SERIAL_PORT" />
+    <!-- Add location permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Camera for security photos (optional hardware) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.external" android:required="false" />
 
     <!-- KIOSK MODE PERMISSIONS -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
@@ -193,6 +200,37 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
             android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
+            android:name=".ui.sendpackage.SendPackageActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <!-- Recipient Collection -->
+        <activity
+            android:name=".ui.collect.CollectionCodeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName=".ui.main.CustomerMainActivity" />
+
+        <!-- Courier Flows -->
+        <activity
+            android:name=".ui.courier.CourierCollectActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName=".ui.main.CourierMainActivity" />
+
+        <activity
+            android:name=".ui.courier.CourierDeliverActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName=".ui.main.CourierMainActivity" />
 
         <!-- Technician Access Activities -->
         <activity
@@ -244,6 +282,15 @@
 
         <!-- Legacy Activities (for reference/reuse) -->
         <activity android:name=".ui.technician.DevSettingsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+
+        <activity android:name=".ui.courier.CourierLoginActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.customer.TrackDeliveryActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
 

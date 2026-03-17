@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_primary">
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Scroll View for Form -->
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/bottomButtons"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:text="Enter Recipient Details"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <!-- Name -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRecipientName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                app:boxStrokeColor="@color/zimpudo_primary"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:startIconDrawable="@drawable/ic_person"
+                app:startIconTint="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etRecipientName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/name"
+                    android:inputType="textCapWords"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Surname -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRecipientSurname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                app:boxStrokeColor="@color/zimpudo_primary"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:startIconDrawable="@drawable/ic_person"
+                app:startIconTint="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etRecipientSurname"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/surname"
+                    android:inputType="textCapWords"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Mobile Number -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRecipientMobile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                app:boxStrokeColor="@color/zimpudo_primary"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:startIconDrawable="@drawable/ic_phone"
+                app:startIconTint="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etRecipientMobile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/mobile_number"
+                    android:inputType="phone"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- National ID -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilRecipientNationalId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                app:boxStrokeColor="@color/zimpudo_primary"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:startIconDrawable="@drawable/ic_card"
+                app:startIconTint="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etRecipientNationalId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/national_id"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Address Section Title -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:text="@string/address_information"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- House Number -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilHouseNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                app:boxStrokeColor="@color/zimpudo_primary"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:startIconDrawable="@drawable/ic_location"
+                app:startIconTint="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etHouseNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/house_number"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Street -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilStreet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                app:boxStrokeColor="@color/zimpudo_primary"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:startIconDrawable="@drawable/ic_location"
+                app:startIconTint="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etStreet"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/street"
+                    android:inputType="textPostalAddress|textCapWords"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- City Spinner -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_xs"
+                android:text="@string/city"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <Spinner
+                android:id="@+id/spinnerCity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:minHeight="48dp"
+                android:padding="@dimen/spacing_md" />
+
+            <!-- Suburb Spinner -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_xs"
+                android:text="@string/suburb"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <Spinner
+                android:id="@+id/spinnerSuburb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:minHeight="48dp"
+                android:padding="@dimen/spacing_md" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Buttons -->
+    <LinearLayout
+        android:id="@+id/bottomButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_md"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/btnBack"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginEnd="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:text="Back"
+            android:textColor="@color/zimpudo_primary"
+            app:strokeColor="@color/zimpudo_primary" />
+
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:layout_weight="1"
+            android:backgroundTint="@color/zimpudo_primary"
+            android:text="Next"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

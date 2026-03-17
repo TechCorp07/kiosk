@@ -10,14 +10,28 @@ import com.blitztech.pudokiosk.data.api.dto.user.*
 import com.blitztech.pudokiosk.data.api.dto.common.*
 import com.blitztech.pudokiosk.data.api.dto.location.CityDto
 import com.blitztech.pudokiosk.data.api.dto.location.SuburbDto
+import com.blitztech.pudokiosk.data.api.dto.order.CreateOrderRequest
+import com.blitztech.pudokiosk.data.api.dto.order.CreateOrderResponse
+import com.blitztech.pudokiosk.data.api.dto.order.PackageDetails
+import com.blitztech.pudokiosk.data.api.dto.order.PaymentRequest
+import com.blitztech.pudokiosk.data.api.dto.order.PaymentResponse
+import com.blitztech.pudokiosk.data.api.dto.order.Recipient
+import com.blitztech.pudokiosk.data.api.dto.order.SenderLocation
+import com.blitztech.pudokiosk.data.api.dto.order.OrderDto
+import com.blitztech.pudokiosk.data.api.dto.order.PageOrder
+import com.blitztech.pudokiosk.data.api.dto.collection.*
+import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
+import com.blitztech.pudokiosk.data.api.dto.courier.TransactionResponse
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.io.File
 import java.io.IOException
@@ -36,7 +50,9 @@ class ApiRepository(
         private const val RETRY_DELAY_MS = 1000L
     }
 
-    // Authentication methods
+    // ─────────────────────────────────────────────────────────────
+    //  Auth Service – PIN + OTP (same for users and couriers)
+    // ─────────────────────────────────────────────────────────────
     suspend fun login(mobileNumber: String, pin: String): NetworkResult<LoginResponse> {
         return safeApiCall {
             val request = LoginRequest(
@@ -55,6 +71,13 @@ class ApiRepository(
         }
     }
 
+    suspend fun verifyBackupCode(mobileNumber: String, backupCode: String): NetworkResult<LoginResponse> {
+        return safeApiCall {
+            val request = BackupCodeVerifyRequest(mobileNumber, backupCode)
+            apiService.verifyBackupCode(request)
+        }
+    }
+
     suspend fun forgotPin(mobileNumber: String): NetworkResult<ApiResponse> {
         return safeApiCall {
             apiService.forgotPin(mobileNumber, ApiConfig.OTP_METHOD)
@@ -68,7 +91,9 @@ class ApiRepository(
         }
     }
 
-    // User registration methods
+    // ─────────────────────────────────────────────────────────────
+    //  Core Service – User registration & KYC
+    // ─────────────────────────────────────────────────────────────
     suspend fun registerUser(
         name: String,
         surname: String,
@@ -102,31 +127,21 @@ class ApiRepository(
 
     suspend fun uploadKyc(mobileNumber: String): NetworkResult<KycResponse> {
         return safeApiCall {
-            // Copy PDF from assets to cache directory
             val tempFile = File(context.cacheDir, "kyc_placeholder.pdf")
-
             try {
                 context.assets.open("kyc_placeholder.pdf").use { inputStream ->
                     tempFile.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
                 }
-
-                // ✅ Create type as proper MultipartBody.Part (plain text, not JSON)
                 val typePart = MultipartBody.Part.createFormData("type", ApiConfig.KYC_TYPE)
-
-                // Create file part
                 val requestFile = tempFile.asRequestBody("application/pdf".toMediaTypeOrNull())
                 val filePart = MultipartBody.Part.createFormData("file", tempFile.name, requestFile)
-
-                // ✅ Pass both parts correctly
                 apiService.uploadKyc(mobileNumber, typePart, filePart)
-
             } catch (e: Exception) {
                 Log.e("ApiRepository", "Error uploading KYC file", e)
                 throw e
             } finally {
-                // Clean up temp file
                 if (tempFile.exists()) {
                     tempFile.delete()
                 }
@@ -134,43 +149,177 @@ class ApiRepository(
         }
     }
 
-    // Location methods with retry logic
+    // ─────────────────────────────────────────────────────────────
+    //  Location methods with retry logic
+    // ─────────────────────────────────────────────────────────────
     suspend fun getCities(): NetworkResult<List<CityDto>> {
-        return safeApiCallWithRetry {
-            apiService.getCities()
-        }
+        return safeApiCallWithRetry { apiService.getCities() }
     }
 
     suspend fun getSuburbs(cityId: String): NetworkResult<List<SuburbDto>> {
-        return safeApiCallWithRetry {
-            apiService.getSuburbs(cityId)
+        return safeApiCallWithRetry { apiService.getSuburbs(cityId) }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Order Service – Orders & payments
+    // ─────────────────────────────────────────────────────────────
+    suspend fun createOrder(
+        packageDetails: PackageDetails,
+        recipient: Recipient,
+        senderLocation: SenderLocation,
+        currency: String,
+        token: String?
+    ): NetworkResult<CreateOrderResponse> {
+        return safeApiCall {
+            val request = CreateOrderRequest(
+                packageDetails = packageDetails,
+                recipient = recipient,
+                senderLocation = senderLocation,
+                currency = currency
+            )
+            apiService.createOrder(request, "Bearer $token")
         }
     }
 
+    suspend fun createPayment(
+        orderId: String,
+        lockerId: String,
+        paymentMethod: String,
+        mobileNumber: String,
+        currency: String,
+        token: String?
+    ): NetworkResult<PaymentResponse> {
+        return safeApiCall {
+            val request = PaymentRequest(
+                orderId = orderId,
+                lockerId = lockerId,
+                paymentMethod = paymentMethod,
+                mobileNumber = mobileNumber,
+                currency = currency
+            )
+            apiService.createPayment(request, "Bearer $token")
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Order Service – Customer order tracking
+    // ─────────────────────────────────────────────────────────────
+    suspend fun getLoggedInOrders(token: String, page: Int = 0, size: Int = 20): NetworkResult<PageOrder> {
+        return safeApiCall { apiService.getLoggedInOrders("Bearer $token", page, size) }
+    }
+
+    suspend fun trackOrder(trackingNumber: String): NetworkResult<OrderDto> {
+        return safeApiCall { apiService.trackOrder(trackingNumber) }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Order Service – Locker operations (recipient collection)
+    // ─────────────────────────────────────────────────────────────
+    suspend fun authenticateRecipient(
+        request: RecipientAuthRequest
+    ): NetworkResult<RecipientAuthResponse> {
+        return safeApiCall { apiService.authenticateRecipient(request) }
+    }
+
+    suspend fun completePickup(
+        request: LockerPickupRequest,
+        token: String
+    ): NetworkResult<ApiResponse> {
+        return safeApiCall { apiService.completePickup(request, "Bearer $token") }
+    }
+
+    suspend fun openCell(
+        request: LockerOpenRequest,
+        token: String
+    ): NetworkResult<ApiResponse> {
+        return safeApiCall { apiService.openCell(request, "Bearer $token") }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Locker Transactions – Courier
+    // ─────────────────────────────────────────────────────────────
+    suspend fun courierPickup(
+        request: TransactionRequest,
+        token: String
+    ): NetworkResult<TransactionResponse> {
+        return safeApiCall { apiService.courierPickup(request, "Bearer $token") }
+    }
+
+    suspend fun courierDropoff(
+        request: TransactionRequest,
+        token: String
+    ): NetworkResult<TransactionResponse> {
+        return safeApiCall { apiService.courierDropoff(request, "Bearer $token") }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Locker Transactions – Sender
+    // ─────────────────────────────────────────────────────────────
+    suspend fun verifyReservation(
+        request: TransactionRequest,
+        token: String
+    ): NetworkResult<TransactionResponse> {
+        return safeApiCall { apiService.verifyReservation(request, "Bearer $token") }
+    }
+
+    suspend fun senderDropoff(
+        request: TransactionRequest,
+        token: String
+    ): NetworkResult<TransactionResponse> {
+        return safeApiCall { apiService.senderDropoff(request, "Bearer $token") }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Security photos
+    // ─────────────────────────────────────────────────────────────
+    suspend fun uploadSecurityPhoto(
+        photoFile: java.io.File,
+        reason: String,
+        referenceId: String,
+        userId: String,
+        kioskId: String,
+        capturedAt: Long
+    ): NetworkResult<ApiResponse> {
+        return safeApiCall {
+            val requestBody = photoFile.asRequestBody("image/jpeg".toMediaType())
+            val photoPart = okhttp3.MultipartBody.Part.createFormData(
+                "photo", photoFile.name, requestBody
+            )
+            fun textPart(value: String) = value.toRequestBody("text/plain".toMediaType())
+            apiService.uploadSecurityPhoto(
+                photo = photoPart,
+                reason = textPart(reason),
+                referenceId = textPart(referenceId),
+                userId = textPart(userId),
+                kioskId = textPart(kioskId),
+                capturedAt = textPart(capturedAt.toString())
+            )
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Network helpers
+    // ─────────────────────────────────────────────────────────────
     private suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): NetworkResult<T> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiCall()
-
                 if (response.isSuccessful) {
                     response.body()?.let { body ->
                         NetworkResult.Success(body)
                     } ?: NetworkResult.Error("Empty response body")
                 } else {
-                    // Parse error response
                     val errorMessage = parseErrorResponse(response)
                     NetworkResult.Error(errorMessage)
                 }
             } catch (exception: Exception) {
                 Log.e(TAG, "API call failed", exception)
-
                 val errorMessage = when (exception) {
                     is IOException -> "Network error. Please check your connection."
                     is retrofit2.HttpException -> "Server error: ${exception.code()}"
                     is com.squareup.moshi.JsonDataException -> "Invalid response format"
                     else -> "An unexpected error occurred: ${exception.message}"
                 }
-
                 NetworkResult.Error(errorMessage)
             }
         }
@@ -222,8 +371,6 @@ class ApiRepository(
                     Log.e(TAG, "Unexpected error", e)
                     return@withContext NetworkResult.Error("An unexpected error occurred: ${e.message}")
                 }
-
-                // Wait before retrying
                 delay(RETRY_DELAY_MS * (attempt + 1))
             }
             NetworkResult.Error("Unable to connect after multiple attempts. Please try again later.")

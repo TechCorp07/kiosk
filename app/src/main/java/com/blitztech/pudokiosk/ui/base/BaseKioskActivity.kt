@@ -19,18 +19,34 @@ abstract class BaseKioskActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "BaseKioskActivity"
-        private const val UI_HIDE_DELAY = 3000L // Hide UI after 3 seconds
+        private const val UI_HIDE_DELAY = 3000L
+        /** Inactivity timeout before auto‑reset to home screen (2 minutes). */
+        private const val INACTIVITY_TIMEOUT_MS = 120_000L
     }
 
     private val uiHideHandler = Handler(Looper.getMainLooper())
+    private val inactivityHandler = Handler(Looper.getMainLooper())
     private var kioskModeEnabled = true
+
+    /**
+     * Set to true before calling finish() to allow a controlled exit
+     * from a workflow activity back to its parent screen.
+     * Use [finishSafely] instead of calling finish() directly.
+     */
+    protected var finishAllowed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Setup kiosk mode for this activity
         setupKioskMode()
         setupBackButtonHandling()
+    }
+
+    // ---------------------------------------------------------------------------
+    // Touch interception — resets inactivity timer on every touch event
+    // ---------------------------------------------------------------------------
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        resetInactivityTimer()
+        return super.dispatchTouchEvent(ev)
     }
 
     private fun setupKioskMode() {
@@ -165,28 +181,68 @@ abstract class BaseKioskActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
         if (kioskModeEnabled) {
             hideSystemUI()
             scheduleUIHide()
         }
-
+        resetInactivityTimer()
         Log.d(TAG, "${this::class.java.simpleName} resumed in kiosk mode")
     }
 
     override fun onPause() {
         super.onPause()
         uiHideHandler.removeCallbacksAndMessages(null)
+        inactivityHandler.removeCallbacksAndMessages(null)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         uiHideHandler.removeCallbacksAndMessages(null)
+        inactivityHandler.removeCallbacksAndMessages(null)
     }
 
-    // Override to prevent activity from finishing in kiosk mode
+    // ---------------------------------------------------------------------------
+    // Inactivity watchdog
+    // ---------------------------------------------------------------------------
+    private fun resetInactivityTimer() {
+        inactivityHandler.removeCallbacksAndMessages(null)
+        inactivityHandler.postDelayed({
+            onInactivityTimeout()
+        }, INACTIVITY_TIMEOUT_MS)
+    }
+
+    /**
+     * Called when the user has not touched the screen for [INACTIVITY_TIMEOUT_MS].
+     * Override in subclasses for custom behaviour; default resets to MainActivity.
+     */
+    protected open fun onInactivityTimeout() {
+        Log.d(TAG, "Inactivity timeout — resetting to home screen")
+        // Clear session so the next user starts fresh
+        try {
+            val prefs = com.blitztech.pudokiosk.prefs.Prefs(this)
+            prefs.clearAuthData()
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not clear auth on timeout", e)
+        }
+        navigateToMain()
+    }
+
+    // ---------------------------------------------------------------------------
+    // Controlled finish helpers
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Preferred way to finish a workflow activity while staying in kiosk mode.
+     * Sets [finishAllowed] then calls finish() so the kiosk guard lets it through.
+     */
+    protected fun finishSafely() {
+        finishAllowed = true
+        super.finish()
+    }
+
+    /** Kiosk-safe finish: only allowed when [finishAllowed] is true or kiosk mode is off. */
     override fun finish() {
-        if (kioskModeEnabled && !isFinishing) {
+        if (kioskModeEnabled && !finishAllowed && !isFinishing) {
             Log.d(TAG, "finish() blocked in kiosk mode for ${this::class.java.simpleName}")
             return
         }

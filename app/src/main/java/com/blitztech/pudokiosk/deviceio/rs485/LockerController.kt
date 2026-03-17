@@ -42,7 +42,7 @@ class LockerController(private val context: Context) {
 
             if (success) {
                 log("✅ Connected successfully!")
-                log("📡 Station: ${WinnsenProtocol.STATION_NUMBER}, Locks: ${WinnsenProtocol.MIN_LOCK}-${WinnsenProtocol.MAX_LOCK}")
+                log("📡 Boards: 0-1, Locks: ${WinnsenProtocol.MIN_LOCK}-${WinnsenProtocol.MAX_LOCK} (${WinnsenProtocol.LOCKS_PER_BOARD} per board)")
 
                 // Optional: Perform connection test
                 delay(500) // Allow hardware to stabilize

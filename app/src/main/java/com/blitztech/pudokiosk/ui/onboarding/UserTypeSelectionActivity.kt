@@ -8,6 +8,7 @@ import com.blitztech.pudokiosk.databinding.ActivityUserTypeSelectionBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.auth.SignInActivity
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
+import com.blitztech.pudokiosk.ui.courier.CourierLoginActivity
 
 class UserTypeSelectionActivity : BaseKioskActivity() {
 
@@ -45,9 +46,13 @@ class UserTypeSelectionActivity : BaseKioskActivity() {
         }
 
         binding.cardCourier.setOnClickListener {
-            navigateToAuth(UserType.COURIER)
+            // Couriers have their own PIN-based authentication screen
+            startActivity(Intent(this, CourierLoginActivity::class.java))
+            finish()
         }
     }
+
+    enum class UserType { CUSTOMER, COURIER }
 
     private fun navigateToAuth(userType: UserType) {
         val intent = Intent(this, SignInActivity::class.java).apply {

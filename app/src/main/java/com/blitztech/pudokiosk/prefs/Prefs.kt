@@ -132,7 +132,8 @@ class Prefs(context: Context) {
         if (!isLoggedIn()) return false
 
         val lastLogin = getLastLogin()
-        val sessionTimeout = 24 * 60 * 60 * 1000L // 24 hours
+        // Kiosk sessions expire after 5 minutes of inactivity on a shared device
+        val sessionTimeout = 5 * 60 * 1000L // 5 minutes
 
         return (System.currentTimeMillis() - lastLogin) < sessionTimeout
     }
@@ -209,4 +210,14 @@ class Prefs(context: Context) {
     fun getLocationId(): String {
         return getString("location_id", "")
     }
+
+    // Security camera settings
+    fun isCameraEnabled(): Boolean = getBoolean("camera_enabled", true)
+    fun setCameraEnabled(enabled: Boolean) = putBoolean("camera_enabled", enabled)
+
+    fun getCameraJpegQuality(): Int = getInt("camera_jpeg_quality", 85)
+    fun setCameraJpegQuality(quality: Int) = putInt("camera_jpeg_quality", quality.coerceIn(30, 100))
+
+    fun getPhotoRetentionDays(): Int = getInt("photo_retention_days", 30)
+    fun setPhotoRetentionDays(days: Int) = putInt("photo_retention_days", days.coerceIn(1, 365))
 }

@@ -10,9 +10,10 @@ import androidx.room.RoomDatabase
         LockerEntity::class,
         OutboxEventEntity::class,
         AuditLogEntity::class,
-        ConfigEntity::class
+        ConfigEntity::class,
+        SecurityPhotoEntity::class
     ],
-    version = 3
+    version = 4
 )
 
 abstract class AppDatabase : RoomDatabase() {
@@ -22,4 +23,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun outbox(): OutboxDao
     abstract fun config(): ConfigDao
     abstract fun audit(): AuditDao
+    abstract fun securityPhotos(): SecurityPhotoDao
 }

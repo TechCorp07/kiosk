@@ -144,6 +144,127 @@
     <string name="profile_description">Manage your courier profile and performance</string>
     <string name="send_instructions">Send Instructions</string>
 
+    <!-- Send Package Flow -->
+    <string name="send_package_title">Send Package</string>
+    <string name="recipient_details_title">Recipient Details</string>
+    <string name="package_details_title">Package Details</string>
+    <string name="payment_title">Payment</string>
+
+    <!-- Recipient Details -->
+    <string name="recipient_name">Recipient Name</string>
+    <string name="recipient_surname">Recipient Surname</string>
+    <string name="recipient_mobile">Recipient Mobile Number</string>
+    <string name="recipient_national_id">Recipient National ID</string>
+    <string name="recipient_address">Recipient Address</string>
+
+    <!-- Package Details -->
+    <string name="package_dimensions">Package Dimensions</string>
+    <string name="length_meters">Length (m)</string>
+    <string name="width_meters">Width (m)</string>
+    <string name="height_meters">Height (m)</string>
+    <string name="package_contents">Package Contents</string>
+    <string name="package_contents_hint">e.g., Books, Clothes, Electronics</string>
+    <string name="payment_currency">Payment Currency</string>
+    <string name="calculated_size">Calculated Size: %s</string>
+    <string name="dimensions_in_meters">All dimensions should be in meters</string>
+    <string name="create_order">Create Order</string>
+
+    <!-- Payment -->
+    <string name="order_summary">Order Summary</string>
+    <string name="order_id_label">Order ID: %s</string>
+    <string name="recipient_label">To: %s</string>
+    <string name="package_size_label">Size: %s</string>
+    <string name="distance_label">Distance: %s</string>
+    <string name="total_amount">Total Amount:</string>
+    <string name="payment_method">Payment Method</string>
+    <string name="payment_mobile_number">Mobile Money Number</string>
+    <string name="pay_now">Pay Now</string>
+    <string name="processing">Processing…</string>
+    <string name="printing_receipt">Printing customer receipt…</string>
+    <string name="printing_barcode">Printing barcode label…</string>
+    <string name="opening_locker">Opening locker %d…</string>
+
+    <!-- Success Messages -->
+    <string name="order_created_success">Order created successfully!</string>
+    <string name="payment_success">Payment successful!</string>
+    <string name="package_complete_title">Package Sending Complete!</string>
+    <string name="package_complete_message">Your package has been successfully processed.\n\nPlease:\n1. Take your receipt and barcode label\n2. Place your package in Locker %d\n3. Stick the barcode label on your package\n4. Close the locker door\n\nThe recipient will be notified.</string>
+
+    <!-- Error Messages -->
+    <string name="error_invalid_dimensions">Please enter valid dimensions</string>
+    <string name="error_contents_required">Package contents are required</string>
+    <string name="error_currency_required">Please select a currency</string>
+    <string name="error_payment_method_required">Please select a payment method</string>
+    <string name="error_payment_mobile_required">Payment mobile number is required</string>
+    <string name="error_order_creation_failed">Order creation failed: %s</string>
+    <string name="error_payment_failed">Payment failed: %s</string>
+    <string name="error_hardware_init">Hardware initialization error: %s</string>
+    <string name="error_receipt_print_failed">Receipt printing failed</string>
+    <string name="error_barcode_print_failed">Barcode printing failed</string>
+    <string name="error_locker_failed">Locker error: %s. Please contact support.</string>
+    <string name="error_session_expired_login">Session expired. Please login again.</string>
+
+    <!-- Dialog Messages -->
+    <string name="cancel_package_sending">Cancel Package Sending</string>
+    <string name="cancel_package_message">Are you sure you want to cancel? All entered data will be lost.</string>
+    <string name="yes_cancel">Yes, Cancel</string>
+    <string name="no_continue">No, Continue</string>
+    <string name="done">Done</string>
+
+    <!-- Location -->
+    <string name="location_permission_denied">Location permission denied. Cannot get sender location.</string>
+    <string name="using_default_location">Using default location. GPS signal not available.</string>
+    <string name="location_error">Location error. Using default location.</string>
+
+    <!-- Loading States -->
+    <string name="loading_cities_suburbs">Loading cities and suburbs…</string>
+    <string name="creating_order">Creating order…</string>
+    <string name="processing_payment">Processing payment…</string>
+
+    <!-- Stepper Labels -->
+    <string name="step_recipient">Recipient</string>
+    <string name="step_package">Package</string>
+    <string name="step_payment">Payment</string>
+
+    <!-- Package Size -->
+    <string name="package_size_xs">Extra Small</string>
+    <string name="package_size_s">Small</string>
+    <string name="package_size_m">Medium</string>
+    <string name="package_size_l">Large</string>
+    <string name="package_size_xl">Extra Large</string>
+
+    <!-- Payment Methods -->
+    <string name="payment_ecocash">EcoCash</string>
+    <string name="payment_telecash">TeleCash</string>
+    <string name="payment_onemoney">OneMoney</string>
+
+    <!-- Currency -->
+    <string name="currency_usd">US Dollar ($)</string>
+    <string name="currency_zwl">Zimbabwe Dollar (Z$)</string>
+
+    <!-- Printer Status -->
+    <string name="printer_ready">Printer Ready</string>
+    <string name="printer_busy">Printer Busy</string>
+    <string name="printer_error">Printer Error</string>
+    <string name="printer_no_paper">No Paper</string>
+
+    <!-- Receipt Text -->
+    <string name="receipt_header">ZIMPUDO KIOSK</string>
+    <string name="receipt_send_package">SEND PACKAGE RECEIPT</string>
+    <string name="receipt_sender_info">SENDER INFORMATION</string>
+    <string name="receipt_recipient_info">RECIPIENT INFORMATION</string>
+    <string name="receipt_package_info">PACKAGE INFORMATION</string>
+    <string name="receipt_payment_info">PAYMENT INFORMATION</string>
+    <string name="receipt_locker_info">LOCKER INFORMATION</string>
+    <string name="receipt_footer">Thank you for using ZIMPUDO!</string>
+    <string name="receipt_website">www.zimpudo.com</string>
+    <string name="receipt_place_package">Please place your package in Locker %d and close the door.</string>
+
+    <!-- Barcode Label -->
+    <string name="barcode_header">ZIMPUDO PACKAGE</string>
+    <string name="barcode_order_id">Order ID:</string>
+    <string name="barcode_locker">Locker: %d</string>
+    <string name="barcode_scan_instruction">Scan at delivery</string>
 
     <!-- General Actions -->
     <string name="logout">Logout</string>
@@ -208,14 +329,16 @@
     <string name="invalid_phone">Please enter a valid phone number (+2637XXXXXXXX)</string>
     <string name="invalid_national_id">Please enter a valid National ID (Format: XX-XXXXXXX-X-XX)</string>
     <string name="field_required">This field is required</string>
-    <string name="name_required">Name is required</string>
-    <string name="surname_required">Surname is required</string>
     <string name="phone_required">Mobile number is required</string>
     <string name="national_id_required">National ID is required</string>
     <string name="house_number_required">House number is required</string>
     <string name="street_required">Street is required</string>
-    <string name="city_required">City is required</string>
-    <string name="suburb_required">Suburb is required</string>
+    <string name="name_required">Name is required</string>
+    <string name="surname_required">Surname is required</string>
+    <string name="invalid_mobile_number">Invalid mobile number</string>
+    <string name="invalid_national_id_format">Invalid national ID</string>
+    <string name="city_required">Please select a city</string>
+    <string name="suburb_required">Please select a suburb</string>
 
     <!-- Location related strings -->
     <string name="select_city">Select City</string>

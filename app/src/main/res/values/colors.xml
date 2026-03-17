@@ -4,9 +4,6 @@
     <color name="zimpudo_primary">#1DB584</color>
     <color name="zimpudo_primary_dark">#16A073</color>
     <color name="zimpudo_primary_light">#4FC49A</color>
-    <color name="error_red">#F44336</color>
-    <color name="success_green">#4CAF50</color>
-    <color name="warning_orange">#FF9800</color>
 
     <!-- Secondary Colors -->
     <color name="zimpudo_accent">#FF6B6B</color>
@@ -44,24 +41,47 @@
     <color name="input_border">#DEE2E6</color>
     <color name="input_border_focused">#1DB584</color>
 
-    <!-- Status Colors -->
+    <!-- Success colors -->
     <color name="success">#28A745</color>
-    <color name="error">#DC3545</color>
-    <color name="warning">#FFC107</color>
-    <color name="info">#17A2B8</color>
-
-    <!-- Error State Colors -->
-    <color name="error_background">#FFEBEE</color>
-    <color name="error_text">#C62828</color>
-
-    <!-- Warning State Colors -->
-    <color name="warning_background">#FFF8E1</color>
-    <color name="warning_text">#F57C00</color>
-
-    <!-- Additional Status Colors -->
+    <color name="success_light">#E8F5E9</color>
+    <color name="success_dark">#388E3C</color>
     <color name="success_background">#E8F5E8</color>
     <color name="success_text">#2E7D32</color>
+    <color name="success_green">#4CAF50</color>
 
+    <!-- Error colors -->
+    <color name="error">#DC3545</color>
+    <color name="error_background">#FFEBEE</color>
+    <color name="error_text">#C62828</color>
+    <color name="error_light">#FFEBEE</color>
+    <color name="error_dark">#D32F2F</color>
+    <color name="error_red">#F44336</color>
+
+    <!-- Warning colors -->
+    <color name="warning">#FF9800</color>
+    <color name="warning_light">#FFF3E0</color>
+    <color name="warning_dark">#F57C00</color>
+    <color name="warning_background">#FFF8E1</color>
+    <color name="warning_text">#F57C00</color>
+    <color name="warning_orange">#FF9800</color>
+
+    <!-- Info colors -->
+    <color name="info">#17A2B8</color>
+    <color name="info_light">#E3F2FD</color>
+    <color name="info_dark">#1976D2</color>
     <color name="info_background">#E3F2FD</color>
     <color name="info_text">#1565C0</color>
+
+    <!-- Stepper colors -->
+    <color name="stepper_active">@color/zimpudo_primary</color>
+    <color name="stepper_inactive">#BDBDBD</color>
+    <color name="stepper_completed">@color/success</color>
+
+    <!-- Divider -->
+    <color name="divider">#E0E0E0</color>
+
+    <!-- Kiosk dark UI backgrounds (new flow screens) -->
+    <color name="background_dark">#121212</color>
+    <color name="card_background">#1E1E1E</color>
+
 </resources>

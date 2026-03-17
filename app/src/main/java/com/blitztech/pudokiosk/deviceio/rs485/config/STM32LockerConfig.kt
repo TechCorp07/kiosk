@@ -8,8 +8,8 @@ package com.blitztech.pudokiosk.deviceio.rs485.config
  *
  * Hardware Configuration:
  * - MCU: STM32L412
- * - Locks: 16 solenoid locks (LOCK1-16)
- * - Status: 16 status sensors (STATE1-16)
+ * - Board 0 (Station 0): Locks  1-16 — solenoid locks + status sensors
+ * - Board 1 (Station 1): Locks 17-32 — solenoid locks + status sensors
  * - Communication: RS485 via MAX3485 (PA2=TX, PA3=RX, PA1=EN)
  * - Protocol: Winnsen Smart Locker 9600 8N1
  */
@@ -21,7 +21,9 @@ object STM32LockerConfig {
     const val FIRMWARE_VERSION = "Production"
 
     // === LOCK CONFIGURATION ===
-    const val TOTAL_LOCKS = 16
+    const val TOTAL_LOCKS = 32          // 2 boards × 16 locks each
+    const val LOCKS_PER_BOARD = 16
+    const val NUM_BOARDS = 2
     const val LOCK_PULSE_TIME_MS = 200L
     const val LOCK_TYPE = "Solenoid (Normally Closed)"
 
@@ -86,8 +88,8 @@ object STM32LockerConfig {
         const val STRESS_TEST_DELAY_MS = 50L
 
         // Test sequences for comprehensive testing
-        val QUICK_TEST_LOCKS = listOf(1, 8, 16) // Test corners and middle
-        val FULL_TEST_LOCKS = (1..16).toList()
+        val QUICK_TEST_LOCKS = listOf(1, 8, 16, 17, 24, 32) // corners, boundaries & midpoints
+        val FULL_TEST_LOCKS   = (1..TOTAL_LOCKS).toList()
 
         // Expected response times (for performance testing)
         const val MAX_UNLOCK_RESPONSE_TIME_MS = 500L

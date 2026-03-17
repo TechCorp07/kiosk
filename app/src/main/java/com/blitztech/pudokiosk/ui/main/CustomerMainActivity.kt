@@ -9,6 +9,9 @@ import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityCustomerMainBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
+import com.blitztech.pudokiosk.ui.collect.CollectionCodeActivity
+import com.blitztech.pudokiosk.ui.customer.TrackDeliveryActivity
+import com.blitztech.pudokiosk.ui.sendpackage.SendPackageActivity
 
 /**
  * Main dashboard for customer users
@@ -57,18 +60,16 @@ class CustomerMainActivity : BaseKioskActivity() {
         }
 
         binding.cardSendPackage.setOnClickListener {
-            // TODO: Navigate to send package flow
-            //startActivity(Intent(this, SenderActivity::class.java))
+            val intent = Intent(this, SendPackageActivity::class.java)
+            startActivity(intent)
         }
 
         binding.cardCollectPackage.setOnClickListener {
-            // TODO: Navigate to collect package flow
-            //startActivity(Intent(this, RecipientActivity::class.java))
+            startActivity(Intent(this, CollectionCodeActivity::class.java))
         }
 
         binding.cardTrackDelivery.setOnClickListener {
-            // TODO: Navigate to tracking screen
-            // startActivity(Intent(this, TrackingActivity::class.java))
+            startActivity(Intent(this, TrackDeliveryActivity::class.java))
         }
 
         binding.cardMyAccount.setOnClickListener {

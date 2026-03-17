@@ -7,6 +7,7 @@ import android.util.Log
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.sync.SyncScheduler
 import java.util.*
 
 class ZimpudoApp : Application() {
@@ -70,20 +71,22 @@ class ZimpudoApp : Application() {
         try {
             Log.d(TAG, "Loading global settings...")
 
-            // Load saved locale with timeout protection
             val savedLocale = try {
                 prefs.getLocale()
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to load saved locale, using default", e)
-                "en" // Default fallback
+                "en"
             }
 
             applyLocale(savedLocale)
+
+            // Start background event sync
+            SyncScheduler.schedule(this)
+
             Log.d(TAG, "Global settings initialized - Locale: $savedLocale")
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize global settings", e)
-            // Apply default locale
             applyLocale("en")
         }
     }
