@@ -47,7 +47,7 @@
             android:gravity="center"
             android:text="Enter the collection code from your\nSMS or email notification"
             android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
+            android:textSize="20sp" />
 
         <!-- Collection code input -->
         <com.google.android.material.textfield.TextInputLayout
@@ -65,7 +65,7 @@
                 android:inputType="textCapCharacters"
                 android:letterSpacing="0.15"
                 android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:textSize="28sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Open locker button -->
@@ -75,7 +75,7 @@
             android:layout_height="56dp"
             android:layout_marginTop="24dp"
             android:text="Open Locker"
-            android:textSize="16sp" />
+            android:textSize="22sp" />
 
         <!-- Progress bar -->
         <ProgressBar
@@ -95,7 +95,7 @@
             android:gravity="center"
             android:padding="16dp"
             android:textColor="@color/white"
-            android:textSize="16sp"
+            android:textSize="22sp"
             android:visibility="gone" />
 
     </LinearLayout>

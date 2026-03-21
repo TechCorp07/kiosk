@@ -52,7 +52,7 @@ class TermsConditionsActivity : BaseKioskActivity() {
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         binding.btnAcceptContinue.setOnClickListener {

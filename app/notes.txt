@@ -1,3 +1,17 @@
 Username: tech001    | Password: admin123
 Username: service    | Password: service2024
 Username: maintenance| Password: maintain456
+
+adb connect <box-ip>:5555
+adb install app-debug.apk
+adb shell dpm set-device-owner com.blitztech.pudokiosk/.receiver.KioskDeviceAdminReceiver
+
+OTA needs server endpoint set
+GET /api/kiosk/update/latest
+{
+  "versionCode": 2,
+  "versionName": "0.2.0",
+  "apkUrl": "https://your-server.com/releases/pudokiosk-0.2.0.apk",
+  "releaseNotes": "Bug fixes",
+  "mandatory": false
+}

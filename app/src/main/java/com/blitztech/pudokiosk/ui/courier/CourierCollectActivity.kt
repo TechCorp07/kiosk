@@ -1,5 +1,6 @@
 package com.blitztech.pudokiosk.ui.courier
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -11,13 +12,18 @@ import com.blitztech.pudokiosk.data.api.dto.courier.TransactionResponse
 import com.blitztech.pudokiosk.databinding.ActivityCourierCollectBinding
 import com.blitztech.pudokiosk.deviceio.DoorMonitor
 import com.blitztech.pudokiosk.deviceio.HardwareManager
+import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
 import com.blitztech.pudokiosk.deviceio.rs232.BarcodeScanner
 import com.blitztech.pudokiosk.deviceio.camera.SecurityCameraManager
 import com.blitztech.pudokiosk.deviceio.camera.PhotoReason
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
+import com.blitztech.pudokiosk.ui.main.CourierMainActivity
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Courier Collection Flow (scan-first → transaction)
@@ -40,17 +46,26 @@ class CourierCollectActivity : BaseKioskActivity() {
     private lateinit var prefs: Prefs
     private val hw: HardwareManager by lazy { HardwareManager.getInstance(this) }
     private val api by lazy { ZimpudoApp.apiRepository }
+    private val printer: CustomTG2480HIIIDriver by lazy { CustomTG2480HIIIDriver(this) }
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
     private var collectedCount = 0
     private var doorMonitor: DoorMonitor? = null
-    private var scanJob: kotlinx.coroutines.Job? = null
+    private var scanJob: Job? = null
+    private var idleJob: Job? = null
     private var isWaitingForDoor = false
+    private var lastTxnTracking: String = ""
+    private var lastTxnCell: Int = 0
+
+    companion object {
+        private const val IDLE_TIMEOUT_MS = 2 * 60 * 1000L // 2 minutes
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCourierCollectBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        prefs = Prefs(this)
+        prefs = ZimpudoApp.prefs
 
         binding.btnBack.setOnClickListener {
             if (!isWaitingForDoor) finishSafely()
@@ -73,6 +88,7 @@ class CourierCollectActivity : BaseKioskActivity() {
         showStatus("📦 Scan a parcel barcode to collect")
         binding.btnFinish.isEnabled = true
         startScanListening()
+        resetIdleTimer()
     }
 
     private fun startScanListening() {
@@ -80,6 +96,7 @@ class CourierCollectActivity : BaseKioskActivity() {
         scanJob = lifecycleScope.launch {
             BarcodeScanner.scannedData.collect { scannedCode ->
                 scanJob?.cancel()
+                resetIdleTimer()
                 showStatus("Looking up parcel: $scannedCode…")
                 processPickup(scannedCode)
             }
@@ -109,6 +126,8 @@ class CourierCollectActivity : BaseKioskActivity() {
                     val cellNumber = resp.cellNumber
                     if (cellNumber != null && cellNumber > 0) {
                         showStatus("✅ Found! Opening Locker $cellNumber…\n${resp.recipientName ?: ""}")
+                        lastTxnTracking = trackingNumber
+                        lastTxnCell = cellNumber
                         openLockerForCollection(resp)
                     } else {
                         showToast("No locker assigned for this parcel.")
@@ -182,9 +201,52 @@ class CourierCollectActivity : BaseKioskActivity() {
     private fun onPickupComplete() {
         collectedCount++
         lifecycleScope.launch {
+            printCourierReceipt(lastTxnTracking, lastTxnCell)
             delay(500)
             enterScanMode()
         }
+    }
+
+    // ── Idle timeout ─────────────────────────────────────────────
+    private fun resetIdleTimer() {
+        idleJob?.cancel()
+        idleJob = lifecycleScope.launch {
+            delay(IDLE_TIMEOUT_MS)
+            showToast("Session idle — returning to main menu.")
+            navigateToCourierMain()
+        }
+    }
+
+    private fun navigateToCourierMain() {
+        scanJob?.cancel()
+        doorMonitor?.stop()
+        val intent = Intent(this, CourierMainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        startActivity(intent)
+        finish()
+    }
+
+    // ── Receipt printing ──────────────────────────────────────────
+    private suspend fun printCourierReceipt(trackingNumber: String, cellNumber: Int) {
+        try {
+            val kioskId = prefs.getLocationId().ifBlank { "KIOSK-001" }
+            val receipt = buildString {
+                appendLine("    ZIMPUDO KIOSK")
+                appendLine("    PICK-UP RECEIPT")
+                appendLine("================================")
+                appendLine("Date: ${dateFormatter.format(Date())}")
+                appendLine("Kiosk: $kioskId")
+                appendLine("Courier: ${prefs.getUserMobile() ?: "-"}")
+                appendLine("Tracking: $trackingNumber")
+                appendLine("Locker Cell: $cellNumber")
+                appendLine("================================")
+                appendLine("Parcel collected from locker.")
+                appendLine("Deliver to recipient promptly.")
+                appendLine()
+            }
+            val result = printer.printText(receipt, fontSize = 1, centered = false)
+            if (result.isSuccess) printer.feedAndCut()
+        } catch (_: Exception) { /* best-effort */ }
     }
 
     // ── Summary & exit ───────────────────────────────────────────
@@ -213,6 +275,7 @@ class CourierCollectActivity : BaseKioskActivity() {
     override fun onDestroy() {
         super.onDestroy()
         scanJob?.cancel()
+        idleJob?.cancel()
         doorMonitor?.stop()
         hw.speaker.stopDoorCloseReminder()
     }

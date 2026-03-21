@@ -31,7 +31,7 @@
                 android:layout_height="wrap_content"
                 android:text="English"
                 android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:text="English"
                 android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
         </LinearLayout>
 
         <!-- Selection Indicator -->

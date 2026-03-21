@@ -51,7 +51,7 @@
                 android:gravity="center"
                 android:text="Welcome, Customer!"
                 android:textColor="@color/text_white"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -61,7 +61,7 @@
                 android:gravity="center"
                 android:text="What would you like to do today?"
                 android:textColor="@color/text_white"
-                android:textSize="16sp" />
+                android:textSize="22sp" />
         </LinearLayout>
 
         <!-- Main Actions Container -->
@@ -112,7 +112,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="Send Package"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -121,7 +121,7 @@
                             android:layout_height="wrap_content"
                             android:text="Send packages nationwide with secure delivery"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -173,7 +173,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="Collect Package"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -182,7 +182,7 @@
                             android:layout_height="wrap_content"
                             android:text="Collect packages waiting for you at this location"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -234,7 +234,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="Track Delivery"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -243,7 +243,7 @@
                             android:layout_height="wrap_content"
                             android:text="Track your packages in real-time"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -294,7 +294,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="My Account"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -303,7 +303,7 @@
                             android:layout_height="wrap_content"
                             android:text="Manage your profile and delivery history"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView

@@ -13,9 +13,15 @@ import java.util.concurrent.TimeUnit
 
 object NetworkModule {
 
+    /** Set from ZimpudoApp.onCreate(). Controls HTTP logging verbosity. */
+    var isDebug: Boolean = false
+
     fun provideOkHttpClient(): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (isDebug)
+                HttpLoggingInterceptor.Level.BODY
+            else
+                HttpLoggingInterceptor.Level.HEADERS
         }
 
         return OkHttpClient.Builder()

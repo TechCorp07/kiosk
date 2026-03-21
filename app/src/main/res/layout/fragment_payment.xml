@@ -35,7 +35,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="Payment"
                 android:textColor="@color/text_primary"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 android:textStyle="bold" />
 
             <!-- Order Summary Card -->
@@ -58,7 +58,7 @@
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:text="Order Summary"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="26sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -106,7 +106,7 @@
                             android:layout_weight="1"
                             android:text="Total Amount:"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -115,7 +115,7 @@
                             android:layout_height="wrap_content"
                             android:text="$10.00"
                             android:textColor="@color/zimpudo_primary"
-                            android:textSize="20sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -125,7 +125,7 @@
                             android:layout_marginStart="@dimen/spacing_xs"
                             android:text="USD"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -137,7 +137,7 @@
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:text="Payment Method"
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
 
             <Spinner
                 android:id="@+id/spinnerPaymentMethod"
@@ -178,7 +178,7 @@
                 android:text="Processing..."
                 android:textAlignment="center"
                 android:textColor="@color/info"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
 

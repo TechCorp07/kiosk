@@ -23,6 +23,10 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- OTA UPDATE PERMISSIONS -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- USB host feature (for printer/serial dongles) -->
     <uses-feature android:name="android.hardware.usb.host"
@@ -280,6 +284,28 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity android:name=".ui.technician.DeveloperModeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Customer activities -->
+        <activity android:name=".ui.customer.CustomerAccountActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Courier activities -->
+        <activity android:name=".ui.courier.CourierProfileActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.courier.CourierRouteActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.courier.CourierStatusUpdateActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
         <!-- Legacy Activities (for reference/reuse) -->
         <activity android:name=".ui.technician.DevSettingsActivity"
             android:exported="false"
@@ -293,6 +319,22 @@
         <activity android:name=".ui.customer.TrackDeliveryActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <!-- FileProvider for APK update installs -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_paths" />
+        </provider>
+
+        <!-- Update install result receiver -->
+        <receiver
+            android:name=".update.UpdateInstallReceiver"
+            android:exported="false" />
 
     </application>
 

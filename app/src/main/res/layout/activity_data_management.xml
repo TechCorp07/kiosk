@@ -32,7 +32,7 @@
                 android:layout_gravity="center"
                 android:text="Data Management"
                 android:textColor="@color/text_white"
-                android:textSize="20sp"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <ProgressBar
@@ -52,7 +52,7 @@
             android:gravity="center"
             android:text="Clear cache, logs, and manage app data"
             android:textColor="@color/text_white"
-            android:textSize="14sp" />
+            android:textSize="20sp" />
 
         <!-- Main Content -->
         <LinearLayout
@@ -69,7 +69,7 @@
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:text="Storage Information"
                 android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <androidx.cardview.widget.CardView
@@ -97,7 +97,7 @@
                             android:layout_weight="1"
                             android:text="Current Usage:"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
 
                         <Button
@@ -106,7 +106,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="32dp"
                             android:text="Refresh"
-                            android:textSize="12sp" />
+                            android:textSize="16sp" />
                     </LinearLayout>
 
                     <TextView
@@ -116,7 +116,7 @@
                         android:fontFamily="monospace"
                         android:text="Loading storage information..."
                         android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/tvLastUpdated"
@@ -125,7 +125,7 @@
                         android:layout_marginTop="@dimen/spacing_sm"
                         android:text="Last updated: --"
                         android:textColor="@color/text_secondary"
-                        android:textSize="10sp" />
+                        android:textSize="14sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -136,7 +136,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="Safe Operations"
                 android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <GridLayout
@@ -179,7 +179,7 @@
                             android:gravity="center"
                             android:text="Clear\nCache"
                             android:textColor="@color/text_primary"
-                            android:textSize="12sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -217,7 +217,7 @@
                             android:gravity="center"
                             android:text="Clear\nLogs"
                             android:textColor="@color/text_primary"
-                            android:textSize="12sp"
+                            android:textSize="16sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -253,7 +253,7 @@
                             android:layout_height="wrap_content"
                             android:text="Export User Data"
                             android:textColor="@color/text_primary"
-                            android:textSize="14sp"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
@@ -266,7 +266,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="⚠️ Warning: Data Loss Operations"
                 android:textColor="@color/warning_text"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <androidx.cardview.widget.CardView
@@ -301,7 +301,7 @@
                         android:layout_weight="1"
                         android:text="Clear User Data &amp; Settings"
                         android:textColor="@color/warning_text"
-                        android:textSize="14sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -314,7 +314,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="🚨 Critical: Destructive Operations"
                 android:textColor="@color/error_text"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <androidx.cardview.widget.CardView
@@ -349,7 +349,7 @@
                         android:layout_weight="1"
                         android:text="Reset Database (All Package Data)"
                         android:textColor="@color/error_text"
-                        android:textSize="14sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -385,7 +385,7 @@
                         android:layout_weight="1"
                         android:text="Factory Reset (Complete App Reset)"
                         android:textColor="@color/error_text"
-                        android:textSize="14sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

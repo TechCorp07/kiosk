@@ -20,7 +20,7 @@
             android:layout_gravity="end"
             android:text="@string/skip"
             android:textColor="@color/text_white"
-            android:textSize="18sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:background="@drawable/bg_skip_button"
             android:elevation="4dp"

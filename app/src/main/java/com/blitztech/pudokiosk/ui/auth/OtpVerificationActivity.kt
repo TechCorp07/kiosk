@@ -16,6 +16,8 @@ import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.dto.common.AuthStatus
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivityOtpVerificationBinding
+import com.blitztech.pudokiosk.deviceio.camera.PhotoReason
+import com.blitztech.pudokiosk.deviceio.camera.SecurityCameraManager
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
@@ -67,12 +69,8 @@ class OtpVerificationActivity : BaseKioskActivity() {
     private fun setupDependencies() {
         prefs = ZimpudoApp.prefs
 
-        // Initialize API repository
-        val okHttpClient = NetworkModule.provideOkHttpClient()
-        val moshi = NetworkModule.provideMoshi()
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
-        val apiService = NetworkModule.provideApiService(retrofit)
-        apiRepository = NetworkModule.provideApiRepository(apiService, this)
+        // Use app-wide singleton API repository
+        apiRepository = ZimpudoApp.apiRepository
     }
 
     private fun setupViews() {
@@ -86,7 +84,7 @@ class OtpVerificationActivity : BaseKioskActivity() {
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
 
         binding.btnVerify.setOnClickListener {
@@ -194,7 +192,7 @@ class OtpVerificationActivity : BaseKioskActivity() {
         }
     }
 
-    private fun saveUserDataAndNavigate(accessToken: String, refreshToken: String) {
+    private suspend fun saveUserDataAndNavigate(accessToken: String, refreshToken: String) {
         // Save user authentication data
         prefs.saveAuthData(
             accessToken = accessToken,
@@ -203,6 +201,15 @@ class OtpVerificationActivity : BaseKioskActivity() {
             mobileNumber = mobileNumber,
             userName = null
         )
+
+        // Fire courier security photo after successful OTP (fire-and-forget)
+        if (userType == UserType.COURIER) {
+            SecurityCameraManager.getInstance(this).captureSecurityPhoto(
+                reason = PhotoReason.COURIER_LOGIN,
+                referenceId = mobileNumber,
+                userId = mobileNumber
+            )
+        }
 
         // Navigate to appropriate main menu
         val intent = when (userType) {

@@ -70,7 +70,7 @@
                 android:layout_marginBottom="@dimen/spacing_lg"
                 android:text="@string/effective_date"
                 android:textColor="@color/text_secondary"
-                android:textSize="14sp"
+                android:textSize="20sp"
                 android:gravity="center" />
 
             <!-- Privacy Policy Content -->
@@ -86,7 +86,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp"
+                    android:textSize="20sp"
                     android:lineSpacingMultiplier="1.4" />
 
             </ScrollView>

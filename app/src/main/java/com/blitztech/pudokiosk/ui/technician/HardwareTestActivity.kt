@@ -51,6 +51,9 @@ class HardwareTestActivity : BaseKioskActivity() {
     private lateinit var tvLockerLog: TextView
     private lateinit var scrollLockerLog: ScrollView
     private lateinit var spinnerLockNumber: Spinner
+    private lateinit var spinnerBoardNumber: Spinner
+
+    // === RAW RS485 DEBUG CONSOLE (removed) ===
 
     // === BARCODE SCANNER COMPONENTS ===
     private lateinit var btnScannerFocus: Button
@@ -110,11 +113,12 @@ class HardwareTestActivity : BaseKioskActivity() {
         tvLockerLog = findViewById(R.id.tvLockerLog)
         scrollLockerLog = findViewById(R.id.scrollLockerLog)
         spinnerLockNumber = findViewById(R.id.spinnerLockNumber)
+        spinnerBoardNumber = findViewById(R.id.spinnerBoardNumber)
         btnStartListening = findViewById(R.id.btnStartListening)
-        btnClearCommLog = findViewById(R.id.btnClearCommLog)
-        tvSerialStatus = findViewById(R.id.tvSerialStatus)
-        tvCommLog = findViewById(R.id.tvCommLog)
-        scrollCommLog = findViewById(R.id.scrollCommLog)
+        btnClearCommLog = findViewById(R.id.btnClearLockerLog)
+        tvSerialStatus = tvLockerStatus              // merged - reuse the same status view
+        tvCommLog = tvLockerLog                      // merged - single log pane
+        scrollCommLog = scrollLockerLog              // merged - single scroll pane
 
         // Barcode Scanner UI
         btnScannerFocus = findViewById(R.id.btnScannerFocus)
@@ -143,10 +147,10 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun setupEventListeners() {
         // RS485 Communication Events
-        btnStartListening.setOnClickListener {
-            if (isListening) stopListening() else startListening()
+        btnClearLockerLog.setOnClickListener {
+            lockerController.clearLog()
+            tvLockerLog.text = "Log cleared."
         }
-        btnClearCommLog.setOnClickListener { clearCommunicationLog() }
         btnConnectLocker.setOnClickListener { connectToLockerController() }
         btnTestCommunication.setOnClickListener { testLockerCommunication() }
         btnUnlockSingle.setOnClickListener { unlockSingleLock() }
@@ -155,7 +159,6 @@ class HardwareTestActivity : BaseKioskActivity() {
         btnEmergencyUnlock.setOnClickListener { emergencyUnlockAll() }
 
         // Scanner Events
-        btnScannerFocus.setOnClickListener { etScannerResults.requestFocus() }
         btnTriggerScan.setOnClickListener { triggerBarcodeScan() }
         btnClearScans.setOnClickListener { etScannerResults.text.clear() }
         btnScannerReconnect.setOnClickListener { reconnectScanner() }
@@ -205,13 +208,41 @@ class HardwareTestActivity : BaseKioskActivity() {
         lockerController = LockerController(this)
         updateLockerStatus("🔒 Locker Controller ready - Click 'Connect' to start")
 
-        // Setup lock number spinner
-        val lockNumbers = (1..16).map { "Lock $it" }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, lockNumbers)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerLockNumber.adapter = adapter
+        // Board spinner (1-4)
+        val boards = (1..4).map { "Board $it" }
+        val boardAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, boards)
+        boardAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerBoardNumber.adapter = boardAdapter
+
+        // Update lock spinner whenever board changes
+        spinnerBoardNumber.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                updateLockSpinnerForBoard(position + 1)
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
+        }
+
+        // Initialise lock spinner for board 1
+        updateLockSpinnerForBoard(1)
 
         Log.i(TAG, "Locker Controller initialized")
+    }
+
+    /** Populate lock spinner with global lock numbers for the chosen board. */
+    private fun updateLockSpinnerForBoard(board: Int) {
+        val firstLock = (board - 1) * WinnsenProtocol.LOCKS_PER_BOARD + 1
+        val lastLock  = board * WinnsenProtocol.LOCKS_PER_BOARD
+        val lockLabels = (firstLock..lastLock).map { "Lock $it" }
+        val lockAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, lockLabels)
+        lockAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerLockNumber.adapter = lockAdapter
+    }
+
+    /** Returns the global lock number selected across both spinners. */
+    private fun selectedGlobalLockNumber(): Int {
+        val board = spinnerBoardNumber.selectedItemPosition + 1
+        val slot  = spinnerLockNumber.selectedItemPosition + 1
+        return (board - 1) * WinnsenProtocol.LOCKS_PER_BOARD + slot
     }
 
     // === RS485 COMMUNICATION TEST METHODS ===
@@ -319,8 +350,7 @@ class HardwareTestActivity : BaseKioskActivity() {
             return
         }
 
-        val selectedPosition = spinnerLockNumber.selectedItemPosition
-        val lockNumber = selectedPosition + 1 // Locks are 1-16
+        val lockNumber = selectedGlobalLockNumber()
 
         updateLockerStatus("🔓 Unlocking lock $lockNumber...")
         showProgress(true)
@@ -355,8 +385,7 @@ class HardwareTestActivity : BaseKioskActivity() {
             return
         }
 
-        val selectedPosition = spinnerLockNumber.selectedItemPosition
-        val lockNumber = selectedPosition + 1
+        val lockNumber = selectedGlobalLockNumber()
 
         updateLockerStatus("🔍 Checking status of lock $lockNumber...")
         showProgress(true)
@@ -1039,21 +1068,13 @@ class HardwareTestActivity : BaseKioskActivity() {
         }
     }
 
+
+
     private fun debugLayoutComponents() {
         Log.d(TAG, "=== LAYOUT COMPONENT DEBUG ===")
-
-        // Check existing components
-        Log.d(TAG, "RS485 components:")
-        Log.d(TAG, "  btnStartListening: ${findViewById<Button>(R.id.btnStartListening) != null}")
-        Log.d(TAG, "  btnClearCommLog: ${findViewById<Button>(R.id.btnClearCommLog) != null}")
-
-        // Check locker components
-        Log.d(TAG, "Locker components:")
         Log.d(TAG, "  btnConnectLocker: ${findViewById<Button>(R.id.btnConnectLocker) != null}")
-        Log.d(TAG, "  btnTestCommunication: ${findViewById<Button>(R.id.btnTestCommunication) != null}")
+        Log.d(TAG, "  spinnerBoardNumber: ${findViewById<Spinner>(R.id.spinnerBoardNumber) != null}")
         Log.d(TAG, "  spinnerLockNumber: ${findViewById<Spinner>(R.id.spinnerLockNumber) != null}")
-        Log.d(TAG, "  tvLockerStatus: ${findViewById<TextView>(R.id.tvLockerStatus) != null}")
-
         Log.d(TAG, "=== END LAYOUT DEBUG ===")
     }
 

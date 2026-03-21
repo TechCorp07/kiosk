@@ -4,6 +4,14 @@ import com.blitztech.pudokiosk.data.net.CourierLoginResponse
 import com.blitztech.pudokiosk.data.net.CourierParcel
 import kotlinx.coroutines.delay
 
+/**
+ * ⚠️ LEGACY — DO NOT USE IN PRODUCTION CODE ⚠️
+ *
+ * This repository uses stub/mock data only. All live courier flows go through
+ * [com.blitztech.pudokiosk.data.repository.ApiRepository] via [com.blitztech.pudokiosk.ZimpudoApp.apiRepository].
+ *
+ * This class can be safely deleted once any remaining referencing code is confirmed to be test-only.
+ */
 class CourierRepository(private val useStub: Boolean = true) {
 
     suspend fun login(codeOrPin: String): CourierLoginResponse {

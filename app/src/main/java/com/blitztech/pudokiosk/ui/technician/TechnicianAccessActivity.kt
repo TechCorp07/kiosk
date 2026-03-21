@@ -36,17 +36,12 @@ class TechnicianAccessActivity : BaseKioskActivity() {
         binding.tvSubtitle.text = "Enter technician credentials to access diagnostic tools"
         binding.etUsername.hint = "Username"
         binding.etPassword.hint = "Password"
-        binding.btnLogin.text = "Access Diagnostics"
-        binding.btnCancel.text = "Cancel"
+        binding.btnLogin.text = "Login"
     }
 
     private fun setupClickListeners() {
         binding.btnLogin.setOnClickListener {
             attemptTechnicianLogin()
-        }
-
-        binding.btnCancel.setOnClickListener {
-            returnToMainApp()
         }
 
         binding.btnBack.setOnClickListener {
@@ -73,9 +68,10 @@ class TechnicianAccessActivity : BaseKioskActivity() {
     }
 
     private fun navigateToTechMenu() {
+        disableKioskMode()
         val intent = Intent(this, TechnicianMenuActivity::class.java)
         startActivity(intent)
-        finish()
+        finishSafely()
     }
 
     private fun returnToMainApp() {

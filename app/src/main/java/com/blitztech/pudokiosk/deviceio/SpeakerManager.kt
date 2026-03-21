@@ -2,7 +2,7 @@ package com.blitztech.pudokiosk.deviceio
 
 import android.content.Context
 import android.media.AudioAttributes
-import android.media.MediaPlayer
+import android.media.SoundPool
 import android.media.ToneGenerator
 import android.media.AudioManager
 import android.util.Log
@@ -12,11 +12,8 @@ import kotlinx.coroutines.*
 /**
  * SpeakerManager — centralised audio alert controller for the kiosk.
  *
- * Plays three categories of sound:
- *  - **Door close reminder**: looping prompt while a locker door is open
- *  - **Success chime**: single play on successful operation
- *  - **Error alert**: single play on failure
- *
+ * Uses [SoundPool] for efficient, low-latency audio playback.
+ * Pre-loads sounds once, plays from pool with zero per-call allocation.
  * Falls back gracefully to [ToneGenerator] beeps when raw audio files
  * are not yet bundled with the APK.
  */
@@ -41,9 +38,34 @@ class SpeakerManager private constructor(private val context: Context) {
     private var reminderJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    // -------------------------------------------------------------------------
-    //  Public API
-    // -------------------------------------------------------------------------
+    // ── SoundPool — pre-loaded, reusable audio ──────────────────────────
+    private val audioAttributes = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+        .build()
+
+    private val soundPool: SoundPool by lazy {
+        SoundPool.Builder()
+            .setMaxStreams(2)
+            .setAudioAttributes(audioAttributes)
+            .build()
+    }
+
+    // Sound IDs (0 = not loaded / load failed)
+    private val doorReminderId: Int by lazy { loadSound(R.raw.close_door_reminder) }
+    private val successChimeId: Int by lazy { loadSound(R.raw.success_chime) }
+    private val errorAlertId: Int by lazy { loadSound(R.raw.error_alert) }
+
+    private fun loadSound(rawResId: Int): Int {
+        return try {
+            soundPool.load(context, rawResId, 1)
+        } catch (e: Exception) {
+            Log.d(TAG, "Could not load sound resource: ${e.message}")
+            0
+        }
+    }
+
+    // ── Public API ──────────────────────────────────────────────────────
 
     /**
      * Starts looping the "close the door" reminder every [REMINDER_REPEAT_INTERVAL_MS].
@@ -54,7 +76,7 @@ class SpeakerManager private constructor(private val context: Context) {
         Log.d(TAG, "🔊 Starting door-close reminder loop")
         reminderJob = scope.launch {
             while (isActive) {
-                playDoorCloseReminder()
+                playSound(doorReminderId, ToneGenerator.TONE_PROP_BEEP2)
                 delay(REMINDER_REPEAT_INTERVAL_MS)
             }
         }
@@ -68,54 +90,29 @@ class SpeakerManager private constructor(private val context: Context) {
     }
 
     /** Plays a single success chime. */
-    fun playSuccessChime() = playRawOrBeep(R.raw.success_chime, ToneGenerator.TONE_PROP_ACK)
+    fun playSuccessChime() = playSound(successChimeId, ToneGenerator.TONE_PROP_ACK)
 
     /** Plays a single error alert. */
-    fun playErrorAlert() = playRawOrBeep(R.raw.error_alert, ToneGenerator.TONE_PROP_NACK)
+    fun playErrorAlert() = playSound(errorAlertId, ToneGenerator.TONE_PROP_NACK)
 
     /** Releases all resources. Call when the app is shutting down. */
     fun release() {
         stopDoorCloseReminder()
         scope.cancel()
+        try { soundPool.release() } catch (_: Exception) {}
         instance = null
     }
 
-    // -------------------------------------------------------------------------
-    //  Internal helpers
-    // -------------------------------------------------------------------------
+    // ── Internal ────────────────────────────────────────────────────────
 
-    private fun playDoorCloseReminder() {
-        playRawOrBeep(R.raw.close_door_reminder, ToneGenerator.TONE_PROP_BEEP2)
-    }
-
-    /**
-     * Attempts to play a bundled raw audio resource.
-     * If the resource does not exist (0-byte placeholder), falls back to [ToneGenerator].
-     */
-    private fun playRawOrBeep(rawResId: Int, toneType: Int) {
-        try {
-            val player = MediaPlayer().apply {
-                val afd = context.resources.openRawResourceFd(rawResId)
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build()
-                )
-                setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-                afd.close()
-                prepare()
-                setOnCompletionListener { release() }
-                setOnErrorListener { mp, _, _ -> mp.release(); true }
-            }
-            player.start()
-        } catch (e: Exception) {
-            // Raw file not yet added — fall back to system tone
-            Log.d(TAG, "Raw audio unavailable (${e.message}), using ToneGenerator fallback")
+    private fun playSound(soundId: Int, fallbackTone: Int) {
+        if (soundId > 0) {
+            soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f)
+        } else {
+            // Raw file not loaded — fall back to system tone
             try {
                 val tg = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80)
-                tg.startTone(toneType, 800)
-                // ToneGenerator auto-stops; release after tone duration
+                tg.startTone(fallbackTone, 800)
                 scope.launch {
                     delay(900)
                     tg.release()
@@ -126,3 +123,4 @@ class SpeakerManager private constructor(private val context: Context) {
         }
     }
 }
+

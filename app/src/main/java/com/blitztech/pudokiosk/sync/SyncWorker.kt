@@ -4,7 +4,14 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.blitztech.pudokiosk.ZimpudoApp
+import com.blitztech.pudokiosk.data.api.NetworkResult
+import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
+import com.blitztech.pudokiosk.data.api.dto.collection.LockerPickupRequest
 import com.blitztech.pudokiosk.data.db.AppDatabase
+import com.blitztech.pudokiosk.data.db.OutboxEventEntity
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 /**
  * SyncWorker — drains the local outbox of pending events to the backend.
@@ -36,15 +43,21 @@ class SyncWorker(
 
             Log.d(TAG, "Syncing ${pending.size} outbox event(s)")
 
+            // Build Moshi once per sync run, reuse across all events
+            val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
             val deliveredKeys = mutableListOf<String>()
             var failures = 0
 
             for (event in pending) {
                 try {
-                    // TODO (Phase 9): POST event.payloadJson to the corresponding backend endpoint
-                    // based on event.type (e.g. "collection_confirmed", "delivery_confirmed")
-                    Log.d(TAG, "  → Syncing [${event.type}] key=${event.idempotencyKey}")
-                    deliveredKeys.add(event.idempotencyKey)
+                    val dispatched = dispatchEvent(event, moshi)
+                    if (dispatched) {
+                        deliveredKeys.add(event.idempotencyKey)
+                        Log.d(TAG, "  ✓ Synced [${event.type}] key=${event.idempotencyKey}")
+                    } else {
+                        Log.w(TAG, "  ✗ Dispatch returned false for ${event.idempotencyKey}")
+                        failures++
+                    }
                 } catch (e: Exception) {
                     Log.w(TAG, "  ✗ Failed to sync event ${event.idempotencyKey}: ${e.message}")
                     failures++
@@ -68,18 +81,53 @@ class SyncWorker(
         }
     }
 
+    // ── Event dispatcher — routes by type ─────────────────────────────────
+    private suspend fun dispatchEvent(event: OutboxEventEntity, moshi: Moshi): Boolean {
+        val api = ZimpudoApp.apiRepository
+        val prefs = ZimpudoApp.prefs
+        val token = prefs.getAccessToken().orEmpty()
+        if (token.isBlank()) {
+            Log.w(TAG, "No access token — cannot dispatch event ${event.type}")
+            return false
+        }
+
+        return when (event.type) {
+            "courier_dropoff" -> {
+                val req = moshi.adapter(TransactionRequest::class.java).fromJson(event.payloadJson)
+                    ?: return false
+                val result = api.courierDropoff(req, token)
+                result is NetworkResult.Success
+            }
+            "courier_pickup" -> {
+                val req = moshi.adapter(TransactionRequest::class.java).fromJson(event.payloadJson)
+                    ?: return false
+                val result = api.courierPickup(req, token)
+                result is NetworkResult.Success
+            }
+            "collection_confirmed" -> {
+                val req = moshi.adapter(LockerPickupRequest::class.java).fromJson(event.payloadJson)
+                    ?: return false
+                val result = api.completePickup(req, token)
+                result is NetworkResult.Success
+            }
+            "courier_issue_report" -> {
+                // TODO: Wire to dedicated backend issue-reporting endpoint when available.
+                // For now, keep in outbox (return false) so it retries once the endpoint exists.
+                Log.d(TAG, "courier_issue_report event pending backend endpoint — will retry")
+                false
+            }
+            else -> {
+                // Unknown type — mark as delivered to avoid blocking the queue
+                Log.w(TAG, "Unknown event type '${event.type}' — marking delivered without dispatch")
+                true
+            }
+        }
+    }
+
+    // ── Database access ─────────────────────────────────────────────
     private fun getDatabase(): AppDatabase {
-        // Use a plain (non-encrypted) fallback for the Worker — the encrypted
-        // production instance is managed by the main app process.
-        // TODO (Phase 9): expose AppDatabase as a singleton in ZimpudoApp
-        // so SyncWorker can reuse the existing encrypted connection.
-        return androidx.room.Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "pudokiosk_db"
-        )
-            .fallbackToDestructiveMigration()
-            .build()
+        // Use the application-level singleton now that it is exposed.
+        return ZimpudoApp.database
     }
 }
 

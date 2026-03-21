@@ -44,7 +44,7 @@ class CollectionCodeActivity : BaseKioskActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCollectionCodeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        prefs = Prefs(this)
+        prefs = ZimpudoApp.prefs
         setupClickListeners()
     }
 

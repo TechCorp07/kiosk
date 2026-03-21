@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
-import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.dto.location.CityDto
 import com.blitztech.pudokiosk.data.api.dto.location.SuburbDto
@@ -57,12 +56,7 @@ class RecipientDetailsFragment : Fragment() {
     }
 
     private fun setupDependencies() {
-        val context = requireContext()
-        val okHttpClient = NetworkModule.provideOkHttpClient()
-        val moshi = NetworkModule.provideMoshi()
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
-        val apiService = NetworkModule.provideApiService(retrofit)
-        apiRepository = NetworkModule.provideApiRepository(apiService, context)
+        apiRepository = ZimpudoApp.apiRepository
     }
 
     private fun setupViews() {

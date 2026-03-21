@@ -11,6 +11,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import com.blitztech.pudokiosk.databinding.ActivityMainBinding
+import com.blitztech.pudokiosk.service.KioskLockManager
 import com.blitztech.pudokiosk.service.KioskModeService
 import com.blitztech.pudokiosk.ui.technician.TechnicianAccessActivity
 import com.blitztech.pudokiosk.ui.onboarding.LanguageSelectionActivity
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity() {
             setupSystemUIHiding()
 
             KioskModeService.start(this)
+            KioskLockManager.ensureLockTaskOnStartup(this)
             scheduleNavigation()
 
             // Start monitoring for system UI visibility changes
@@ -254,10 +256,11 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Log.d(TAG, "MainActivity.onResume() called")
 
-        // Always re-enable kiosk mode on resume (unless technician is active)
-        if (kioskModeEnabled) {
+        // Always re-enable kiosk mode on resume (unless maintenance mode is active)
+        if (kioskModeEnabled && !KioskLockManager.isMaintenanceMode()) {
             hideSystemUI()
             startUIVisibilityMonitoring()
+            KioskLockManager.enableLockTaskMode(this)
         }
 
         // Auto-return timer for accidental navigation

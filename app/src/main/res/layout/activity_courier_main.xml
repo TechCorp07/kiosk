@@ -51,7 +51,7 @@
                 android:gravity="center"
                 android:text="Welcome, Courier!"
                 android:textColor="@color/text_white"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -61,7 +61,7 @@
                 android:gravity="center"
                 android:text="Ready to make deliveries?"
                 android:textColor="@color/text_white"
-                android:textSize="16sp" />
+                android:textSize="22sp" />
         </LinearLayout>
 
         <!-- Main Actions Container -->
@@ -112,7 +112,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="Pickup Packages"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -121,7 +121,7 @@
                             android:layout_height="wrap_content"
                             android:text="Collect packages from this kiosk location"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -173,7 +173,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="Deliver Packages"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -182,7 +182,7 @@
                             android:layout_height="wrap_content"
                             android:text="Drop off packages at this kiosk location"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -234,7 +234,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="View My Route"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -243,7 +243,7 @@
                             android:layout_height="wrap_content"
                             android:text="See your assigned delivery route and schedule"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -295,7 +295,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="Update Status"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -304,7 +304,7 @@
                             android:layout_height="wrap_content"
                             android:text="Update delivery status and add notes"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -355,7 +355,7 @@
                             android:layout_marginBottom="@dimen/spacing_sm"
                             android:text="My Profile"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -364,7 +364,7 @@
                             android:layout_height="wrap_content"
                             android:text="Manage your courier profile and performance"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
                     </LinearLayout>
 
                     <ImageView

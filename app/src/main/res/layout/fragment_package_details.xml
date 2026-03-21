@@ -36,7 +36,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="Enter Package Details"
                 android:textColor="@color/text_primary"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 android:textStyle="bold" />
 
             <!-- Dimensions Section -->
@@ -46,7 +46,7 @@
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:text="Package Dimensions (in meters)"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
             <!-- Length -->
@@ -113,7 +113,7 @@
                 android:padding="@dimen/spacing_md"
                 android:text="Calculated Size: Medium"
                 android:textColor="@color/success"
-                android:textSize="16sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -143,7 +143,7 @@
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:text="Payment Currency"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
             <Spinner

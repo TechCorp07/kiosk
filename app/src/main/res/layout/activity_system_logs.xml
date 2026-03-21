@@ -28,7 +28,7 @@
             android:layout_gravity="center"
             android:text="System Logs"
             android:textColor="@color/text_white"
-            android:textSize="20sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <ProgressBar
@@ -48,7 +48,7 @@
         android:gravity="center"
         android:text="Application and system diagnostic logs"
         android:textColor="@color/text_white"
-        android:textSize="14sp" />
+        android:textSize="20sp" />
 
     <!-- Main Content -->
     <LinearLayout
@@ -74,7 +74,7 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
                 android:text="All"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
 
             <Button
                 android:id="@+id/btnFilterError"
@@ -84,7 +84,7 @@
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:text="Errors"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
 
             <Button
                 android:id="@+id/btnFilterWarning"
@@ -94,7 +94,7 @@
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:text="Warnings"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
 
             <Button
                 android:id="@+id/btnFilterInfo"
@@ -104,7 +104,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
                 android:text="Info"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
         </LinearLayout>
 
         <!-- Action Buttons -->
@@ -124,7 +124,7 @@
                 android:drawableStart="@drawable/ic_refresh"
                 android:drawablePadding="8dp"
                 android:text="Refresh"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btnClear"
@@ -134,7 +134,7 @@
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:text="Clear"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btnExport"
@@ -144,7 +144,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="Export"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
         </LinearLayout>
 
         <!-- Last Updated -->
@@ -155,7 +155,7 @@
             android:layout_marginBottom="@dimen/spacing_sm"
             android:text="Last updated: --"
             android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+            android:textSize="16sp" />
 
         <!-- Logs Content -->
         <ScrollView
@@ -172,7 +172,7 @@
                 android:fontFamily="monospace"
                 android:text="Loading logs..."
                 android:textColor="@color/text_primary"
-                android:textSize="10sp"
+                android:textSize="14sp"
                 android:textIsSelectable="true" />
         </ScrollView>
     </LinearLayout>

@@ -9,11 +9,13 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkResult
-
+import com.blitztech.pudokiosk.data.api.dto.common.AuthStatus
 import com.blitztech.pudokiosk.databinding.ActivityCourierLoginBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.auth.OtpVerificationActivity
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.CourierMainActivity
+import com.blitztech.pudokiosk.ui.onboarding.UserType
 import com.blitztech.pudokiosk.deviceio.camera.SecurityCameraManager
 import com.blitztech.pudokiosk.deviceio.camera.PhotoReason
 import kotlinx.coroutines.launch
@@ -23,9 +25,10 @@ import kotlinx.coroutines.launch
  *
  * Flow:
  * 1. Courier enters mobile number + 4-digit PIN
- * 2. App calls courierLogin API
- * 3. On success: saves courierId + token to Prefs → launches CourierMainActivity
- * 4. On failure: shows error message, allows retry
+ * 2. App calls login API
+ * 3. On PENDING_OTP: navigates to OtpVerificationActivity to complete 2FA
+ * 4. On AUTHENTICATED: saves session → launches CourierMainActivity
+ * 5. On FAILED / Error: shows error message, allows retry
  */
 class CourierLoginActivity : BaseKioskActivity() {
 
@@ -37,13 +40,12 @@ class CourierLoginActivity : BaseKioskActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCourierLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        prefs = Prefs(this)
+        prefs = ZimpudoApp.prefs
         setupViews()
         setupClickListeners()
     }
 
     private fun setupViews() {
-        // Auto-format mobile: strip spaces/dashes
         binding.etMobile.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -66,7 +68,6 @@ class CourierLoginActivity : BaseKioskActivity() {
         binding.btnLogin.setOnClickListener {
             val mobile = binding.etMobile.text.toString().trim()
             val pin = binding.etPin.text.toString().trim()
-
             if (!validate(mobile, pin)) return@setOnClickListener
             attemptLogin(mobile, pin)
         }
@@ -88,38 +89,58 @@ class CourierLoginActivity : BaseKioskActivity() {
     private fun attemptLogin(mobile: String, pin: String) {
         setLoading(true)
         lifecycleScope.launch {
-            // Couriers authenticate via the same Auth Service as regular users
             val result = api.login(mobile, pin)
             setLoading(false)
             when (result) {
                 is NetworkResult.Success -> {
                     val resp = result.data
-                    // Persist courier session via the standard Prefs API
-                    prefs.saveAuthData(
-                        accessToken = resp.accessToken.orEmpty(),
-                        refreshToken = resp.refreshToken.orEmpty(),
-                        userType = "COURIER",
-                        mobileNumber = mobile,
-                        userName = ""
-                    )
-                    // Fire-and-forget security photo after successful login
-                    SecurityCameraManager.getInstance(this@CourierLoginActivity).captureSecurityPhoto(
-                        reason = PhotoReason.COURIER_LOGIN,
-                        referenceId = mobile,
-                        userId = mobile
-                    )
-                    navigateToDashboard()
+                    when (resp.status) {
+                        AuthStatus.PENDING_OTP -> {
+                            // OTP sent — navigate to verification screen
+                            navigateToOtpVerification(mobile, pin, resp.accessToken)
+                        }
+                        AuthStatus.AUTHENTICATED -> {
+                            // Direct authentication (no OTP required for this account)
+                            prefs.saveAuthData(
+                                accessToken = resp.accessToken.orEmpty(),
+                                refreshToken = resp.refreshToken.orEmpty(),
+                                userType = "COURIER",
+                                mobileNumber = mobile,
+                                userName = ""
+                            )
+                            SecurityCameraManager.getInstance(this@CourierLoginActivity)
+                                .captureSecurityPhoto(
+                                    reason = PhotoReason.COURIER_LOGIN,
+                                    referenceId = mobile,
+                                    userId = mobile
+                                )
+                            navigateToDashboard()
+                        }
+                        AuthStatus.FAILED -> {
+                            showError("Invalid mobile number or PIN. Please try again.")
+                        }
+                        else -> {
+                            showError("Unexpected authentication response. Please try again.")
+                        }
+                    }
                 }
                 is NetworkResult.Error -> {
-                    Toast.makeText(
-                        this@CourierLoginActivity,
-                        "Login failed: ${result.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    showError("Login failed: ${result.message}")
                 }
                 is NetworkResult.Loading<*> -> { /* handled by setLoading */ }
             }
         }
+    }
+
+    private fun navigateToOtpVerification(mobile: String, pin: String, accessToken: String?) {
+        val intent = Intent(this, OtpVerificationActivity::class.java).apply {
+            putExtra(OtpVerificationActivity.EXTRA_MOBILE_NUMBER, mobile)
+            putExtra(OtpVerificationActivity.EXTRA_PIN, pin)
+            accessToken?.let { putExtra(OtpVerificationActivity.EXTRA_ACCESS_TOKEN, it) }
+            putExtra(OtpVerificationActivity.EXTRA_USER_TYPE, UserType.COURIER.name)
+        }
+        startActivity(intent)
+        finishSafely()
     }
 
     private fun navigateToDashboard() {
@@ -136,4 +157,9 @@ class CourierLoginActivity : BaseKioskActivity() {
         binding.etMobile.isEnabled = !loading
         binding.etPin.isEnabled = !loading
     }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
 }
+

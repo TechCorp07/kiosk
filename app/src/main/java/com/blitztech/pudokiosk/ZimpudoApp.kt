@@ -4,10 +4,13 @@ import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import android.util.Log
+import androidx.room.Room
 import com.blitztech.pudokiosk.data.api.NetworkModule
+import com.blitztech.pudokiosk.data.db.AppDatabase
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.sync.SyncScheduler
+import com.blitztech.pudokiosk.update.UpdateCheckWorker
 import java.util.*
 
 class ZimpudoApp : Application() {
@@ -43,6 +46,23 @@ class ZimpudoApp : Application() {
                 throw e
             }
         }
+
+        /** Shared Room database instance (Phase-9 TODO resolved). */
+        val database: AppDatabase by lazy {
+            try {
+                Log.d(TAG, "Initializing AppDatabase...")
+                Room.databaseBuilder(
+                    instance,
+                    AppDatabase::class.java,
+                    "pudokiosk_db"
+                )
+                    .fallbackToDestructiveMigration(true)
+                    .build()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize AppDatabase", e)
+                throw e
+            }
+        }
     }
 
     override fun onCreate() {
@@ -54,6 +74,9 @@ class ZimpudoApp : Application() {
         Log.d(TAG, "Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
 
         try {
+            // Configure network logging level before API client init
+            NetworkModule.isDebug = (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
             // Initialize in safe order with timeouts
             initializeErrorHandling()
             initializeGlobalSettings()
@@ -82,6 +105,9 @@ class ZimpudoApp : Application() {
 
             // Start background event sync
             SyncScheduler.schedule(this)
+
+            // Schedule periodic OTA update checks
+            UpdateCheckWorker.schedule(this)
 
             Log.d(TAG, "Global settings initialized - Locale: $savedLocale")
 

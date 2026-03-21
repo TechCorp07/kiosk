@@ -52,8 +52,6 @@ class UserTypeSelectionActivity : BaseKioskActivity() {
         }
     }
 
-    enum class UserType { CUSTOMER, COURIER }
-
     private fun navigateToAuth(userType: UserType) {
         val intent = Intent(this, SignInActivity::class.java).apply {
             putExtra(SignInActivity.EXTRA_USER_TYPE, userType.name)

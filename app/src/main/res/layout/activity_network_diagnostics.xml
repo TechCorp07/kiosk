@@ -28,7 +28,7 @@
             android:layout_gravity="center"
             android:text="Network Diagnostics"
             android:textColor="@color/text_white"
-            android:textSize="20sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <ProgressBar
@@ -48,7 +48,7 @@
         android:gravity="center"
         android:text="Network connectivity and performance testing"
         android:textColor="@color/text_white"
-        android:textSize="14sp" />
+        android:textSize="20sp" />
 
     <!-- Main Content -->
     <LinearLayout
@@ -78,7 +78,7 @@
                 android:drawableStart="@drawable/ic_refresh"
                 android:drawablePadding="8dp"
                 android:text="Run All Tests"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btnPingTest"
@@ -89,7 +89,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginBottom="8dp"
                 android:text="Ping Test"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btnConnectivityTest"
@@ -99,7 +99,7 @@
                 android:layout_columnWeight="1"
                 android:layout_marginEnd="8dp"
                 android:text="Connectivity"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btnSpeedTest"
@@ -109,7 +109,7 @@
                 android:layout_columnWeight="1"
                 android:layout_marginStart="8dp"
                 android:text="Speed Info"
-                android:textSize="14sp" />
+                android:textSize="20sp" />
         </GridLayout>
 
         <!-- Network Status Indicators -->
@@ -140,7 +140,7 @@
                     android:layout_height="wrap_content"
                     android:text="WiFi"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -162,7 +162,7 @@
                     android:layout_height="wrap_content"
                     android:text="Internet"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -184,7 +184,7 @@
                     android:layout_height="wrap_content"
                     android:text="Backend"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="16sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -196,7 +196,7 @@
             android:layout_marginBottom="@dimen/spacing_sm"
             android:text="Last updated: --"
             android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+            android:textSize="16sp" />
 
         <!-- Results Content -->
         <ScrollView
@@ -213,7 +213,7 @@
                 android:fontFamily="monospace"
                 android:text="Tap 'Run All Tests' to start network diagnostics..."
                 android:textColor="@color/text_primary"
-                android:textSize="11sp"
+                android:textSize="15sp"
                 android:textIsSelectable="true" />
         </ScrollView>
     </LinearLayout>

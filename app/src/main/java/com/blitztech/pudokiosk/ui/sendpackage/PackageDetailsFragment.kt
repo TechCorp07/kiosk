@@ -10,7 +10,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.blitztech.pudokiosk.data.api.NetworkModule
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.dto.order.Currency
 import com.blitztech.pudokiosk.data.api.dto.order.PackageSize
@@ -52,12 +52,7 @@ class PackageDetailsFragment : Fragment() {
     }
 
     private fun setupDependencies() {
-        val context = requireContext()
-        val okHttpClient = NetworkModule.provideOkHttpClient()
-        val moshi = NetworkModule.provideMoshi()
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
-        val apiService = NetworkModule.provideApiService(retrofit)
-        apiRepository = NetworkModule.provideApiRepository(apiService, context)
+        apiRepository = ZimpudoApp.apiRepository
     }
 
     private fun setupViews() {
@@ -196,7 +191,7 @@ class PackageDetailsFragment : Fragment() {
         val data = sendPackageActivity.sendPackageData
         val accessToken = prefs.getAccessToken()
 
-        if (accessToken?.isEmpty() == true) {
+        if (accessToken.isNullOrBlank()) {
             Toast.makeText(requireContext(), "Session expired. Please login again.", Toast.LENGTH_LONG).show()
             binding.progressBar.visibility = View.GONE
             binding.btnNext.isEnabled = true

@@ -116,7 +116,7 @@
                 android:layout_marginBottom="@dimen/spacing_xl"
                 android:text="@string/forgot_pin"
                 android:textColor="@color/zimpudo_primary"
-                android:textSize="14sp"
+                android:textSize="20sp"
                 android:clickable="true"
                 android:focusable="true"
                 android:background="?attr/selectableItemBackground"
@@ -162,7 +162,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/dont_have_account"
                     android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
+                    android:textSize="20sp" />
 
                 <TextView
                     android:id="@+id/tvSignUp"
@@ -171,7 +171,7 @@
                     android:layout_marginStart="4dp"
                     android:text="@string/sign_up"
                     android:textColor="@color/zimpudo_primary"
-                    android:textSize="14sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
             </LinearLayout>

@@ -20,8 +20,8 @@ abstract class BaseKioskActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "BaseKioskActivity"
         private const val UI_HIDE_DELAY = 3000L
-        /** Inactivity timeout before auto‑reset to home screen (2 minutes). */
-        private const val INACTIVITY_TIMEOUT_MS = 120_000L
+        /** Inactivity timeout before auto‑reset to home screen (5 minutes). */
+        private const val INACTIVITY_TIMEOUT_MS = 300_000L
     }
 
     private val uiHideHandler = Handler(Looper.getMainLooper())
@@ -35,10 +35,14 @@ abstract class BaseKioskActivity : AppCompatActivity() {
      */
     protected var finishAllowed = false
 
+    /** Cached parent class resolved once in onCreate. */
+    private var parentActivityClass: Class<*>? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setupKioskMode()
         setupBackButtonHandling()
+        cacheParentActivity()
     }
 
     // ---------------------------------------------------------------------------
@@ -118,30 +122,25 @@ abstract class BaseKioskActivity : AppCompatActivity() {
     /**
      * Handle back navigation - override this method in subclasses for custom behavior
      */
-    protected open fun handleBackNavigation() {
-        // Get the parent activity from manifest
-        val parentActivityName = try {
-            packageManager.getActivityInfo(componentName, 0).parentActivityName
+    private fun cacheParentActivity() {
+        parentActivityClass = try {
+            val name = packageManager.getActivityInfo(componentName, 0).parentActivityName
+            if (name != null) Class.forName(name) else null
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting parent activity info", e)
+            Log.e(TAG, "Error resolving parent activity", e)
             null
         }
+    }
 
-        if (parentActivityName != null) {
-            try {
-                val parentClass = Class.forName(parentActivityName)
-                val intent = Intent(this, parentClass).apply {
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(intent)
-                Log.d(TAG, "Navigating back to: $parentActivityName")
-                return
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to navigate to parent activity: $parentActivityName", e)
+    protected open fun handleBackNavigation() {
+        val parentClass = parentActivityClass
+        if (parentClass != null) {
+            val intent = Intent(this, parentClass).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
+            startActivity(intent)
+            return
         }
-
-        // Fallback: go to main activity
         navigateToMain()
     }
 
@@ -219,7 +218,7 @@ abstract class BaseKioskActivity : AppCompatActivity() {
         Log.d(TAG, "Inactivity timeout — resetting to home screen")
         // Clear session so the next user starts fresh
         try {
-            val prefs = com.blitztech.pudokiosk.prefs.Prefs(this)
+            val prefs = com.blitztech.pudokiosk.ZimpudoApp.prefs
             prefs.clearAuthData()
         } catch (e: Exception) {
             Log.w(TAG, "Could not clear auth on timeout", e)

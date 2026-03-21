@@ -52,12 +52,8 @@ class SignUpActivity : BaseKioskActivity() {
     }
 
     private fun setupDependencies() {
-        // Initialize API repository
-        val okHttpClient = NetworkModule.provideOkHttpClient()
-        val moshi = NetworkModule.provideMoshi()
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
-        val apiService = NetworkModule.provideApiService(retrofit)
-        apiRepository = NetworkModule.provideApiRepository(apiService, this)
+        // Use app-wide singleton API repository
+        apiRepository = ZimpudoApp.apiRepository
     }
 
     private fun setupViews() {

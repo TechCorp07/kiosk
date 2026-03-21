@@ -38,7 +38,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="Enter Recipient Details"
                 android:textColor="@color/text_primary"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 android:textStyle="bold" />
 
             <!-- Name -->
@@ -129,7 +129,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="@string/address_information"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
             <!-- House Number -->
@@ -179,7 +179,7 @@
                 android:layout_marginBottom="@dimen/spacing_xs"
                 android:text="@string/city"
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
 
             <Spinner
                 android:id="@+id/spinnerCity"
@@ -196,7 +196,7 @@
                 android:layout_marginBottom="@dimen/spacing_xs"
                 android:text="@string/suburb"
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
 
             <Spinner
                 android:id="@+id/spinnerSuburb"

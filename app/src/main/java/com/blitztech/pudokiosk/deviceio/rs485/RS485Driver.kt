@@ -42,9 +42,9 @@ class RS485Driver(private val ctx: Context) {
         private const val XR_SET_REG = 0x00
         private const val XR_GET_REG = 0x01
 
-        // XR21V1414 Register Blocks
-        private const val BLOCK_UART_MANAGER = 0  // UART Manager (FIFO enables)
-        private const val BLOCK_CHANNEL_A = 1    // Port 1 uses Channel B
+        // XR21V1414 Register Blocks (per datasheet Table 5)
+        private const val BLOCK_UART_MANAGER = 4  // UART Manager block (FIFO enables)
+        private const val BLOCK_CHANNEL_A = 0     // Channel A = Block 0, B=1, C=2, D=3
 
         // Register addresses - UART Manager
         private const val REG_FIFO_ENABLE_CHA = 0x10
@@ -142,16 +142,18 @@ class RS485Driver(private val ctx: Context) {
         val fifoEnableReg = REG_FIFO_ENABLE_CHA + portNumber
         val txFifoResetReg = REG_TX_FIFO_RESET_CHA + portNumber
 
-        // Step 0: CRITICAL - Disable hardware flow control
-        // CDC-ACM driver sets FLOW_CONTROL=0x01 which blocks transmission without CTS
-        if (!writeXR21Register(connection, block, REG_FLOW_CONTROL, 0x00)) {
-            log("❌ Failed to disable flow control")
+        // Step 0: CRITICAL - Enable half-duplex mode, disable HW flow control
+        // FLOW_CONTROL[3]=1 enables half-duplex (ignores RX during TX, essential for RS485)
+        // FLOW_CONTROL[2:0]=000 disables HW flow control (CDC-ACM sets 0x01 which blocks TX without CTS)
+        if (!writeXR21Register(connection, block, REG_FLOW_CONTROL, 0x08)) {
+            log("❌ Failed to set half-duplex / disable flow control")
             return@withContext false
         }
 
-        // Step 0b: Set GPIO_MODE to 0x03 for RS485 mode
+        // Step 0b: Set GPIO_MODE to 0x0B for RS485 mode with HIGH polarity
         // Bits[2:0] = 011 = RS485 half-duplex with GPIO5 automatic direction control
-        if (!writeXR21Register(connection, block, REG_GPIO_MODE, 0x03)) {
+        // Bit[3] = 1 = RS485 pin HIGH during TX (matches MAX3485 DE pin active-high)
+        if (!writeXR21Register(connection, block, REG_GPIO_MODE, 0x0B)) {
             log("❌ Failed to enable RS485 mode")
             return@withContext false
         }
@@ -193,10 +195,11 @@ class RS485Driver(private val ctx: Context) {
         val fifoStatus = readXR21Register(connection, BLOCK_UART_MANAGER, fifoEnableReg)
         val uartStatus = readXR21Register(connection, block, REG_UART_ENABLE)
 
-        log("📊 Flow=0x${flowControl.toString(16)}, FIFO=0x${fifoStatus.toString(16)}, UART=0x${uartStatus.toString(16)}")
+        val gpioMode = readXR21Register(connection, block, REG_GPIO_MODE)
+        log("📊 Flow=0x${flowControl.toString(16)}, FIFO=0x${fifoStatus.toString(16)}, UART=0x${uartStatus.toString(16)}, GPIO=0x${gpioMode.toString(16)}")
 
-        if (flowControl == 0x00 && fifoStatus == 0x03 && uartStatus == 0x03) {
-            log("✅ XR21V1414 Channel ${('A' + portNumber)} ready - Flow control DISABLED!")
+        if (flowControl == 0x08 && fifoStatus == 0x03 && uartStatus == 0x03) {
+            log("✅ XR21V1414 Channel ${('A' + portNumber)} ready - Half-duplex RS485 mode!")
             return@withContext true
         } else {
             log("⚠️ Partial success - continuing anyway")
@@ -353,17 +356,17 @@ class RS485Driver(private val ctx: Context) {
                 log("⚠️ Buffer purge not supported: ${e.message}")
             }
 
-            // Clear any stale data
+            // Clear any stale data from buffer
             try {
                 val dummyBuffer = ByteArray(256)
-                var cleared = 0
+                var clearedBytes = 0
                 for (i in 0..5) {
                     val read = selectedPort.read(dummyBuffer, 50)
-                    if (read > 0) cleared += read
+                    if (read > 0) clearedBytes += read
                     if (read <= 0) break
                 }
-                if (cleared > 0) {
-                    log("🧹 Cleared $cleared bytes of stale data")
+                if (clearedBytes > 0) {
+                    log("🧹 Cleared $clearedBytes bytes from receive buffer")
                 }
             } catch (e: Exception) {
                 // Normal if no data
@@ -453,8 +456,12 @@ class RS485Driver(private val ctx: Context) {
             // Write with reasonable timeout
             p.write(data, 1000)
 
-            // Small delay for USB packet transmission
-            delay(20)
+            // Wait for data to physically leave the XR21V1414 TX FIFO at 9600 baud
+            // and for the RS485 auto-direction pin to switch back to RX mode.
+            // At 9600 baud: each byte ~1.04ms. RS485_DELAY = 10 bit-times ~1.04ms.
+            // Plus USB transfer latency safety margin.
+            val wireTimetMs = (data.size * 1.04 + 1.04 + 10).toLong() // bytes + turnaround + margin
+            delay(wireTimetMs)
 
             log("✅ Send successful (${data.size} bytes)")
             return@withContext true
@@ -485,10 +492,8 @@ class RS485Driver(private val ctx: Context) {
 
             if (bytesRead > 0) {
                 val data = buffer.copyOf(bytesRead)
-                log("📥 Received ${bytesRead} bytes: ${toHexString(data)}")
                 return@withContext data
             } else {
-                // No data received (timeout or no data available)
                 return@withContext ByteArray(0)
             }
 
@@ -619,12 +624,12 @@ class RS485Driver(private val ctx: Context) {
 
         log("🧪 Testing basic communication...")
 
-        // Send a status check command for lock 1
+        // Send a status check command for lock 1 on station 1
         val testCommand = byteArrayOf(
             0x90.toByte(), // Header
             0x06.toByte(), // Length
             0x12.toByte(), // Status function
-            0x00.toByte(), // Station 0
+            0x01.toByte(), // Station 1 (default per protocol spec)
             0x01.toByte(), // Lock 1
             0x03.toByte()  // End
         )
@@ -652,6 +657,94 @@ class RS485Driver(private val ctx: Context) {
             Log.e(TAG, "Communication test error", e)
             return@withContext false
         }
+    }
+
+    /**
+     * Send a raw hex string command (for debug console).
+     * Input format: "90 06 12 01 01 03" (space-separated hex bytes)
+     * Returns the raw response bytes.
+     */
+    suspend fun sendRawHexString(
+        hexString: String,
+        timeoutMs: Int = 3000
+    ): ByteArray = withContext(Dispatchers.IO) {
+        if (!isConnected()) {
+            log("❌ Not connected")
+            return@withContext ByteArray(0)
+        }
+
+        try {
+            // Parse hex string to bytes
+            val cleanHex = hexString.trim().replace("\\s+".toRegex(), " ")
+            val bytes = cleanHex.split(" ").map { it.toInt(16).toByte() }.toByteArray()
+
+            log("🔧 RAW TX → ${toHexString(bytes)} (${bytes.size} bytes)")
+
+            val response = sendCommandAndReceive(bytes, timeoutMs)
+
+            if (response.isNotEmpty()) {
+                val ascii = response.map { b ->
+                    val c = (b.toInt() and 0xFF).toChar()
+                    if (c.isLetterOrDigit() || c == ' ') c else '.'
+                }.joinToString("")
+                log("🔧 RAW RX ← ${toHexString(response)} | ASCII: $ascii")
+            } else {
+                log("🔧 RAW RX ← (no response)")
+            }
+
+            return@withContext response
+        } catch (e: NumberFormatException) {
+            log("❌ Invalid hex format: ${e.message}")
+            return@withContext ByteArray(0)
+        } catch (e: Exception) {
+            log("❌ Raw send error: ${e.message}")
+            return@withContext ByteArray(0)
+        }
+    }
+
+    /**
+     * Receive raw unfiltered data for a specified duration (for debug console).
+     * Shows all bytes received with both hex and ASCII representation.
+     */
+    suspend fun receiveRawDump(
+        durationMs: Long = 10000
+    ): List<String> = withContext(Dispatchers.IO) {
+        val p = port ?: run {
+            log("❌ No connection")
+            return@withContext emptyList()
+        }
+
+        val messages = mutableListOf<String>()
+        val startTime = System.currentTimeMillis()
+
+        log("🔧 RAW LISTEN for ${durationMs / 1000}s...")
+
+        try {
+            while (System.currentTimeMillis() - startTime < durationMs) {
+                val buffer = ByteArray(256)
+                val bytesRead = p.read(buffer, 100)
+
+                if (bytesRead > 0) {
+                    val data = buffer.copyOf(bytesRead)
+                    val hex = toHexString(data)
+                    val ascii = data.map { b ->
+                        val c = (b.toInt() and 0xFF).toChar()
+                        if (c.isLetterOrDigit() || c == ' ') c else '.'
+                    }.joinToString("")
+                    val elapsed = System.currentTimeMillis() - startTime
+                    val msg = "[${elapsed}ms] ${hex} | $ascii"
+                    messages.add(msg)
+                    log("🔧 RX: $msg")
+                }
+
+                delay(10)
+            }
+        } catch (e: Exception) {
+            log("❌ Listen error: ${e.message}")
+        }
+
+        log("🔧 Listen done. ${messages.size} messages received.")
+        messages
     }
 
     /**

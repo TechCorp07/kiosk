@@ -13,7 +13,8 @@ import android.util.Log
  *
  * Frame Structure:
  * Command:  [0x90, 0x06, function, station, lock_slot, 0x03]
- * Response: [0x90, 0x07, function, station, lock_slot, status, 0x03]
+ * Response (unlock): [0x90, 0x07, 0x85, station, lock_slot, status, 0x03]
+ * Response (status): [0x90, 0x07, 0x92, station, status, lock_slot, 0x03]  <- NOTE: status/lock swapped!
  *
  * lock_slot is always 1-16 relative to the board (station).
  * Global lock number 17 → station=1, slot=1; lock 32 → station=1, slot=16.
@@ -40,24 +41,34 @@ object WinnsenProtocol {
     const val STATUS_CLOSED: Byte = 0x00.toByte()
 
     // Configuration
-    const val STATION_0: Byte = 0x00.toByte() // First board  (locks 1-16)
-    const val STATION_1: Byte = 0x01.toByte() // Second board (locks 17-32)
     const val MIN_LOCK = 1
-    const val MAX_LOCK = 32
+    const val MAX_LOCK = 64           // 4 boards × 16 locks
     const val LOCKS_PER_BOARD = 16
-    const val RESPONSE_TIMEOUT_MS = 2000L
+    const val NUM_BOARDS = 4
+    const val RESPONSE_TIMEOUT_MS = 3000L
+
+    // Station bytes for each board (DIP switch addresses)
+    val STATION_BYTES: Array<Byte> = arrayOf(
+        0x01.toByte(),  // Board 1: locks  1-16
+        0x02.toByte(),  // Board 2: locks 17-32
+        0x03.toByte(),  // Board 3: locks 33-48
+        0x04.toByte()   // Board 4: locks 49-64
+    )
 
     /**
-     * Returns the RS485 station byte for a given global lock number.
-     * Locks 1-16  → station 0 (first board)
-     * Locks 17-32 → station 1 (second board)
+     * Returns the RS485 station byte for a given global lock number (1-64).
+     * Board 1 = station 0x01 (locks  1-16)
+     * Board 2 = station 0x02 (locks 17-32)
+     * Board 3 = station 0x03 (locks 33-48)
+     * Board 4 = station 0x04 (locks 49-64)
      */
     fun stationForLock(lockNumber: Int): Byte {
-        return if (lockNumber <= LOCKS_PER_BOARD) STATION_0 else STATION_1
+        val boardIndex = (lockNumber - 1) / LOCKS_PER_BOARD
+        return STATION_BYTES[boardIndex.coerceIn(0, NUM_BOARDS - 1)]
     }
 
     /**
-     * Converts a global lock number (1-32) to a per-board slot byte (1-16).
+     * Converts a global lock number (1-64) to a per-board slot byte (1-16).
      */
     fun lockByteFor(lockNumber: Int): Byte {
         return (((lockNumber - 1) % LOCKS_PER_BOARD) + 1).toByte()
@@ -70,7 +81,7 @@ object WinnsenProtocol {
         val header: Byte = FRAME_HEADER,
         val length: Byte = CMD_LENGTH,
         val function: Byte,
-        val station: Byte = STATION_0,
+        val station: Byte,   // always set explicitly via stationForLock()
         val lockNumber: Byte,
         val frameEnd: Byte = FRAME_END
     ) {
@@ -85,6 +96,10 @@ object WinnsenProtocol {
 
     /**
      * Response Frame - 7 bytes total
+     *
+     * IMPORTANT: Field order differs by response type!
+     * Unlock response (0x85): [header, length, func, station, lockNumber, status, end]
+     * Status response (0x92): [header, length, func, station, status, lockNumber, end]
      */
     data class ResponseFrame(
         val header: Byte,
@@ -103,13 +118,30 @@ object WinnsenProtocol {
                 }
 
                 return try {
+                    val function = data[2]
+                    // Status response (0x92) has fields 4,5 swapped vs unlock response (0x85)
+                    // Unlock: [header, len, 0x85, station, lock, status, end]
+                    // Status: [header, len, 0x92, station, status, lock, end]
+                    val lockNumber: Byte
+                    val status: Byte
+
+                    if (function == FUNC_STATUS_RESP) {
+                        // Status response: data[4] = status, data[5] = lockNumber
+                        status = data[4]
+                        lockNumber = data[5]
+                    } else {
+                        // Unlock response (and any other): data[4] = lockNumber, data[5] = status
+                        lockNumber = data[4]
+                        status = data[5]
+                    }
+
                     ResponseFrame(
                         header = data[0],
                         length = data[1],
-                        function = data[2],
+                        function = function,
                         station = data[3],
-                        lockNumber = data[4],
-                        status = data[5],
+                        lockNumber = lockNumber,
+                        status = status,
                         frameEnd = data[6]
                     )
                 } catch (e: Exception) {
@@ -122,14 +154,18 @@ object WinnsenProtocol {
         fun isValid(): Boolean {
             return header == FRAME_HEADER &&
                     length == RESP_LENGTH &&
-                    (station == STATION_0 || station == STATION_1) &&
+                    (station in STATION_BYTES || station == 0x00.toByte()) && // accept all 4 board stations or broadcast
                     frameEnd == FRAME_END &&
                     lockNumber in 1..LOCKS_PER_BOARD // slot is always 1-16 per board
         }
 
         fun toHexString(): String {
-            return byteArrayOf(header, length, function, station, lockNumber, status, frameEnd)
-                .joinToString(" ") { "%02X".format(it) }
+            // Reconstruct the raw wire bytes (respecting field order swap)
+            return if (function == FUNC_STATUS_RESP) {
+                byteArrayOf(header, length, function, station, status, lockNumber, frameEnd)
+            } else {
+                byteArrayOf(header, length, function, station, lockNumber, status, frameEnd)
+            }.joinToString(" ") { "%02X".format(it) }
         }
     }
 

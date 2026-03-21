@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:text="@string/zimpudo_tagline"
         android:textColor="@color/text_white"
-        android:textSize="42sp"
+        android:textSize="52sp"
         android:textStyle="bold"
         android:layout_marginBottom="@dimen/spacing_xl" />
 
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:text="@string/zimpudo_welcome"
         android:textColor="@color/text_white"
-        android:textSize="30sp"
+        android:textSize="38sp"
         android:gravity="center"
         android:lineSpacingMultiplier="1.4"
         android:layout_marginBottom="@dimen/spacing_xl" />
@@ -50,7 +50,7 @@
         android:layout_height="wrap_content"
         android:text="@string/loading_please_wait"
         android:textColor="@color/text_white"
-        android:textSize="20sp"
+        android:textSize="28sp"
         android:alpha="0.7" />
 
 </LinearLayout>

@@ -10,6 +10,9 @@ import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.courier.CourierCollectActivity
 import com.blitztech.pudokiosk.ui.courier.CourierDeliverActivity
+import com.blitztech.pudokiosk.ui.courier.CourierProfileActivity
+import com.blitztech.pudokiosk.ui.courier.CourierRouteActivity
+import com.blitztech.pudokiosk.ui.courier.CourierStatusUpdateActivity
 
 /**
  * Main dashboard for courier users
@@ -45,14 +48,10 @@ class CourierMainActivity : BaseKioskActivity() {
         binding.tvDeliverPackages.text = getString(R.string.deliver_packages)
         binding.tvDeliverDescription.text = getString(R.string.deliver_description)
 
-        binding.tvViewRoute.text = getString(R.string.view_route)
-        binding.tvRouteDescription.text = getString(R.string.route_description)
-
-        binding.tvUpdateStatus.text = getString(R.string.update_status)
-        binding.tvStatusDescription.text = getString(R.string.status_description)
-
-        binding.tvCourierProfile.text = getString(R.string.courier_profile)
-        binding.tvProfileDescription.text = getString(R.string.profile_description)
+        // Show implemented cards
+        binding.cardViewRoute.visibility = android.view.View.VISIBLE
+        binding.cardUpdateStatus.visibility = android.view.View.VISIBLE
+        binding.cardCourierProfile.visibility = android.view.View.VISIBLE
     }
 
     private fun setupClickListeners() {
@@ -69,15 +68,15 @@ class CourierMainActivity : BaseKioskActivity() {
         }
 
         binding.cardViewRoute.setOnClickListener {
-            // TODO: Navigate to route view
+            startActivity(Intent(this, CourierRouteActivity::class.java))
         }
 
         binding.cardUpdateStatus.setOnClickListener {
-            // TODO: Navigate to status update
+            startActivity(Intent(this, CourierStatusUpdateActivity::class.java))
         }
 
         binding.cardCourierProfile.setOnClickListener {
-            // TODO: Navigate to courier profile
+            startActivity(Intent(this, CourierProfileActivity::class.java))
         }
     }
 

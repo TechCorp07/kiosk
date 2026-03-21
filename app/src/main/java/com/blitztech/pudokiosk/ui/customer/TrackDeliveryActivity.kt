@@ -29,7 +29,7 @@ class TrackDeliveryActivity : BaseKioskActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTrackDeliveryBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        prefs = Prefs(this)
+        prefs = ZimpudoApp.prefs
 
         binding.btnBack.setOnClickListener { finishSafely() }
         loadParcels()

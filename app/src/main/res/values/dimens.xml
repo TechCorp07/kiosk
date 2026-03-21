@@ -21,13 +21,13 @@
     <dimen name="elevation_xl">12dp</dimen>
 
     <!-- Button dimensions -->
-    <dimen name="button_height">56dp</dimen>
-    <dimen name="button_height_sm">48dp</dimen>
-    <dimen name="button_height_lg">64dp</dimen>
+    <dimen name="button_height">64dp</dimen>
+    <dimen name="button_height_sm">56dp</dimen>
+    <dimen name="button_height_lg">72dp</dimen>
 
     <!-- Input field dimensions -->
-    <dimen name="input_height">56dp</dimen>
-    <dimen name="input_min_height">48dp</dimen>
+    <dimen name="input_height">64dp</dimen>
+    <dimen name="input_min_height">56dp</dimen>
 
     <!-- Icon sizes -->
     <dimen name="icon_size_sm">16dp</dimen>
@@ -40,26 +40,26 @@
     <dimen name="card_padding">16dp</dimen>
 
     <!-- List item dimensions -->
-    <dimen name="list_item_height">72dp</dimen>
-    <dimen name="list_item_height_sm">56dp</dimen>
-    <dimen name="list_item_height_lg">88dp</dimen>
+    <dimen name="list_item_height">84dp</dimen>
+    <dimen name="list_item_height_sm">64dp</dimen>
+    <dimen name="list_item_height_lg">100dp</dimen>
 
-    <!-- Text sizes -->
-    <dimen name="text_size_micro">10sp</dimen>
-    <dimen name="text_size_small">12sp</dimen>
-    <dimen name="text_size_body">14sp</dimen>
-    <dimen name="text_size_body_large">16sp</dimen>
-    <dimen name="text_size_title">18sp</dimen>
-    <dimen name="text_size_title_large">20sp</dimen>
-    <dimen name="text_size_headline">24sp</dimen>
-    <dimen name="text_size_display">28sp</dimen>
+    <!-- Text sizes (scaled up for kiosk readability) -->
+    <dimen name="text_size_micro">14sp</dimen>
+    <dimen name="text_size_small">16sp</dimen>
+    <dimen name="text_size_body">20sp</dimen>
+    <dimen name="text_size_body_large">22sp</dimen>
+    <dimen name="text_size_title">26sp</dimen>
+    <dimen name="text_size_title_large">28sp</dimen>
+    <dimen name="text_size_headline">32sp</dimen>
+    <dimen name="text_size_display">36sp</dimen>
 
     <!-- App bar -->
-    <dimen name="app_bar_height">56dp</dimen>
-    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="app_bar_height">64dp</dimen>
+    <dimen name="toolbar_height">64dp</dimen>
 
     <!-- Bottom navigation -->
-    <dimen name="bottom_nav_height">56dp</dimen>
+    <dimen name="bottom_nav_height">64dp</dimen>
 
     <!-- Divider -->
     <dimen name="divider_height">1dp</dimen>
@@ -82,7 +82,7 @@
     <dimen name="onboarding_indicator_size">8dp</dimen>
 
     <!-- Kiosk specific dimensions -->
-    <dimen name="kiosk_button_height">72dp</dimen>
-    <dimen name="kiosk_card_height">140dp</dimen>
-    <dimen name="kiosk_icon_size">56dp</dimen>
+    <dimen name="kiosk_button_height">84dp</dimen>
+    <dimen name="kiosk_card_height">160dp</dimen>
+    <dimen name="kiosk_icon_size">64dp</dimen>
 </resources>

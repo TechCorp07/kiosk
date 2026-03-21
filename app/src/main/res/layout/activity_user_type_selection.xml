@@ -93,7 +93,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/user_type_customer"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -103,7 +103,7 @@
                             android:layout_marginTop="@dimen/spacing_xs"
                             android:text="@string/user_type_customer_desc"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
 
                     </LinearLayout>
 
@@ -158,7 +158,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/user_type_courier"
                             android:textColor="@color/text_primary"
-                            android:textSize="18sp"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -168,7 +168,7 @@
                             android:layout_marginTop="@dimen/spacing_xs"
                             android:text="@string/user_type_courier_desc"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
+                            android:textSize="20sp" />
 
                     </LinearLayout>
 

@@ -127,22 +127,7 @@ class Prefs(context: Context) {
             .apply()
     }
 
-    // Session management
-    fun isSessionValid(): Boolean {
-        if (!isLoggedIn()) return false
 
-        val lastLogin = getLastLogin()
-        // Kiosk sessions expire after 5 minutes of inactivity on a shared device
-        val sessionTimeout = 5 * 60 * 1000L // 5 minutes
-
-        return (System.currentTimeMillis() - lastLogin) < sessionTimeout
-    }
-
-    fun extendSession() {
-        if (isLoggedIn()) {
-            prefs.edit().putLong(KEY_LAST_LOGIN, System.currentTimeMillis()).apply()
-        }
-    }
 
     // General utility methods
     fun clear() {
@@ -220,4 +205,12 @@ class Prefs(context: Context) {
 
     fun getPhotoRetentionDays(): Int = getInt("photo_retention_days", 30)
     fun setPhotoRetentionDays(days: Int) = putInt("photo_retention_days", days.coerceIn(1, 365))
-}
+
+    // Maintenance mode (technician unlocks device for servicing)
+    fun isMaintenanceMode(): Boolean = getBoolean("maintenance_mode", false)
+    fun setMaintenanceMode(enabled: Boolean) = putBoolean("maintenance_mode", enabled)
+
+    // OTA update settings
+    fun getUpdateServerUrl(): String = getString("update_server_url", "https://api.zimpudo.com")
+    fun setUpdateServerUrl(url: String) = putString("update_server_url", url)
+}

@@ -65,14 +65,16 @@ class SecurityCameraManager private constructor(private val context: Context) {
         }
     }
 
-    private val prefs: Prefs by lazy { Prefs(context) }
+    private val prefs: Prefs by lazy { com.blitztech.pudokiosk.ZimpudoApp.prefs }
     private val photoDir: File by lazy {
         File(context.filesDir, "security_photos").also { it.mkdirs() }
     }
 
-    // Background thread for Camera2 callbacks
-    private val cameraThread = HandlerThread("SecurityCameraThread").also { it.start() }
-    private val cameraHandler = Handler(cameraThread.looper)
+    // Background thread for Camera2 callbacks — lazy so thread only starts on first capture
+    private val cameraThread: HandlerThread by lazy {
+        HandlerThread("SecurityCameraThread").also { it.start() }
+    }
+    private val cameraHandler: Handler by lazy { Handler(cameraThread.looper) }
 
     // -------------------------------------------------------------------------
     //  Public API
@@ -230,11 +232,11 @@ class SecurityCameraManager private constructor(private val context: Context) {
     ): ByteArray {
         var quality = 80
         val targetMaxBytes = targetMaxKb * 1024
-        val targetMinBytes = targetMinKb * 1024
 
         var result: ByteArray
+        val stream = java.io.ByteArrayOutputStream(targetMaxBytes)
         do {
-            val stream = java.io.ByteArrayOutputStream()
+            stream.reset()
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
             result = stream.toByteArray()
             Log.d(TAG, "  Compress q=$quality → ${result.size / 1024} KB")

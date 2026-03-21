@@ -6,13 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.content.Context
+import android.util.Log
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.deviceio.camera.SecurityCameraManager
 import com.blitztech.pudokiosk.deviceio.camera.PhotoReason
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.api.NetworkResult
+import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
 import com.blitztech.pudokiosk.data.api.dto.order.PaymentMethod
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.FragmentPaymentBinding
@@ -69,12 +71,7 @@ class PaymentFragment : Fragment() {
     }
 
     private fun setupDependencies() {
-        val context = requireContext()
-        val okHttpClient = NetworkModule.provideOkHttpClient()
-        val moshi = NetworkModule.provideMoshi()
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
-        val apiService = NetworkModule.provideApiService(retrofit)
-        apiRepository = NetworkModule.provideApiRepository(apiService, context)
+        apiRepository = ZimpudoApp.apiRepository
     }
 
     /**
@@ -153,7 +150,7 @@ class PaymentFragment : Fragment() {
         val data = sendPackageActivity.sendPackageData
         val accessToken = prefs.getAccessToken()
 
-        if (accessToken?.isEmpty() == true){
+        if (accessToken.isNullOrBlank()) {
             Toast.makeText(requireContext(), "Session expired. Please login again.", Toast.LENGTH_LONG).show()
             binding.progressBar.visibility = View.GONE
             binding.btnPay.isEnabled = true
@@ -418,8 +415,9 @@ class PaymentFragment : Fragment() {
                 throw Exception("Failed to unlock locker: ${result.errorMessage}")
             }
 
-            // Disconnect
-            lockerController.disconnect()
+            // DO NOT disconnect here — DoorMonitor needs the connection
+            // to poll the door sensor. Disconnect happens in showSuccessDialog()
+            // or onDestroyView().
 
         } catch (e: Exception) {
             // Log error but don't fail the entire workflow
@@ -433,11 +431,20 @@ class PaymentFragment : Fragment() {
 
     /**
      * Show success dialog — triggered by door close event.
+     * Also confirms the sender drop-off with the backend and disconnects the locker.
      */
     private fun showSuccessDialog() {
         binding.tvStatus.visibility = View.GONE
         activeDoorMonitor?.stop()
         activeDoorMonitor = null
+
+        // Disconnect locker hardware now that the door is closed
+        lifecycleScope.launch {
+            try { lockerController.disconnect() } catch (_: Exception) {}
+        }
+
+        // Confirm sender drop-off with the backend (fire-and-forget)
+        confirmSenderDropoff()
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Package Sending Complete!")
@@ -454,8 +461,40 @@ class PaymentFragment : Fragment() {
             .show()
     }
 
+    /**
+     * Notify the backend that the sender has placed the package in the locker.
+     * Uses the sender/dropoff transaction endpoint. Best-effort — does not block UI.
+     */
+    private fun confirmSenderDropoff() {
+        lifecycleScope.launch {
+            try {
+                val data = sendPackageActivity.sendPackageData
+                val token = prefs.getAccessToken().orEmpty()
+                if (token.isBlank() || data.orderId.isBlank()) return@launch
+
+                val kioskId = prefs.getLocationId().ifBlank { "KIOSK-001" }
+                val request = TransactionRequest(
+                    trackingNumber = data.orderId,
+                    kioskId = kioskId
+                )
+                val result = apiRepository.senderDropoff(request, token)
+                when (result) {
+                    is NetworkResult.Success -> Log.d("PaymentFragment", "Sender dropoff confirmed")
+                    is NetworkResult.Error -> Log.w("PaymentFragment", "Sender dropoff failed: ${result.message}")
+                    is NetworkResult.Loading<*> -> { /* no-op */ }
+                }
+            } catch (e: Exception) {
+                Log.w("PaymentFragment", "Sender dropoff error: ${e.message}")
+            }
+        }
+    }
+
     override fun onDestroyView() {
         activeDoorMonitor?.stop()
+        activeDoorMonitor = null
+        kotlinx.coroutines.GlobalScope.launch {
+            try { lockerController.disconnect() } catch (_: Exception) {}
+        }
         super.onDestroyView()
         _binding = null
     }

@@ -28,7 +28,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="15sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:text="TRK-XXXXXXXX" />
@@ -37,7 +37,7 @@
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:text="IN TRANSIT" />
         </LinearLayout>
@@ -53,7 +53,7 @@
                 android:id="@+id/tvLocker"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:textSize="18sp"
                 android:textColor="@color/text_secondary"
                 android:text="Locker 5" />
 
@@ -68,7 +68,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="13sp"
+                android:textSize="18sp"
                 android:textColor="@color/text_secondary"
                 android:text="MEDIUM" />
 
@@ -76,7 +76,7 @@
                 android:id="@+id/tvDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="16sp"
                 android:textColor="@color/text_secondary"
                 android:text="2024-01-15" />
         </LinearLayout>

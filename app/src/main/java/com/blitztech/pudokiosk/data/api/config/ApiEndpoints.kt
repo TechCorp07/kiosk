@@ -41,7 +41,6 @@ object ApiEndpoints {
     // ── Locker Service – Transactions ───────────────────────────
     const val VERIFY_RESERVATION = "api/v1/transactions/sender/verify-reservation"
     const val SENDER_DROPOFF = "api/v1/transactions/sender/dropoff"
-    const val RECIPIENT_PICKUP = "api/v1/transactions/recipient/pickup"
     const val COURIER_PICKUP = "api/v1/transactions/courier/pickup"
     const val COURIER_DROPOFF = "api/v1/transactions/courier/dropoff"
 

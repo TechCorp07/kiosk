@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import com.blitztech.pudokiosk.service.KioskLockManager
 import com.blitztech.pudokiosk.ui.main.MainActivity
 
 /**
@@ -75,6 +76,10 @@ class KioskWatchdogService : Service() {
 
                 // Check if our kiosk app is the top activity
                 if (topActivity?.packageName != packageName) {
+                    // Skip enforcement during maintenance mode
+                    if (KioskLockManager.isMaintenanceMode()) {
+                        return
+                    }
                     Log.w(TAG, "Kiosk app not in foreground! Top app: ${topActivity?.packageName}")
                     bringKioskToForeground()
                 } else if (topActivity.className != MainActivity::class.java.name) {

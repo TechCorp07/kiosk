@@ -148,7 +148,7 @@
                 android:layout_marginBottom="@dimen/spacing_xl"
                 android:text="@string/pin_requirements"
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp"
+                android:textSize="16sp"
                 android:gravity="center" />
 
             <!-- Save PIN Button -->

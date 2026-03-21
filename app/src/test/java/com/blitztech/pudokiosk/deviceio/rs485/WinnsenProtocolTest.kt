@@ -157,7 +157,7 @@ class WinnsenProtocolTest {
         assertEquals(0x90.toByte(), bytes[0]) // header
         assertEquals(0x06.toByte(), bytes[1]) // length
         assertEquals(WinnsenProtocol.FUNC_UNLOCK, bytes[2])
-        assertEquals(0x00.toByte(), bytes[3]) // station
+        assertEquals(0x01.toByte(), bytes[3]) // station (STATION_0 = 0x01 per protocol spec)
         assertEquals(0x05.toByte(), bytes[4]) // lock
         assertEquals(0x03.toByte(), bytes[5]) // frame end
     }

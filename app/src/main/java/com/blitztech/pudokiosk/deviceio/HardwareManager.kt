@@ -170,9 +170,15 @@ class HardwareManager private constructor(private val context: Context) {
             _printerDriver = null
             printerInitialized = false
 
-            return@withLock getPrinter() != null
+            // Inline initialization (cannot call getPrinter() — same mutex)
+            _printerDriver = CustomTG2480HIIIDriver(context, enableAutoReconnect = true)
+            printerInitialized = true
+            Log.d(TAG, "Printer reinitialized successfully")
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Printer reinitialization error", e)
+            _printerDriver = null
+            printerInitialized = false
             false
         }
     }
@@ -186,9 +192,16 @@ class HardwareManager private constructor(private val context: Context) {
             _lockerController = null
             lockerInitialized = false
 
-            return@withLock getLocker() != null
+            // Inline initialization (cannot call getLocker() — same mutex)
+            _lockerController = LockerController(context)
+            val connected = _lockerController?.connect() ?: false
+            lockerInitialized = connected
+            Log.d(TAG, "Locker reinitialized: connected=$connected")
+            connected
         } catch (e: Exception) {
             Log.e(TAG, "Locker reinitialization error", e)
+            _lockerController = null
+            lockerInitialized = false
             false
         }
     }

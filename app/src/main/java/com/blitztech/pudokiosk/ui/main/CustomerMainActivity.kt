@@ -10,6 +10,7 @@ import com.blitztech.pudokiosk.databinding.ActivityCustomerMainBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.collect.CollectionCodeActivity
+import com.blitztech.pudokiosk.ui.customer.CustomerAccountActivity
 import com.blitztech.pudokiosk.ui.customer.TrackDeliveryActivity
 import com.blitztech.pudokiosk.ui.sendpackage.SendPackageActivity
 
@@ -73,8 +74,7 @@ class CustomerMainActivity : BaseKioskActivity() {
         }
 
         binding.cardMyAccount.setOnClickListener {
-            // TODO: Navigate to account management
-            // startActivity(Intent(this, AccountActivity::class.java))
+            startActivity(Intent(this, CustomerAccountActivity::class.java))
         }
     }
 

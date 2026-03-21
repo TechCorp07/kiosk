@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:text="WELCOME | MAUYA |\nSIYAKWAMUKELA"
             android:textColor="@color/text_white"
-            android:textSize="18sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:gravity="center"
             android:lineSpacingMultiplier="1.2" />

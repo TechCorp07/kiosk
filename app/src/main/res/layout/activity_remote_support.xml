@@ -90,7 +90,7 @@
                     android:drawableStart="@drawable/ic_refresh"
                     android:drawablePadding="8dp"
                     android:text="Generate Code"
-                    android:textSize="14sp" />
+                    android:textSize="20sp" />
 
                 <Button
                     android:id="@+id/btnRefresh"
@@ -102,7 +102,7 @@
                     android:drawableStart="@drawable/ic_refresh"
                     android:drawablePadding="8dp"
                     android:text="Refresh"
-                    android:textSize="14sp" />
+                    android:textSize="20sp" />
 
             </LinearLayout>
 
@@ -126,7 +126,7 @@
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:text="Support Code"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -140,7 +140,7 @@
                         android:padding="@dimen/spacing_md"
                         android:text="No code generated"
                         android:textColor="@color/text_primary"
-                        android:textSize="18sp"
+                        android:textSize="26sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -151,7 +151,7 @@
                         android:gravity="center"
                         android:text="Valid until: --"
                         android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="16sp" />
 
                     <Button
                         android:id="@+id/btnCopyCode"
@@ -162,7 +162,7 @@
                         android:drawablePadding="8dp"
                         android:enabled="false"
                         android:text="Copy Code"
-                        android:textSize="14sp" />
+                        android:textSize="20sp" />
 
                 </LinearLayout>
 
@@ -188,7 +188,7 @@
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:text="Support Session"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -198,7 +198,7 @@
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:text="⚪ No active session"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
+                        android:textSize="20sp" />
 
                     <TextView
                         android:id="@+id/tvSessionDetails"
@@ -208,7 +208,7 @@
                         android:lineSpacingExtra="4dp"
                         android:text="Click 'Start Session' to enable remote support."
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/btnStartSession"
@@ -219,7 +219,7 @@
                         android:drawablePadding="8dp"
                         android:enabled="false"
                         android:text="Start Session"
-                        android:textSize="14sp" />
+                        android:textSize="20sp" />
 
                 </LinearLayout>
 
@@ -245,7 +245,7 @@
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:text="Device Information"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -257,7 +257,7 @@
                         android:padding="@dimen/spacing_md"
                         android:text="Loading device information..."
                         android:textColor="@color/text_primary"
-                        android:textSize="12sp" />
+                        android:textSize="16sp" />
 
                 </LinearLayout>
 
@@ -279,7 +279,7 @@
                     android:drawableStart="@drawable/ic_share"
                     android:drawablePadding="8dp"
                     android:text="Share Info"
-                    android:textSize="14sp" />
+                    android:textSize="20sp" />
 
                 <Button
                     android:id="@+id/btnContactSupport"
@@ -291,7 +291,7 @@
                     android:drawableStart="@drawable/ic_phone"
                     android:drawablePadding="8dp"
                     android:text="Contact"
-                    android:textSize="14sp" />
+                    android:textSize="20sp" />
 
             </LinearLayout>
 

@@ -12,6 +12,7 @@ import com.blitztech.pudokiosk.data.api.dto.common.AuthStatus
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.ActivitySignInBinding
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.CustomerMainActivity
 import com.blitztech.pudokiosk.ui.main.CourierMainActivity
@@ -48,18 +49,13 @@ class SignInActivity : BaseKioskActivity() {
     }
 
     private fun setupDependencies() {
-        prefs = Prefs(this)
-
+        prefs = ZimpudoApp.prefs
 
         // Load current language
         val currentLocale = prefs.getLocale()
 
-        // Initialize API repository
-        val okHttpClient = NetworkModule.provideOkHttpClient()
-        val moshi = NetworkModule.provideMoshi()
-        val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
-        val apiService = NetworkModule.provideApiService(retrofit)
-        apiRepository = NetworkModule.provideApiRepository(apiService, this)
+        // Use app-wide singleton API repository
+        apiRepository = ZimpudoApp.apiRepository
     }
 
     private fun setupViews() {

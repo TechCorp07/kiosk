@@ -33,7 +33,7 @@
             android:text="Send Package"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:textSize="20sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <!-- Placeholder for symmetry -->
@@ -74,7 +74,7 @@
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="Recipient"
                 android:textColor="@color/text_hint"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
         </LinearLayout>
 
         <!-- Line 1 -->
@@ -109,7 +109,7 @@
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="Package"
                 android:textColor="@color/text_hint"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
         </LinearLayout>
 
         <!-- Line 2 -->
@@ -144,7 +144,7 @@
                 android:layout_marginTop="@dimen/spacing_xs"
                 android:text="Payment"
                 android:textColor="@color/text_hint"
-                android:textSize="12sp" />
+                android:textSize="16sp" />
         </LinearLayout>
     </LinearLayout>
 
