@@ -3,14 +3,20 @@ package com.blitztech.pudokiosk
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
+import android.util.Base64
 import android.util.Log
 import androidx.room.Room
 import com.blitztech.pudokiosk.data.api.NetworkModule
 import com.blitztech.pudokiosk.data.db.AppDatabase
 import com.blitztech.pudokiosk.data.repository.ApiRepository
+import com.blitztech.pudokiosk.deviceio.HardwareWatchdog
+import com.blitztech.pudokiosk.offline.OfflineCollectionManager
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.sync.SyncScheduler
 import com.blitztech.pudokiosk.update.UpdateCheckWorker
+import com.blitztech.pudokiosk.util.NetworkUtils
+import net.sqlcipher.database.SupportFactory
+import java.security.SecureRandom
 import java.util.*
 
 class ZimpudoApp : Application() {
@@ -36,7 +42,7 @@ class ZimpudoApp : Application() {
         val apiRepository: ApiRepository by lazy {
             try {
                 Log.d(TAG, "Initializing API Repository...")
-                val okHttpClient = NetworkModule.provideOkHttpClient()
+                val okHttpClient = NetworkModule.provideOkHttpClient(prefs)
                 val moshi = NetworkModule.provideMoshi()
                 val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
                 val apiService = NetworkModule.provideApiService(retrofit)
@@ -47,21 +53,61 @@ class ZimpudoApp : Application() {
             }
         }
 
-        /** Shared Room database instance (Phase-9 TODO resolved). */
+        /** Shared Room database instance — encrypted with SQLCipher. */
         val database: AppDatabase by lazy {
             try {
-                Log.d(TAG, "Initializing AppDatabase...")
+                Log.d(TAG, "Initializing encrypted AppDatabase (SQLCipher)...")
+                val passphrase = getOrCreateDbPassphrase()
+                val factory = SupportFactory(passphrase)
                 Room.databaseBuilder(
                     instance,
                     AppDatabase::class.java,
                     "pudokiosk_db"
                 )
+                    .openHelperFactory(factory)
                     .fallbackToDestructiveMigration(true)
                     .build()
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize AppDatabase", e)
                 throw e
             }
+        }
+
+        /**
+         * Returns the stored DB passphrase, or generates + stores a new one on first boot.
+         *
+         * The passphrase is 32 bytes of SecureRandom entropy, Base64-encoded and stored
+         * in EncryptedSharedPreferences (AES-256-GCM — already used by [Prefs]).
+         * This means the passphrase is encrypted at rest using the Android Keystore.
+         *
+         * Note: `prefs` must be initialized before `database` is accessed.
+         */
+        private fun getOrCreateDbPassphrase(): ByteArray {
+            val KEY = "db_passphrase_v1"
+            var encoded = prefs.getString(KEY, "")
+            if (encoded.isBlank()) {
+                val randomBytes = ByteArray(32)
+                SecureRandom().nextBytes(randomBytes)
+                encoded = Base64.encodeToString(randomBytes, Base64.NO_WRAP)
+                prefs.putString(KEY, encoded)
+                Log.d(TAG, "Generated new DB passphrase (first boot)")
+            } else {
+                Log.d(TAG, "Using existing DB passphrase")
+            }
+            return Base64.decode(encoded, Base64.NO_WRAP)
+        }
+
+        /** Network connectivity utilities (API 25 compatible). */
+        val networkUtils: NetworkUtils get() = NetworkUtils
+
+        /** Offline OTP validation manager for recipient collection. */
+        val offlineCollectionManager: OfflineCollectionManager by lazy {
+            OfflineCollectionManager(database)
+        }
+
+        /** RS485 hardware watchdog — pings locker board every 30s, reconnects on failure. */
+        val hardwareWatchdog: HardwareWatchdog by lazy {
+            HardwareWatchdog(instance)
         }
     }
 
@@ -103,11 +149,24 @@ class ZimpudoApp : Application() {
 
             applyLocale(savedLocale)
 
-            // Start background event sync
+            // Start background event sync (outbox drain)
             SyncScheduler.schedule(this)
+
+            // Start locker cell sync + heartbeat every 15 minutes
+            SyncScheduler.scheduleLockerSync(this)
+
+            // Immediate locker sync on startup to prime cell inventory
+            SyncScheduler.enqueueLockerSyncNow(this)
 
             // Schedule periodic OTA update checks
             UpdateCheckWorker.schedule(this)
+
+            // Start hardware watchdog — RS485 health ping every 30s
+            try {
+                hardwareWatchdog.start()
+            } catch (e: Exception) {
+                Log.w(TAG, "HardwareWatchdog failed to start: ${e.message}")
+            }
 
             Log.d(TAG, "Global settings initialized - Locale: $savedLocale")
 

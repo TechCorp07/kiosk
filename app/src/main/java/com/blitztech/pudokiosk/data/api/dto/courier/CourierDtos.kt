@@ -32,6 +32,7 @@ data class TransactionResponse(
     @Json(name = "transactionId") val transactionId: String? = null,
     @Json(name = "orderId") val orderId: String? = null,
     @Json(name = "lockerId") val lockerId: String? = null,
+    @Json(name = "cellId") val cellId: String? = null,
     @Json(name = "cellNumber") val cellNumber: Int? = null,
     @Json(name = "trackingNumber") val trackingNumber: String? = null,
     @Json(name = "recipientName") val recipientName: String? = null,
@@ -39,7 +40,51 @@ data class TransactionResponse(
 )
 
 // ─────────────────────────────────────────────────────────────
+//  Orders Service – Courier dropoff at destination PUDO locker
+//  POST /api/v1/orders/{orderId}/dropoff?barcode=...&destinationLockerId=...
+//  Returns GenericResponse { success, message }
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Generic response from orders-service courier operations.
+ * Used for dropoff and pickup-scan endpoints.
+ */
+@JsonClass(generateAdapter = true)
+data class CourierOpsResponse(
+    @Json(name = "success") val success: Boolean,
+    @Json(name = "message") val message: String
+)
+
+// ─────────────────────────────────────────────────────────────
+//  Orders Service – Order search result (used to resolve orderId by barcode)
+//  POST /api/v1/orders/and-search  { "trackingNumber": "..." }
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Minimal order lookup result — we only need the orderId and status.
+ */
+@JsonClass(generateAdapter = true)
+data class OrderLookupResult(
+    @Json(name = "id") val orderId: String? = null,
+    @Json(name = "trackingNumber") val trackingNumber: String? = null,
+    @Json(name = "status") val status: String? = null,
+    @Json(name = "cabinetId") val cabinetId: String? = null,
+    @Json(name = "cellId") val cellId: String? = null,
+    @Json(name = "cellNumber") val cellNumber: Int? = null  // Physical door number (Option A)
+)
+
+/**
+ * Paged response wrapper for order search.
+ */
+@JsonClass(generateAdapter = true)
+data class OrderSearchPage(
+    @Json(name = "content") val content: List<OrderLookupResult> = emptyList(),
+    @Json(name = "totalElements") val totalElements: Int = 0
+)
+
+// ─────────────────────────────────────────────────────────────
 //  Legacy models kept for adapter compatibility
+//  (Used by outbox SyncWorker deserialization)
 // ─────────────────────────────────────────────────────────────
 
 /**

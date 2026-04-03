@@ -23,7 +23,8 @@ class LockerController(private val context: Context) {
         private const val COMMAND_RETRY_COUNT = 3
         private const val RETRY_DELAY_MS = 500L
         private const val TX_RX_TURNAROUND_MS = 15L   // RS485 direction switch settling time
-        private const val LOCK_PULSE_WAIT_MS = 2500L  // STM32 pulse is 2000ms + 500ms buffer
+        // STM32 responds AFTER the 750ms lock pulse + 50ms settling + transmission overhead
+        private const val UNLOCK_RESPONSE_TIMEOUT_MS = 2000L
     }
 
     /**
@@ -96,47 +97,47 @@ class LockerController(private val context: Context) {
                 errorMessage = "Failed to create unlock command"
             )
 
-        val statusCommand = WinnsenProtocol.createStatusCommand(lockNumber)
-            ?: return@withContext WinnsenProtocol.LockOperationResult(
-                success = false,
-                lockNumber = lockNumber,
-                status = WinnsenProtocol.LockStatus.UNKNOWN,
-                errorMessage = "Failed to create status command"
-            )
+        log("\uD83D\uDD13 Unlocking lock $lockNumber...")
+        log("\uD83D\uDCE4 Sending: ${unlockCommand.toHexString()}")
 
-        log("🔓 Unlocking lock $lockNumber...")
-        log("📤 Sending: ${unlockCommand.toHexString()}")
-
+        // The STM32 now pulses the lock FIRST, then responds with the actual
+        // post-unlock status. We send the unlock command and wait for this
+        // single response. Retry only if no response or status ≠ OPEN.
         repeat(COMMAND_RETRY_COUNT) { attempt ->
-            // Step 1: Send unlock — STM32 ACKs immediately, then pulses the lock
-            val ackResult = sendCommand(unlockCommand, WinnsenProtocol.CommandType.UNLOCK, lockNumber)
+            val startTime = System.currentTimeMillis()
+            val result = sendCommand(unlockCommand, WinnsenProtocol.CommandType.UNLOCK, lockNumber)
+            val elapsed = System.currentTimeMillis() - startTime
 
-            if (!ackResult.success) {
-                if (attempt < COMMAND_RETRY_COUNT - 1) {
-                    log("⚠️ Unlock ACK failed on attempt ${attempt + 1}, retrying...")
-                    delay(RETRY_DELAY_MS)
-                }
-                return@repeat
-            }
-
-            // Step 2: Wait for the physical lock pulse to complete
-            log("⏳ Waiting ${LOCK_PULSE_WAIT_MS}ms for lock $lockNumber to open...")
-            delay(LOCK_PULSE_WAIT_MS)
-
-            // Step 3: Verify the lock actually opened
-            val verifyResult = sendCommand(statusCommand, WinnsenProtocol.CommandType.STATUS, lockNumber)
-
-            if (verifyResult.success && verifyResult.status == WinnsenProtocol.LockStatus.OPEN) {
-                log("✅ Lock $lockNumber verified open")
+            if (result.success && result.status == WinnsenProtocol.LockStatus.OPEN) {
+                log("✅ Lock $lockNumber confirmed open (${elapsed}ms)")
                 return@withContext WinnsenProtocol.LockOperationResult(
                     success = true,
                     lockNumber = lockNumber,
-                    status = WinnsenProtocol.LockStatus.OPEN
+                    status = WinnsenProtocol.LockStatus.OPEN,
+                    responseTime = elapsed
                 )
             }
 
-            log("⚠️ Lock $lockNumber not open after attempt ${attempt + 1} — status: ${verifyResult.status.displayName}")
-            if (attempt < COMMAND_RETRY_COUNT - 1) delay(RETRY_DELAY_MS)
+            // Cooldown rejection (0x02): STM32 duty-cycle protection is active.
+            // Do NOT retry — the lock won't unlock until ~15s cooldown expires.
+            if (result.success && result.status == WinnsenProtocol.LockStatus.COOLDOWN) {
+                log("⏳ Lock $lockNumber is in cooldown (duty-cycle protection). Try again in ~15s.")
+                return@withContext WinnsenProtocol.LockOperationResult(
+                    success = false,
+                    lockNumber = lockNumber,
+                    status = WinnsenProtocol.LockStatus.COOLDOWN,
+                    errorMessage = "Lock is in cooldown (duty-cycle protection). Try again in ~15 seconds.",
+                    responseTime = elapsed
+                )
+            }
+
+            // Response received but lock not open, or no response at all
+            val reason = result.errorMessage ?: "status: ${result.status.displayName}"
+            log("⚠️ Unlock attempt ${attempt + 1}/$COMMAND_RETRY_COUNT failed — $reason")
+
+            if (attempt < COMMAND_RETRY_COUNT - 1) {
+                delay(RETRY_DELAY_MS)
+            }
         }
 
         log("❌ Lock $lockNumber failed to open after $COMMAND_RETRY_COUNT attempts")
@@ -281,8 +282,9 @@ class LockerController(private val context: Context) {
         // RS485 turnaround delay: wait for XR21V1414 to finish TX and switch direction to RX
         delay(TX_RX_TURNAROUND_MS)
 
-        // Wait for response
-        val response = waitForResponse(expectedType, lockNumber)
+        // Wait for response — the expected station comes from the command frame
+        val expectedStation = command.station
+        val response = waitForResponse(expectedType, lockNumber, expectedStation)
 
         if (response == null) {
             return WinnsenProtocol.LockOperationResult(
@@ -293,29 +295,17 @@ class LockerController(private val context: Context) {
             )
         }
 
-        log("📥 Received: ${response.toHexString()}")
+        log("\uD83D\uDCE5 Received: ${response.toHexString()}")
 
-        // Parse response
+        // The STM32 now responds AFTER the lock pulse completes, so the
+        // status byte in the response is the actual physical state.
         val lockStatus = WinnsenProtocol.LockStatus.fromByte(response.status)
-        val isSuccess = when (expectedType) {
-            // Unlock: receiving the 0x85 ACK means the command was accepted and the lock will open.
-            // The STM32 responds BEFORE the lock pulse, so status byte reflects the pre-open state.
-            WinnsenProtocol.CommandType.UNLOCK -> true
-            // Status: the status byte IS the result.
-            WinnsenProtocol.CommandType.STATUS -> true
-        }
-
-        if (isSuccess) {
-            log("✅ Lock $lockNumber ${expectedType.displayName.lowercase()} successful - Status: ${lockStatus.displayName}")
-        } else {
-            log("❌ Lock $lockNumber ${expectedType.displayName.lowercase()} failed - Status: ${lockStatus.displayName}")
-        }
+        log("\uD83D\uDD12 Lock $lockNumber ${expectedType.displayName.lowercase()} — Status: ${lockStatus.displayName}")
 
         return WinnsenProtocol.LockOperationResult(
-            success = isSuccess,
+            success = true,
             lockNumber = lockNumber,
-            status = lockStatus,
-            errorMessage = if (!isSuccess) "Operation failed with status: ${lockStatus.displayName}" else null
+            status = lockStatus
         )
     }
 
@@ -326,13 +316,21 @@ class LockerController(private val context: Context) {
      */
     private suspend fun waitForResponse(
         expectedType: WinnsenProtocol.CommandType,
-        expectedLockNumber: Int
+        expectedLockNumber: Int,
+        expectedStation: Byte
     ): WinnsenProtocol.ResponseFrame? {
 
         val startTime = System.currentTimeMillis()
         val accumulator = mutableListOf<Byte>()
 
-        while (System.currentTimeMillis() - startTime < WinnsenProtocol.RESPONSE_TIMEOUT_MS) {
+        // Use a longer timeout for unlock commands (STM32 responds after 2s pulse)
+        val timeoutMs = if (expectedType == WinnsenProtocol.CommandType.UNLOCK) {
+            UNLOCK_RESPONSE_TIMEOUT_MS
+        } else {
+            WinnsenProtocol.RESPONSE_TIMEOUT_MS
+        }
+
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
             val chunk = rs485Driver.receiveData(100)
 
             if (chunk.isNotEmpty()) {
@@ -349,8 +347,11 @@ class LockerController(private val context: Context) {
                         val frame = WinnsenProtocol.parseIncomingFrame(candidate)
                         if (frame != null) {
                             val expectedSlot = WinnsenProtocol.lockByteFor(expectedLockNumber)
+                            // Match on function + lock slot + station to ensure
+                            // we accept only the response from the correct board
                             if (frame.function == expectedType.responseCode &&
-                                frame.lockNumber == expectedSlot) {
+                                frame.lockNumber == expectedSlot &&
+                                frame.station == expectedStation) {
                                 return frame
                             }
                         }

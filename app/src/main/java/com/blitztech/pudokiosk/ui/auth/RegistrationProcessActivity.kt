@@ -86,7 +86,8 @@ class RegistrationProcessActivity : BaseKioskActivity() {
         updateStepUI(1)
 
         lifecycleScope.launch {
-            val result = apiRepository.registerUser(
+            // Walk-in kiosk registration uses /users/partial (no auth required)
+            val result = apiRepository.partialRegisterUser(
                 name = formData.name,
                 surname = formData.surname,
                 email = formData.email,

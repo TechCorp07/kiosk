@@ -8,7 +8,6 @@
 
     <!-- Language Selection -->
     <string name="select_language">Select Your Language</string>
-    <string name="language_subtitle">Choose your preferred language for the app</string>
     <string name="language_english">English</string>
     <string name="language_shona">Shona</string>
     <string name="language_ndebele">Ndebele</string>
@@ -39,6 +38,10 @@
     <!-- User Type Selection -->
     <string name="select_user_type">Select User Type</string>
     <string name="user_type_subtitle">Choose your role to continue</string>
+    <string name="user_type_customer_receive">Receive</string>
+    <string name="user_type_customer_receive_desc">Collect a package waiting for you</string>
+    <string name="user_type_customer_send">Send</string>
+    <string name="user_type_customer_send_desc">Send a package to someone</string>
     <string name="user_type_customer">Customer</string>
     <string name="user_type_customer_desc">Send or collect packages</string>
     <string name="user_type_courier">Courier</string>
@@ -49,8 +52,8 @@
     <string name="sign_in">Sign In</string>
     <string name="sign_up">Sign Up</string>
     <string name="sign_in_subtitle">Sign in to continue</string>
-    <string name="customer_signin">Customer Sign In</string>
-    <string name="courier_signin">Courier Sign In</string>
+    <string name="customer_signin">Customer</string>
+    <string name="courier_signin">Courier</string>
     <string name="create_account">Create an Account</string>
     <string name="sign_up_subtitle">Sign up to get started</string>
     <string name="password">Password</string>

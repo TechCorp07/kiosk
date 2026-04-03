@@ -16,6 +16,8 @@ class TechnicianAccessActivity : BaseKioskActivity() {
     private lateinit var binding: ActivityTechnicianAccessBinding
 
     // Hardcoded technician credentials
+    // TODO [POST-LAUNCH BACKEND]: Replace hardcoded passcode with daily TOTP
+    // Endpoint: GET /api/v1/kiosks/daily-code?deviceId=
     private val validCredentials = mapOf(
         "tech001" to "admin123",
         "service" to "service2024",

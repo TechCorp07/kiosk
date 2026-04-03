@@ -8,7 +8,9 @@ import com.blitztech.pudokiosk.data.api.dto.location.*
 import com.blitztech.pudokiosk.data.api.dto.order.*
 import com.blitztech.pudokiosk.data.api.dto.collection.*
 import com.blitztech.pudokiosk.data.api.dto.courier.*
+import com.blitztech.pudokiosk.data.api.dto.locker.CellDto
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -48,7 +50,16 @@ interface ApiService {
     //  Core Service – User registration & KYC
     // ─────────────────────────────────────────────────────────────
     @POST(ApiEndpoints.USER_REGISTER)
-    suspend fun registerUser(@Body request: SignUpRequest): Response<RegistrationResponse>
+    suspend fun registerUser(
+        @Body request: SignUpRequest,
+        @Header("Authorization") token: String
+    ): Response<RegistrationResponse>
+
+    /** Walk-in kiosk registration — POST /api/v1/users/partial (no auth required) */
+    @POST(ApiEndpoints.USER_PARTIAL_REGISTER)
+    suspend fun partialRegisterUser(
+        @Body request: SignUpRequest
+    ): Response<RegistrationResponse>
 
     @Multipart
     @POST(ApiEndpoints.USER_KYC_UPLOAD)
@@ -97,12 +108,17 @@ interface ApiService {
     @GET(ApiEndpoints.GET_SUBURBS)
     suspend fun getSuburbs(@Path("cityId") cityId: String): Response<List<SuburbDto>>
 
+    @GET(ApiEndpoints.PACKAGE_CONTENT_TYPES)
+    suspend fun getPackageContentTypes(): Response<List<String>>
+
     // ─────────────────────────────────────────────────────────────
     //  Order Service – Locker operations (recipient collection)
+    //  Both endpoints are PUBLIC (no Authorization header needed).
     // ─────────────────────────────────────────────────────────────
     @POST(ApiEndpoints.RECIPIENT_AUTH)
     suspend fun authenticateRecipient(
-        @Body request: RecipientAuthRequest
+        @Body request: RecipientAuthRequest,
+        @Header("Authorization") token: String
     ): Response<RecipientAuthResponse>
 
     @POST(ApiEndpoints.LOCKER_PICKUP)
@@ -118,35 +134,92 @@ interface ApiService {
     ): Response<ApiResponse>
 
     // ─────────────────────────────────────────────────────────────
-    //  Locker Service – Courier transactions
-    //  Couriers authenticate via the same Auth Service (AUTH_PIN + AUTH_OTP)
+    //  Orders Service – Courier kiosk operations
+    //  Note: uses Orders Service (not Locker Service) per backend architecture.
     // ─────────────────────────────────────────────────────────────
-    @POST(ApiEndpoints.COURIER_PICKUP)
-    suspend fun courierPickup(
-        @Body request: TransactionRequest,
-        @Header("Authorization") token: String
-    ): Response<TransactionResponse>
 
-    @POST(ApiEndpoints.COURIER_DROPOFF)
-    suspend fun courierDropoff(
-        @Body request: TransactionRequest,
+    /** Search order by trackingNumber — resolves orderId for subsequent calls. */
+    @POST(ApiEndpoints.ORDER_SEARCH)
+    suspend fun searchOrder(
+        @Body request: Map<String, String>,
         @Header("Authorization") token: String
-    ): Response<TransactionResponse>
+    ): Response<OrderSearchPage>
+
+    /**
+     * Courier barcode scan — marks parcel as PICKED_UP from the kiosk locker.
+     * POST /api/v1/orders/{orderId}/pickup-scan?barcode=...
+     */
+    @POST
+    suspend fun courierPickupScan(
+        @Url url: String,
+        @Query("barcode") barcode: String,
+        @Header("Authorization") token: String
+    ): Response<CourierOpsResponse>
+
+    /**
+     * Courier drops parcel at destination PUDO locker.
+     * POST /api/v1/orders/{orderId}/dropoff?barcode=...&destinationLockerId=...
+     */
+    @POST
+    suspend fun courierDropoffAtLocker(
+        @Url url: String,
+        @Query("barcode") barcode: String,
+        @Query("destinationLockerId") destinationLockerId: String,
+        @Header("Authorization") token: String
+    ): Response<CourierOpsResponse>
 
     // ─────────────────────────────────────────────────────────────
     //  Locker Service – Sender transactions
     // ─────────────────────────────────────────────────────────────
     @POST(ApiEndpoints.VERIFY_RESERVATION)
     suspend fun verifyReservation(
-        @Body request: TransactionRequest,
+        @Body request: VerifyReservationRequest,
         @Header("Authorization") token: String
     ): Response<TransactionResponse>
 
+    /**
+     * Sender drop-off — multipart/form-data matching backend SenderDropOffRequest:
+     *   orderId: UUID (required)
+     *   cellId: UUID (required)
+     *   photos: List<MultipartFile> (nullable per schema)
+     */
+    @Multipart
     @POST(ApiEndpoints.SENDER_DROPOFF)
     suspend fun senderDropoff(
-        @Body request: TransactionRequest,
+        @Part("orderId") orderId: RequestBody,
+        @Part("cellId") cellId: RequestBody,
+        @Part photos: List<MultipartBody.Part>?,
         @Header("Authorization") token: String
     ): Response<TransactionResponse>
+
+    /**
+     * Courier pickup at source locker — POST /api/v1/transactions/courier/pickup
+     * No request body — courier identity derived from JWT.
+     * Returns list of packages assigned to courier at this locker.
+     */
+    @POST(ApiEndpoints.COURIER_PICKUP_LOCKER)
+    suspend fun courierPickupFromLocker(
+        @Header("Authorization") token: String
+    ): Response<TransactionResponse>
+
+    // ─────────────────────────────────────────────────────────────
+    //  Locker Service – Cell & locker sync (API role / device-level token)
+    // ─────────────────────────────────────────────────────────────
+
+    /** GET /api/v1/lockers/{lockerId}/cells — fetch all cells for a locker */
+    @GET
+    suspend fun getLockerCells(
+        @Url url: String,
+        @Header("Authorization") token: String
+    ): Response<List<CellDto>>
+
+    /** PATCH /api/v1/lockers/{lockerId}/status?status=ONLINE — kiosk heartbeat */
+    @PATCH
+    suspend fun patchLockerStatus(
+        @Url url: String,
+        @Query("status") status: String,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse>
 
     // ─────────────────────────────────────────────────────────────
     //  Security photo upload
@@ -161,4 +234,12 @@ interface ApiService {
         @Part("kioskId") kioskId: okhttp3.RequestBody,
         @Part("capturedAt") capturedAt: okhttp3.RequestBody
     ): Response<ApiResponse>
+
+    // ─────────────────────────────────────────────────────────────
+    //  Kiosk Provisioning (no auth required — uses daily OTP)
+    // ─────────────────────────────────────────────────────────────
+    @POST(ApiEndpoints.KIOSK_PROVISION)
+    suspend fun provisionKiosk(
+        @Body request: com.blitztech.pudokiosk.data.api.dto.kiosk.KioskProvisionRequest
+    ): Response<com.blitztech.pudokiosk.data.api.dto.kiosk.KioskProvisionApiResponse>
 }

@@ -69,7 +69,7 @@ class LanguageSelectionActivity : BaseKioskActivity() {
     private fun setupViews() {
         // ✅ Use standard Android strings
         binding.tvTitle.text = getString(R.string.select_language)
-        binding.tvSubtitle.text = getString(R.string.language_subtitle)
+        //binding.tvSubtitle.text = getString(R.string.language_subtitle)
         binding.btnContinue.text = getString(R.string.continue_button)
         binding.btnContinue.isEnabled = false
     }
@@ -131,7 +131,7 @@ class LanguageSelectionActivity : BaseKioskActivity() {
     private fun updateUIText() {
         // ✅ Refresh UI with new language
         binding.tvTitle.text = getString(R.string.select_language)
-        binding.tvSubtitle.text = getString(R.string.language_subtitle)
+        //binding.tvSubtitle.text = getString(R.string.language_subtitle)
         binding.btnContinue.text = getString(R.string.continue_button)
     }
 

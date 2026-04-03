@@ -8,6 +8,6 @@ data class OutboxEventEntity(
     @PrimaryKey val idempotencyKey: String,
     val type: String,
     val payloadJson: String,
-    val createdAt: Long,
+    val createdAt: Long = System.currentTimeMillis(),
     val delivered: Boolean = false
 )

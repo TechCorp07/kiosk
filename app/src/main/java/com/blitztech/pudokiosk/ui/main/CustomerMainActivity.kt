@@ -2,10 +2,12 @@ package com.blitztech.pudokiosk.ui.main
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.addCallback
+import android.util.Log
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
+import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.databinding.ActivityCustomerMainBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
@@ -13,6 +15,7 @@ import com.blitztech.pudokiosk.ui.collect.CollectionCodeActivity
 import com.blitztech.pudokiosk.ui.customer.CustomerAccountActivity
 import com.blitztech.pudokiosk.ui.customer.TrackDeliveryActivity
 import com.blitztech.pudokiosk.ui.sendpackage.SendPackageActivity
+import kotlinx.coroutines.launch
 
 /**
  * Main dashboard for customer users
@@ -22,6 +25,7 @@ class CustomerMainActivity : BaseKioskActivity() {
 
     private lateinit var binding: ActivityCustomerMainBinding
     private lateinit var prefs: Prefs
+    private val api by lazy { ZimpudoApp.apiRepository }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +39,46 @@ class CustomerMainActivity : BaseKioskActivity() {
 
     private fun setupDependencies() {
         prefs = ZimpudoApp.prefs
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkPendingReservations()
+    }
+
+    private fun checkPendingReservations() {
+        lifecycleScope.launch {
+            val token = prefs.getAccessToken() ?: return@launch
+            val senderMobile = prefs.getUserMobile() ?: return@launch
+            try {
+                // Spec Section 4 Step 2.5:
+                // Use POST /orders/and-search with senderMobileNumber
+                // (accepts USER + API roles — more reliable than /orders/logged-in)
+                val result = api.searchOrdersBySender(senderMobile, token)
+                if (result is NetworkResult.Success) {
+                    val page = result.data
+                    // Backend OrderStatus values for pending drop-offs:
+                    //   LOCKER_RESERVED  → cell allocated, awaiting deposit
+                    //   AWAITING_DEPOSIT → QR generated, awaiting physical drop-off
+                    //   AWAITING_COURIER → payment done, parcel ready for courier pickup
+                    val dropOffStatuses = setOf("LOCKER_RESERVED", "AWAITING_DEPOSIT", "AWAITING_COURIER")
+                    val pendingOrder = page.content.firstOrNull { it.status in dropOffStatuses }
+                    
+                    if (pendingOrder != null) {
+                        binding.cardDropoffReserved.visibility = android.view.View.VISIBLE
+                        binding.cardDropoffReserved.setOnClickListener {
+                            val intent = Intent(this@CustomerMainActivity, SendPackageActivity::class.java)
+                            intent.putExtra("RESERVED_TRACKING", pendingOrder.trackingNumber)
+                            startActivity(intent)
+                        }
+                    } else {
+                        binding.cardDropoffReserved.visibility = android.view.View.GONE
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("CustomerMainActivity", "Error checking reservations", e)
+            }
+        }
     }
 
     private fun setupViews() {

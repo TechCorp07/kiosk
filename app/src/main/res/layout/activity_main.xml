@@ -10,8 +10,10 @@
 
     <!-- ZIMPUDO Logo -->
     <ImageView
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
+        android:layout_width="1000dp"
+        android:layout_height="400dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
         android:src="@drawable/zimpudo_logo"
         android:contentDescription="@string/app_name"
         android:layout_marginBottom="@dimen/spacing_lg" />
@@ -22,7 +24,7 @@
         android:layout_height="wrap_content"
         android:text="@string/zimpudo_tagline"
         android:textColor="@color/text_white"
-        android:textSize="52sp"
+        android:textSize="78sp"
         android:textStyle="bold"
         android:layout_marginBottom="@dimen/spacing_xl" />
 
@@ -32,15 +34,15 @@
         android:layout_height="wrap_content"
         android:text="@string/zimpudo_welcome"
         android:textColor="@color/text_white"
-        android:textSize="38sp"
+        android:textSize="57sp"
         android:gravity="center"
         android:lineSpacingMultiplier="1.4"
         android:layout_marginBottom="@dimen/spacing_xl" />
 
     <!-- Loading Indicator -->
     <ProgressBar
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
         android:indeterminateTint="@color/white"
         android:layout_marginBottom="@dimen/spacing_lg" />
 
@@ -50,7 +52,7 @@
         android:layout_height="wrap_content"
         android:text="@string/loading_please_wait"
         android:textColor="@color/text_white"
-        android:textSize="28sp"
+        android:textSize="42sp"
         android:alpha="0.7" />
 
 </LinearLayout>

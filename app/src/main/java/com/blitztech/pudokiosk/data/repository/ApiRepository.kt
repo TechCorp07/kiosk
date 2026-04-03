@@ -5,6 +5,7 @@ import android.util.Log
 import com.blitztech.pudokiosk.data.api.ApiService
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.config.ApiConfig
+import com.blitztech.pudokiosk.data.api.config.ApiEndpoints
 import com.blitztech.pudokiosk.data.api.dto.auth.*
 import com.blitztech.pudokiosk.data.api.dto.user.*
 import com.blitztech.pudokiosk.data.api.dto.common.*
@@ -22,6 +23,10 @@ import com.blitztech.pudokiosk.data.api.dto.order.PageOrder
 import com.blitztech.pudokiosk.data.api.dto.collection.*
 import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
 import com.blitztech.pudokiosk.data.api.dto.courier.TransactionResponse
+import com.blitztech.pudokiosk.data.api.dto.courier.CourierOpsResponse
+import com.blitztech.pudokiosk.data.api.dto.courier.OrderSearchPage
+import com.blitztech.pudokiosk.data.api.dto.locker.CellDto
+import com.blitztech.pudokiosk.data.api.dto.order.VerifyReservationRequest
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
@@ -103,6 +108,42 @@ class ApiRepository(
         houseNumber: String,
         street: String,
         suburb: String,
+        city: String,
+        token: String
+    ): NetworkResult<RegistrationResponse> {
+        return safeApiCall {
+            val address = Address(
+                city = city,
+                suburb = suburb,
+                street = street,
+                houseNumber = houseNumber
+            )
+            val request = SignUpRequest(
+                name = name,
+                surname = surname,
+                email = email,
+                mobileNumber = mobileNumber,
+                nationalId = nationalId,
+                address = address,
+                role = ApiConfig.USER_ROLE
+            )
+            apiService.registerUser(request, "Bearer $token")
+        }
+    }
+
+    /**
+     * Walk-in kiosk partial registration — POST /api/v1/users/partial
+     * No auth required. Sets kycStatus = NONE (soft KYC limits).
+     */
+    suspend fun partialRegisterUser(
+        name: String,
+        surname: String,
+        email: String,
+        mobileNumber: String,
+        nationalId: String,
+        houseNumber: String,
+        street: String,
+        suburb: String,
         city: String
     ): NetworkResult<RegistrationResponse> {
         return safeApiCall {
@@ -121,7 +162,7 @@ class ApiRepository(
                 address = address,
                 role = ApiConfig.USER_ROLE
             )
-            apiService.registerUser(request)
+            apiService.partialRegisterUser(request)
         }
     }
 
@@ -216,9 +257,10 @@ class ApiRepository(
     //  Order Service – Locker operations (recipient collection)
     // ─────────────────────────────────────────────────────────────
     suspend fun authenticateRecipient(
-        request: RecipientAuthRequest
+        request: RecipientAuthRequest,
+        token: String
     ): NetworkResult<RecipientAuthResponse> {
-        return safeApiCall { apiService.authenticateRecipient(request) }
+        return safeApiCall { apiService.authenticateRecipient(request, "Bearer $token") }
     }
 
     suspend fun completePickup(
@@ -226,6 +268,10 @@ class ApiRepository(
         token: String
     ): NetworkResult<ApiResponse> {
         return safeApiCall { apiService.completePickup(request, "Bearer $token") }
+    }
+
+    suspend fun getPackageContentTypes(): NetworkResult<List<String>> {
+        return safeApiCall { apiService.getPackageContentTypes() }
     }
 
     suspend fun openCell(
@@ -236,37 +282,156 @@ class ApiRepository(
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  Locker Transactions – Courier
+    //  Orders Service – Courier kiosk operations
     // ─────────────────────────────────────────────────────────────
-    suspend fun courierPickup(
-        request: TransactionRequest,
+
+    /**
+     * Search order by trackingNumber (barcode scan).
+     * Returns orderId needed for subsequent courier operations.
+     */
+    suspend fun searchOrder(
+        barcode: String,
         token: String
-    ): NetworkResult<TransactionResponse> {
-        return safeApiCall { apiService.courierPickup(request, "Bearer $token") }
+    ): NetworkResult<OrderSearchPage> {
+        return safeApiCall {
+            apiService.searchOrder(
+                request = mapOf("trackingNumber" to barcode),
+                token = "Bearer $token"
+            )
+        }
     }
 
-    suspend fun courierDropoff(
-        request: TransactionRequest,
+    /**
+     * Search orders by sender mobile number.
+     * Uses POST /orders/and-search with senderMobileNumber.
+     * Used by CustomerMainActivity to check for pending drop-off reservations.
+     */
+    suspend fun searchOrdersBySender(
+        senderMobileNumber: String,
         token: String
-    ): NetworkResult<TransactionResponse> {
-        return safeApiCall { apiService.courierDropoff(request, "Bearer $token") }
+    ): NetworkResult<OrderSearchPage> {
+        return safeApiCall {
+            apiService.searchOrder(
+                request = mapOf("senderMobileNumber" to senderMobileNumber),
+                token = "Bearer $token"
+            )
+        }
+    }
+
+    /**
+     * Courier barcode scan at kiosk: marks order as PICKED_UP.
+     * POST /api/v1/orders/{orderId}/pickup-scan?barcode=...
+     */
+    suspend fun courierPickupScan(
+        orderId: String,
+        barcode: String,
+        token: String
+    ): NetworkResult<CourierOpsResponse> {
+        return safeApiCall {
+            val url = ApiEndpoints.getCourierPickupScanUrl(orderId)
+            apiService.courierPickupScan(url, barcode, "Bearer $token")
+        }
+    }
+
+    /**
+     * Courier drops parcel at destination PUDO locker.
+     * POST /api/v1/orders/{orderId}/dropoff?barcode=...&destinationLockerId=...
+     */
+    suspend fun courierDropoffAtLocker(
+        dropoffUrl: String,
+        barcode: String,
+        destinationLockerId: String,
+        token: String
+    ): NetworkResult<CourierOpsResponse> {
+        return safeApiCall {
+            apiService.courierDropoffAtLocker(dropoffUrl, barcode, destinationLockerId, "Bearer $token")
+        }
     }
 
     // ─────────────────────────────────────────────────────────────
     //  Locker Transactions – Sender
     // ─────────────────────────────────────────────────────────────
     suspend fun verifyReservation(
-        request: TransactionRequest,
+        request: VerifyReservationRequest,
         token: String
     ): NetworkResult<TransactionResponse> {
         return safeApiCall { apiService.verifyReservation(request, "Bearer $token") }
     }
 
+    /**
+     * Sender drop-off — multipart/form-data matching backend's SenderDropOffRequest:
+     *   orderId: UUID (required)
+     *   cellId: UUID (required)
+     *   photos: List<MultipartFile> (nullable per schema — sends placeholder)
+     */
     suspend fun senderDropoff(
-        request: TransactionRequest,
+        orderId: String,
+        cellId: String,
         token: String
     ): NetworkResult<TransactionResponse> {
-        return safeApiCall { apiService.senderDropoff(request, "Bearer $token") }
+        return safeApiCall {
+            val orderIdBody = orderId.toRequestBody("text/plain".toMediaType())
+            val cellIdBody = cellId.toRequestBody("text/plain".toMediaType())
+
+            // Load placeholder photo from assets (per spec Section 12)
+            // TODO [CAMERA]: Replace getPlaceholderPhoto() with actual camera capture
+            val photos = try {
+                val bytes = context.assets.open("placeholder_deposit.jpg").readBytes()
+                val requestBody = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData(
+                    name = "photos",
+                    filename = "placeholder_deposit.jpg",
+                    body = requestBody
+                )
+                listOf(part)
+            } catch (e: Exception) {
+                Log.w(TAG, "Placeholder photo not found in assets, sending without photo", e)
+                null
+            }
+
+            apiService.senderDropoff(orderIdBody, cellIdBody, photos, "Bearer $token")
+        }
+    }
+
+    /**
+     * Courier pickup at source locker — POST /api/v1/transactions/courier/pickup
+     * No body — courier identity from JWT.
+     */
+    suspend fun courierPickupFromLocker(
+        token: String
+    ): NetworkResult<TransactionResponse> {
+        return safeApiCall {
+            apiService.courierPickupFromLocker("Bearer $token")
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Locker Service – Cell sync & heartbeat (device-level JWT)
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches all cells for a locker from the backend.
+     * Used by LockerSyncWorker to populate the local Room DB.
+     */
+    suspend fun getLockerCells(
+        lockerId: String,
+        token: String
+    ): NetworkResult<List<CellDto>> {
+        val url = ApiEndpoints.getLockerCellsUrl(lockerId)
+        return safeApiCall { apiService.getLockerCells(url, "Bearer $token") }
+    }
+
+    /**
+     * Reports kiosk heartbeat to the backend.
+     * PATCH /api/v1/lockers/{lockerId}/status?status=ONLINE
+     */
+    suspend fun patchLockerStatus(
+        lockerId: String,
+        status: String,
+        token: String
+    ): NetworkResult<ApiResponse> {
+        val url = ApiEndpoints.getLockerStatusUrl(lockerId)
+        return safeApiCall { apiService.patchLockerStatus(url, status, "Bearer $token") }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -375,5 +540,14 @@ class ApiRepository(
             }
             NetworkResult.Error("Unable to connect after multiple attempts. Please try again later.")
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Kiosk Provisioning (no auth token — daily OTP in request body)
+    // ─────────────────────────────────────────────────────────────
+    suspend fun provisionKiosk(
+        request: com.blitztech.pudokiosk.data.api.dto.kiosk.KioskProvisionRequest
+    ): NetworkResult<com.blitztech.pudokiosk.data.api.dto.kiosk.KioskProvisionApiResponse> {
+        return safeApiCall { apiService.provisionKiosk(request) }
     }
 }

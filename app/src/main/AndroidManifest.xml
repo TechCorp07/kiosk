@@ -217,7 +217,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:parentActivityName=".ui.main.CustomerMainActivity" />
+            android:parentActivityName=".ui.onboarding.UserTypeSelectionActivity" />
 
         <!-- Courier Flows -->
         <activity
@@ -315,6 +315,14 @@
         <activity android:name=".ui.courier.CourierLoginActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <!-- Kiosk Provisioning (first-boot wizard) -->
+        <activity
+            android:name=".ui.technician.KioskProvisioningActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
 
         <activity android:name=".ui.customer.TrackDeliveryActivity"
             android:exported="false"

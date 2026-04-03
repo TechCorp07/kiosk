@@ -64,7 +64,7 @@ class WinnsenProtocolTest {
     // ─────────────────────────────────────────────────────────────
     @Test
     fun isValidLockNumber_validRange() {
-        for (lock in 1..32) {
+        for (lock in 1..64) {
             assertTrue("Lock $lock should be valid", WinnsenProtocol.isValidLockNumber(lock))
         }
     }
@@ -80,8 +80,8 @@ class WinnsenProtocolTest {
     }
 
     @Test
-    fun isValidLockNumber_33_invalid() {
-        assertFalse(WinnsenProtocol.isValidLockNumber(33))
+    fun isValidLockNumber_65_invalid() {
+        assertFalse(WinnsenProtocol.isValidLockNumber(65))
     }
 
     @Test
@@ -112,7 +112,7 @@ class WinnsenProtocolTest {
     @Test
     fun createUnlockCommand_invalidLock_returnsNull() {
         assertNull(WinnsenProtocol.createUnlockCommand(0))
-        assertNull(WinnsenProtocol.createUnlockCommand(33))
+        assertNull(WinnsenProtocol.createUnlockCommand(65))
         assertNull(WinnsenProtocol.createUnlockCommand(-5))
     }
 
@@ -139,7 +139,7 @@ class WinnsenProtocolTest {
     @Test
     fun createStatusCommand_invalidLock_returnsNull() {
         assertNull(WinnsenProtocol.createStatusCommand(0))
-        assertNull(WinnsenProtocol.createStatusCommand(99))
+        assertNull(WinnsenProtocol.createStatusCommand(100))
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -288,6 +288,12 @@ class WinnsenProtocolTest {
     }
 
     @Test
+    fun lockStatus_fromByte_cooldown() {
+        assertEquals(WinnsenProtocol.LockStatus.COOLDOWN,
+            WinnsenProtocol.LockStatus.fromByte(0x02))
+    }
+
+    @Test
     fun lockStatus_fromByte_unknown() {
         assertEquals(WinnsenProtocol.LockStatus.UNKNOWN,
             WinnsenProtocol.LockStatus.fromByte(0x42))
@@ -297,6 +303,7 @@ class WinnsenProtocolTest {
     fun lockStatus_displayNames() {
         assertEquals("Open", WinnsenProtocol.LockStatus.OPEN.displayName)
         assertEquals("Closed", WinnsenProtocol.LockStatus.CLOSED.displayName)
+        assertEquals("Cooldown Active", WinnsenProtocol.LockStatus.COOLDOWN.displayName)
         assertEquals("Unknown", WinnsenProtocol.LockStatus.UNKNOWN.displayName)
     }
 
@@ -350,7 +357,7 @@ class WinnsenProtocolTest {
         assertEquals(0x06.toByte(), WinnsenProtocol.CMD_LENGTH)
         assertEquals(0x07.toByte(), WinnsenProtocol.RESP_LENGTH)
         assertEquals(1, WinnsenProtocol.MIN_LOCK)
-        assertEquals(32, WinnsenProtocol.MAX_LOCK)
+        assertEquals(64, WinnsenProtocol.MAX_LOCK)
         assertEquals(16, WinnsenProtocol.LOCKS_PER_BOARD)
     }
 }

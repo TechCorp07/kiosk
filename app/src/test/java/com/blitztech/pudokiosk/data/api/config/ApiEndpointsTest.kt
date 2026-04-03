@@ -88,8 +88,8 @@ class ApiEndpointsTest {
     fun lockerTransactionEndpoints_haveApiV1Prefix() {
         assertTrue(ApiEndpoints.VERIFY_RESERVATION.startsWith("api/v1/"))
         assertTrue(ApiEndpoints.SENDER_DROPOFF.startsWith("api/v1/"))
-        assertTrue(ApiEndpoints.COURIER_PICKUP.startsWith("api/v1/"))
-        assertTrue(ApiEndpoints.COURIER_DROPOFF.startsWith("api/v1/"))
+        assertTrue(ApiEndpoints.COURIER_PICKUP_SCAN.startsWith("api/v1/"))
+        assertTrue(ApiEndpoints.COURIER_DROPOFF_AT_LOCKER.startsWith("api/v1/"))
     }
 
     @Test

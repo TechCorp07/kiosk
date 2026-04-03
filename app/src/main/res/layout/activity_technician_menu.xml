@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/spacing_md">
+        android:padding="@dimen/spacing_lg">
 
         <!-- Header -->
         <FrameLayout
@@ -19,8 +19,8 @@
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
                 android:contentDescription="@string/back"
@@ -33,13 +33,13 @@
                 android:layout_gravity="center"
                 android:text="Technician Diagnostics"
                 android:textColor="@color/text_white"
-                android:textSize="28sp"
+                android:textSize="36sp"
                 android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/btnLogout"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:layout_gravity="end"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_logout"
@@ -55,7 +55,7 @@
             android:gravity="center"
             android:text="Select diagnostic tool or setting"
             android:textColor="@color/text_white"
-            android:textSize="20sp" />
+            android:textSize="24sp" />
 
         <!-- Diagnostic Tools Grid -->
         <GridLayout
@@ -69,7 +69,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardHardwareTest"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginEnd="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -87,19 +87,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_hardware"
                         app:tint="@color/zimpudo_primary" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Hardware\nTest"
+                        android:text="Hardware Test"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -108,7 +108,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardSystemLogs"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginStart="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -126,19 +126,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_logs"
                         app:tint="@color/zimpudo_primary" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="System\nLogs"
+                        android:text="System Logs"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -147,7 +147,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardDeviceSettings"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginEnd="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -165,19 +165,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_settings"
                         app:tint="@color/zimpudo_primary" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Device\nSettings"
+                        android:text="Device Settings"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -186,7 +186,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardNetworkDiag"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginStart="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -204,19 +204,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_network"
                         app:tint="@color/zimpudo_primary" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Network\nDiagnostics"
+                        android:text="Network Diagnostics"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -225,7 +225,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardDevMode"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginEnd="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -243,19 +243,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_code"
                         app:tint="@color/zimpudo_primary" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Developer\nMode"
+                        android:text="Developer Mode"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -264,7 +264,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardSystemInfo"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginStart="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -282,19 +282,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_info"
                         app:tint="@color/zimpudo_primary" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="System\nInfo"
+                        android:text="System Info"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -303,9 +303,10 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardClearData"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginEnd="@dimen/spacing_sm"
+                android:layout_marginBottom="@dimen/spacing_md"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
@@ -320,19 +321,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_clear"
                         app:tint="@color/error" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
                         android:text="Clear Data"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -341,9 +342,10 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardRemoteSupport"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginStart="@dimen/spacing_sm"
+                android:layout_marginBottom="@dimen/spacing_md"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
@@ -358,19 +360,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_support"
                         app:tint="@color/info" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Remote\nSupport"
+                        android:text="Remote Support"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -379,7 +381,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardMaintenance"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginEnd="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -397,20 +399,20 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_hardware"
                         app:tint="@color/warning" />
 
                     <TextView
                         android:id="@+id/tvMaintenanceLabel"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Maintenance\nMode"
+                        android:text="Maintenance Mode"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -419,7 +421,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardCheckUpdate"
                 android:layout_width="0dp"
-                android:layout_height="120dp"
+                android:layout_height="180dp"
                 android:layout_columnWeight="1"
                 android:layout_marginStart="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
@@ -437,19 +439,19 @@
                     android:padding="@dimen/spacing_md">
 
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:src="@drawable/ic_info"
                         app:tint="@color/zimpudo_primary" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Check for\nUpdates"
+                        android:text="Check for Updates"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="22sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -465,7 +467,7 @@
             android:gravity="center"
             android:text="App Version: --"
             android:textColor="@color/text_white"
-            android:textSize="16sp" />
+            android:textSize="20sp" />
 
     </LinearLayout>
 

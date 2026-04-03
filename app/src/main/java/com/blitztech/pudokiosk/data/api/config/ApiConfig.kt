@@ -8,7 +8,8 @@ package com.blitztech.pudokiosk.data.api.config
  */
 object ApiConfig {
     // Gateway base URL – all services behind the same gateway
-    const val BASE_URL = "https://api.zimpudo.com/"
+    // TODO [DEPLOY]: Change back to https://api.zimpudo.com/ for production
+    const val BASE_URL = "http://localhost:8222/"
 
     // Request timeout configurations (seconds)
     const val CONNECT_TIMEOUT = 30L

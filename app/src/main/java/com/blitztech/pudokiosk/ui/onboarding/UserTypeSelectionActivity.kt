@@ -8,6 +8,7 @@ import com.blitztech.pudokiosk.databinding.ActivityUserTypeSelectionBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.auth.SignInActivity
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
+import com.blitztech.pudokiosk.ui.collect.CollectionCodeActivity
 import com.blitztech.pudokiosk.ui.courier.CourierLoginActivity
 
 class UserTypeSelectionActivity : BaseKioskActivity() {
@@ -27,13 +28,15 @@ class UserTypeSelectionActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        // Set localized text
-        binding.tvTitle.text = getString(R.string.select_user_type)
-        binding.tvSubtitle.text = getString(R.string.user_type_subtitle)
+        //binding.tvTitle.text = getString(R.string.select_user_type)
 
-        // Customer card
-        binding.tvCustomerTitle.text = getString(R.string.user_type_customer)
-        binding.tvCustomerDescription.text = getString(R.string.user_type_customer_desc)
+        // Customer Receive card
+        binding.tvCustomerReceiveTitle.text = getString(R.string.user_type_customer_receive)
+        binding.tvCustomerReceiveDesc.text = getString(R.string.user_type_customer_receive_desc)
+
+        // Customer Send card
+        binding.tvCustomerSendTitle.text = getString(R.string.user_type_customer_send)
+        binding.tvCustomerSendDesc.text = getString(R.string.user_type_customer_send_desc)
 
         // Courier card
         binding.tvCourierTitle.text = getString(R.string.user_type_courier)
@@ -41,12 +44,19 @@ class UserTypeSelectionActivity : BaseKioskActivity() {
     }
 
     private fun setupClickListeners() {
-        binding.cardCustomer.setOnClickListener {
+        // Customer Receive → go directly to collection flow (no login required)
+        binding.cardCustomerReceive.setOnClickListener {
+            startActivity(Intent(this, CollectionCodeActivity::class.java))
+            finish()
+        }
+
+        // Customer Send → sign in as CUSTOMER (send flow)
+        binding.cardCustomerSend.setOnClickListener {
             navigateToAuth(UserType.CUSTOMER)
         }
 
+        // Courier → PIN-based courier login
         binding.cardCourier.setOnClickListener {
-            // Couriers have their own PIN-based authentication screen
             startActivity(Intent(this, CourierLoginActivity::class.java))
             finish()
         }

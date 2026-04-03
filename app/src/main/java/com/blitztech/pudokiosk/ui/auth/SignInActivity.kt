@@ -61,7 +61,7 @@ class SignInActivity : BaseKioskActivity() {
     private fun setupViews() {
         // Set localized text
         binding.tvWelcomeBack.text = getString(R.string.welcome_back)
-        binding.tvSubtitle.text = getString(R.string.sign_in_subtitle)
+        //binding.tvSubtitle.text = getString(R.string.sign_in_subtitle)
         binding.etMobileNumber.hint = getString(R.string.mobile_placeholder)
         binding.etPin.hint = getString(R.string.pin_placeholder)
         binding.btnSignIn.text = getString(R.string.sign_in)

@@ -14,7 +14,8 @@ data class PackageDimensions(
 data class PackageDetails(
     @Json(name = "packageSize") val packageSize: String, // "XS", "S", "M", "L", "XL"
     @Json(name = "packageDimensions") val packageDimensions: PackageDimensions,
-    @Json(name = "contents") val contents: String
+    @Json(name = "contents") val contents: String,
+    @Json(name = "packageClass") val packageClass: String // "STANDARD", "FRAGILE", "EXPRESS", "PERISHABLE"
 )
 
 @JsonClass(generateAdapter = true)
@@ -46,7 +47,9 @@ data class CreateOrderRequest(
     @Json(name = "packageDetails") val packageDetails: PackageDetails,
     @Json(name = "recipient") val recipient: Recipient,
     @Json(name = "senderLocation") val senderLocation: SenderLocation,
-    @Json(name = "currency") val currency: String // "USD" or "ZWL"
+    @Json(name = "currency") val currency: String, // "USD" or "ZWL"
+    @Json(name = "senderMode") val senderMode: String = "LOCKER_DROP",
+    @Json(name = "receiverMode") val receiverMode: String = "LOCKER_PICKUP"
 )
 
 @JsonClass(generateAdapter = true)
@@ -120,10 +123,12 @@ enum class PackageSize(
     }
 }
 
-// Payment is processed via Paynow through the backend.
-// The kiosk does not connect to individual providers directly.
+// Payment methods matching backend's MobileMoneyMethod enum (Paynow SDK).
+// The kiosk sends the method name; Paynow gateway routes to the correct provider.
 enum class PaymentMethod(val displayName: String, val apiValue: String) {
-    PAYNOW("Paynow", "PAYNOW");
+    ECOCASH("EcoCash", "ECOCASH"),
+    ONEMONEY("OneMoney", "ONEMONEY"),
+    TELECASH("TeleCash", "TELECASH");
 
     companion object {
         fun fromApiValue(value: String): PaymentMethod? {

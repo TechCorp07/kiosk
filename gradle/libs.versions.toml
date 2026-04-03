@@ -1,7 +1,7 @@
 
 [versions]
 activityKtx = "1.11.0"
-agp = "9.0.0"
+agp = "9.1.0"
 androidDatabaseSqlcipher = "4.5.4"
 constraintlayoutVersion = "2.2.1"
 converterMoshi = "3.0.0"
@@ -67,4 +67,3 @@ androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", versi
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-

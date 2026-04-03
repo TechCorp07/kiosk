@@ -95,6 +95,9 @@ dependencies {
     // USB-Serial (for later phases)
     implementation(libs.usb.serial.for1.android)
 
+    // jBCrypt — offline OTP validation (Phase 4)
+    implementation("org.mindrot:jbcrypt:0.4")
+
     // CameraX (USB webcam security photos)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)

@@ -28,6 +28,8 @@ data class SendPackageData(
     var packageContents: String = "",
     var packageSize: PackageSize? = null,
     var currency: Currency? = null,
+    var packageClass: String = "",       // "STANDARD", "FRAGILE", "EXPRESS", "PERISHABLE"
+    var packageClassName: String = "",
 
     // Sender location
     var senderLatitude: Double = 0.0,
@@ -71,7 +73,8 @@ data class SendPackageData(
                 packageHeight > 0.0 &&
                 packageContents.isNotBlank() &&
                 packageSize != null &&
-                currency != null
+                currency != null &&
+                packageClass.isNotBlank()
     }
 
     /**
@@ -113,7 +116,8 @@ data class SendPackageData(
                 width = packageWidth,
                 height = packageHeight
             ),
-            contents = packageContents
+            contents = packageContents,
+            packageClass = packageClass
         )
     }
 

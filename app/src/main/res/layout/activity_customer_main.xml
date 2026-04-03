@@ -133,6 +133,69 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Drop-off Reserved Package Card (Initially Hidden) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardDropoffReserved"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/kiosk_card_height"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:visibility="gone"
+                app:cardCornerRadius="@dimen/corner_radius_lg"
+                app:cardElevation="@dimen/elevation_md">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/spacing_lg"
+                    android:background="@color/info_light">
+
+                    <ImageView
+                        android:layout_width="@dimen/kiosk_icon_size"
+                        android:layout_height="@dimen/kiosk_icon_size"
+                        android:layout_gravity="center"
+                        android:layout_marginEnd="@dimen/spacing_lg"
+                        android:src="@drawable/ic_lock"
+                        app:tint="@color/zimpudo_primary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvDropoffReserved"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="@dimen/spacing_sm"
+                            android:text="Drop-off Reserved Package"
+                            android:textColor="@color/text_primary"
+                            android:textSize="26sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvDropoffReservedDescription"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="You have a pending package to deposit into the locker."
+                            android:textColor="@color/text_secondary"
+                            android:textSize="20sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_arrow_forward"
+                        app:tint="@color/text_hint" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- Collect Package Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardCollectPackage"

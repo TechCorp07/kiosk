@@ -39,6 +39,7 @@ object WinnsenProtocol {
     const val STATUS_FAILURE: Byte = 0x00.toByte()
     const val STATUS_OPEN: Byte = 0x01.toByte()
     const val STATUS_CLOSED: Byte = 0x00.toByte()
+    const val STATUS_COOLDOWN: Byte = 0x02.toByte()  // Lock rejected: duty-cycle cooldown active
 
     // Configuration
     const val MIN_LOCK = 1
@@ -54,6 +55,12 @@ object WinnsenProtocol {
         0x03.toByte(),  // Board 3: locks 33-48
         0x04.toByte()   // Board 4: locks 49-64
     )
+
+    // Named station constants for convenience
+    val STATION_0: Byte get() = STATION_BYTES[0]  // Board 1
+    val STATION_1: Byte get() = STATION_BYTES[1]  // Board 2
+    val STATION_2: Byte get() = STATION_BYTES[2]  // Board 3
+    val STATION_3: Byte get() = STATION_BYTES[3]  // Board 4
 
     /**
      * Returns the RS485 station byte for a given global lock number (1-64).
@@ -186,6 +193,7 @@ object WinnsenProtocol {
     enum class LockStatus(val value: Byte, val displayName: String) {
         OPEN(STATUS_OPEN, "Open"),
         CLOSED(STATUS_CLOSED, "Closed"),
+        COOLDOWN(STATUS_COOLDOWN, "Cooldown Active"),
         UNKNOWN(0xFF.toByte(), "Unknown");
 
         companion object {

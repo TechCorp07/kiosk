@@ -36,10 +36,13 @@ interface LockersDao {
 @Dao
 interface OutboxDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun enqueue(e: OutboxEventEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(e: OutboxEventEntity)
     @Query("SELECT * FROM events_outbox WHERE delivered = 0 ORDER BY createdAt LIMIT :limit")
     suspend fun pending(limit: Int): List<OutboxEventEntity>
     @Query("UPDATE events_outbox SET delivered = 1 WHERE idempotencyKey IN (:keys)")
     suspend fun markDelivered(keys: List<String>)
+    @Query("DELETE FROM events_outbox WHERE delivered = 1 AND createdAt < :cutoffEpochMs")
+    suspend fun deleteDeliveredBefore(cutoffEpochMs: Long)
 }
 
 @Dao
@@ -51,4 +54,61 @@ interface SecurityPhotoDao {
     suspend fun markUploaded(ids: List<Long>)
     @Query("DELETE FROM security_photos WHERE capturedAt < :epoch")
     suspend fun deleteOlderThan(epoch: Long)
+}
+
+/**
+ * CellsDao — manages local cell inventory synced from the locker service.
+ * Cells are synced during heartbeat (LockerSyncWorker) and used for
+ * offline cell assignment during courier dropoff.
+ */
+@Dao
+interface CellsDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(cells: List<CellEntity>)
+
+    @Query("SELECT * FROM cells WHERE lockerUuid = :lockerUuid AND status = 'AVAILABLE' ORDER BY physicalDoorNumber ASC LIMIT 1")
+    suspend fun getNextAvailableCell(lockerUuid: String): CellEntity?
+
+    @Query("SELECT * FROM cells WHERE lockerUuid = :lockerUuid AND status = 'AVAILABLE' ORDER BY physicalDoorNumber ASC")
+    suspend fun getAvailableCells(lockerUuid: String): List<CellEntity>
+
+    @Query("SELECT * FROM cells WHERE physicalDoorNumber = :doorNumber LIMIT 1")
+    suspend fun getCellByDoorNumber(doorNumber: Int): CellEntity?
+
+    @Query("UPDATE cells SET status = 'OCCUPIED' WHERE cellUuid = :cellUuid")
+    suspend fun markCellOccupied(cellUuid: String)
+
+    @Query("UPDATE cells SET status = 'AVAILABLE' WHERE cellUuid = :cellUuid")
+    suspend fun markCellAvailable(cellUuid: String)
+
+    @Query("SELECT COUNT(*) FROM cells WHERE lockerUuid = :lockerUuid AND status = 'AVAILABLE'")
+    suspend fun countAvailable(lockerUuid: String): Int
+
+    @Query("SELECT * FROM cells WHERE lockerUuid = :lockerUuid ORDER BY physicalDoorNumber ASC")
+    suspend fun getAllForLocker(lockerUuid: String): List<CellEntity>
+
+    @Query("DELETE FROM cells WHERE lockerUuid = :lockerUuid")
+    suspend fun deleteAllForLocker(lockerUuid: String)
+}
+
+/**
+ * OfflineCollectionDao — stores pre-synced collection data for offline OTP validation.
+ * Populated by LockerSyncWorker from the backend's pending-collections endpoint.
+ */
+@Dao
+interface OfflineCollectionDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entry: OfflineCollectionEntity)
+
+    @Query("SELECT * FROM offline_collections WHERE trackingNumber = :trackingNumber LIMIT 1")
+    suspend fun getByTracking(trackingNumber: String): OfflineCollectionEntity?
+
+    @Query("UPDATE offline_collections SET collected = 1 WHERE trackingNumber = :trackingNumber")
+    suspend fun markCollected(trackingNumber: String)
+
+    @Query("DELETE FROM offline_collections WHERE collected = 1 AND syncedAt < :epoch")
+    suspend fun purgeCollected(epoch: Long)
+
+    @Query("SELECT * FROM offline_collections WHERE collected = 0")
+    suspend fun getAllPending(): List<OfflineCollectionEntity>
 }

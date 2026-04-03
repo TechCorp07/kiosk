@@ -11,7 +11,6 @@ import com.blitztech.pudokiosk.data.api.dto.order.*
 import com.blitztech.pudokiosk.data.api.dto.user.Address
 import com.blitztech.pudokiosk.data.api.dto.user.SignUpRequest
 import com.blitztech.pudokiosk.data.db.*
-import com.blitztech.pudokiosk.data.net.CourierLoginRequest
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -73,31 +72,31 @@ class DataClassTest {
     // ──── Collection DTOs ────────────────────────────────────────
     @Test
     fun recipientAuthRequest_fields() {
-        val req = RecipientAuthRequest("CODE123", "KIOSK-1")
-        assertEquals("CODE123", req.collectionCode)
-        assertEquals("KIOSK-1", req.kioskId)
+        val req = RecipientAuthRequest("TRK123", "CODE123")
+        assertEquals("TRK123", req.trackingNumber)
+        assertEquals("CODE123", req.credential)
     }
 
     @Test
     fun recipientAuthResponse_fields() {
-        val resp = RecipientAuthResponse(true, "OK", "o1", "L1", 5, "John", "M")
+        val resp = RecipientAuthResponse(true, "OK", "TRK123", "CAB-1", "CELL-1", 5)
         assertTrue(resp.success)
         assertEquals(5, resp.cellNumber)
-        assertEquals("John", resp.recipientName)
+        assertEquals("TRK123", resp.trackingNumber)
     }
 
     @Test
     fun lockerOpenRequest_fields() {
-        val req = LockerOpenRequest("L1", 3)
-        assertEquals("L1", req.lockerId)
-        assertEquals(3, req.cellNumber)
+        val req = LockerOpenRequest("CAB-1", "CELL-1")
+        assertEquals("CAB-1", req.cabinetId)
+        assertEquals("CELL-1", req.cellId)
     }
 
     @Test
     fun lockerPickupRequest_fields() {
-        val req = LockerPickupRequest("o1", "KIOSK-1")
-        assertEquals("o1", req.orderId)
-        assertEquals("KIOSK-1", req.kioskId)
+        val req = LockerPickupRequest("TRK123")
+        assertEquals("TRK123", req.trackingNumber)
+        assertEquals("OTP", req.authenticationType)
     }
 
     // ──── Courier DTOs ───────────────────────────────────────
@@ -279,19 +278,6 @@ class DataClassTest {
         val e = UserEntity("u1", "123", "a@b.com", "USER", "VERIFIED", true, 100L)
         assertTrue(e.pinSet)
         assertEquals("VERIFIED", e.kycStatus)
-    }
-
-    // ──── data/net DTOs ──────────────────────────────────────────
-    @Test
-    fun courierLoginRequest_net() {
-        val req = CourierLoginRequest("1234")
-        assertEquals("1234", req.codeOrPin)
-    }
-
-    @Test
-    fun courierParcel_net() {
-        val p = com.blitztech.pudokiosk.data.net.CourierParcel("p1", "L1", "TRK", "M")
-        assertEquals("p1", p.parcelId)
     }
 
     // ──── Copy / equality ────────────────────────────────────────

@@ -23,6 +23,13 @@ class Prefs(context: Context) {
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_LAST_LOGIN = "last_login"
         private const val KEY_BAUD_RATE = "scanner_baud"
+        private const val KEY_PRIMARY_LOCKER_UUID = "primary_locker_uuid"
+        private const val KEY_KIOSK_DEVICE_ID = "kiosk_device_id"
+        private const val KEY_TOKEN_EXPIRES_AT = "token_expires_at"
+        private const val KEY_PROVISIONED = "kiosk_provisioned"
+        private const val KEY_SITE_NAME = "kiosk_site_name"
+        private const val KEY_LOCKER_COUNT = "kiosk_locker_count"
+        private const val KEY_API_BASE_URL_OVERRIDE = "api_base_url_override"
     }
 
     private val prefs: SharedPreferences
@@ -213,4 +220,66 @@ class Prefs(context: Context) {
     // OTA update settings
     fun getUpdateServerUrl(): String = getString("update_server_url", "https://api.zimpudo.com")
     fun setUpdateServerUrl(url: String) = putString("update_server_url", url)
-}
+
+    // ── Locker provisioning ──────────────────────────────────────────────
+    /**
+     * The backend UUID of this kiosk's primary locker.
+     * Set during provisioning via the admin screen.
+     * Used for: cell assignment (courier dropoff), heartbeat, pending-collections sync.
+     */
+    fun getPrimaryLockerUuid(): String = getString(KEY_PRIMARY_LOCKER_UUID, "")
+    fun savePrimaryLockerUuid(uuid: String) = putString(KEY_PRIMARY_LOCKER_UUID, uuid)
+
+    /**
+     * Unique device ID for this kiosk (generated once, stored permanently).
+     * Used for CLIENT_CREDENTIALS device-level JWT authentication.
+     */
+    fun getKioskDeviceId(): String {
+        var id = getString(KEY_KIOSK_DEVICE_ID, "")
+        if (id.isBlank()) {
+            id = java.util.UUID.randomUUID().toString()
+            putString(KEY_KIOSK_DEVICE_ID, id)
+        }
+        return id
+    }
+
+    /**
+     * Token expiry timestamp (epoch ms). Enables proactive token refresh
+     * without parsing the JWT on every request.
+     */
+    fun getTokenExpiresAt(): Long = getLong(KEY_TOKEN_EXPIRES_AT, 0L)
+    fun setTokenExpiresAt(epochMs: Long) = putLong(KEY_TOKEN_EXPIRES_AT, epochMs)
+
+    /** Returns true if the stored token has expired or expires within the next 5 minutes. */
+    fun isTokenExpiredOrExpiringSoon(): Boolean {
+        val expiresAt = getTokenExpiresAt()
+        if (expiresAt == 0L) return true // Never set — assume expired
+        val nowPlusBuffer = System.currentTimeMillis() + (5 * 60 * 1000L) // 5 min buffer
+        return nowPlusBuffer >= expiresAt
+    }
+
+    // ── Kiosk Provisioning ───────────────────────────────────────────────
+
+    /**
+     * True once a technician has completed the 1-time provisioning wizard
+     * (locker UUID, site name, network config). Until provisioned, the kiosk
+     * shows the provisioning screen instead of the customer/courier UI.
+     */
+    fun isProvisioned(): Boolean = getBoolean(KEY_PROVISIONED, false)
+    fun setProvisioned(done: Boolean) = putBoolean(KEY_PROVISIONED, done)
+
+    /** Human-readable name of the site (e.g. "Westgate Shopping Centre"). */
+    fun getSiteName(): String = getString(KEY_SITE_NAME, "Zimpudo Kiosk")
+    fun setSiteName(name: String) = putString(KEY_SITE_NAME, name)
+
+    /** Number of physical locker units attached to this kiosk (1..4). */
+    fun getLockerCount(): Int = getInt(KEY_LOCKER_COUNT, 1)
+    fun setLockerCount(count: Int) = putInt(KEY_LOCKER_COUNT, count.coerceIn(1, 4))
+
+    /**
+     * Optional API base URL override for staging/dev kiosks.
+     * Blank = use default https://api.zimpudo.com.
+     */
+    fun getApiBaseUrlOverride(): String = getString(KEY_API_BASE_URL_OVERRIDE, "")
+    fun setApiBaseUrlOverride(url: String) = putString(KEY_API_BASE_URL_OVERRIDE, url)
+}

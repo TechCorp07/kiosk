@@ -45,12 +45,12 @@ class TechnicianMenuActivity : BaseKioskActivity() {
     private fun updateMaintenanceButton() {
         val inMaintenance = ZimpudoApp.prefs.isMaintenanceMode()
         if (inMaintenance) {
-            binding.tvMaintenanceLabel.text = "Exit\nMaintenance"
+            binding.tvMaintenanceLabel.text = "Exit Maintenance"
             binding.cardMaintenance.setCardBackgroundColor(
                 resources.getColor(com.blitztech.pudokiosk.R.color.warning_light, theme)
             )
         } else {
-            binding.tvMaintenanceLabel.text = "Maintenance\nMode"
+            binding.tvMaintenanceLabel.text = "Maintenance Mode"
             binding.cardMaintenance.setCardBackgroundColor(
                 resources.getColor(com.blitztech.pudokiosk.R.color.white, theme)
             )

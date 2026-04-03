@@ -31,6 +31,18 @@ class PackageDetailsFragment : Fragment() {
     private lateinit var sendPackageActivity: SendPackageActivity
     private lateinit var prefs: Prefs
 
+    /**
+     * Static list of package class enum values matching the backend's PackageClass enum.
+     * These are sent as part of the POST /api/v1/orders payload, not fetched from a separate endpoint.
+     */
+    private data class PackageClassOption(val enumValue: String, val displayName: String)
+    private val packageClassOptions = listOf(
+        PackageClassOption("STANDARD", "Standard"),
+        PackageClassOption("FRAGILE", "Fragile ⚠️"),
+        PackageClassOption("EXPRESS", "Express ⚡"),
+        PackageClassOption("PERISHABLE", "Perishable 🧊")
+    )
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -49,6 +61,7 @@ class PackageDetailsFragment : Fragment() {
         setupViews()
         setupClickListeners()
         restoreData()
+        setupPackageClassSpinner()
     }
 
     private fun setupDependencies() {
@@ -82,6 +95,22 @@ class PackageDetailsFragment : Fragment() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+    }
+
+    private fun setupPackageClassSpinner() {
+        val classNames = packageClassOptions.map { it.displayName }
+        val classAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, classNames)
+        classAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerPackageClass.adapter = classAdapter
+
+        // Restore previous selection if any
+        val data = sendPackageActivity.sendPackageData
+        if (data.packageClass.isNotBlank()) {
+            val selectedIndex = packageClassOptions.indexOfFirst { it.enumValue == data.packageClass }
+            if (selectedIndex >= 0) {
+                binding.spinnerPackageClass.setSelection(selectedIndex)
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -179,6 +208,13 @@ class PackageDetailsFragment : Fragment() {
             data.packageHeight
         )
         data.currency = Currency.values()[binding.spinnerCurrency.selectedItemPosition]
+        
+        val selectedPos = binding.spinnerPackageClass.selectedItemPosition
+        if (selectedPos >= 0 && selectedPos < packageClassOptions.size) {
+            val selectedClass = packageClassOptions[selectedPos]
+            data.packageClass = selectedClass.enumValue
+            data.packageClassName = selectedClass.displayName
+        }
     }
 
     /**

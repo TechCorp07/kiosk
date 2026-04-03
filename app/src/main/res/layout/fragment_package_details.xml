@@ -36,7 +36,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="Enter Package Details"
                 android:textColor="@color/text_primary"
-                android:textSize="32sp"
+                android:textSize="@dimen/text_size_headline"
                 android:textStyle="bold" />
 
             <!-- Dimensions Section -->
@@ -46,7 +46,7 @@
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:text="Package Dimensions (in meters)"
                 android:textColor="@color/text_primary"
-                android:textSize="26sp"
+                android:textSize="@dimen/text_size_title"
                 android:textStyle="bold" />
 
             <!-- Length -->
@@ -113,7 +113,7 @@
                 android:padding="@dimen/spacing_md"
                 android:text="Calculated Size: Medium"
                 android:textColor="@color/success"
-                android:textSize="22sp"
+                android:textSize="@dimen/text_size_body"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -137,22 +137,35 @@
 
             <!-- Currency Selection -->
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
-                android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Payment Currency"
-                android:textColor="@color/text_primary"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:text="Currency"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_body" />
 
             <Spinner
                 android:id="@+id/spinnerCurrency"
                 android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:background="@drawable/bg_input_field" />
+
+            <!-- Package Class Selection -->
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/spacing_lg"
-                android:minHeight="48dp"
-                android:padding="@dimen/spacing_md" />
+                android:text="Package Class"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/text_size_body" />
+
+            <Spinner
+                android:id="@+id/spinnerPackageClass"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/input_height"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:background="@drawable/bg_input_field" />
 
         </LinearLayout>
     </ScrollView>

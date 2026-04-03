@@ -10,7 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
         android:padding="@dimen/spacing_xl">
@@ -24,19 +24,22 @@
             android:contentDescription="Back"
             app:tint="@color/white" />
 
-        <!-- ZIMPUDO Logo -->
+        <!-- ZIMPUDO Logo — 10x wide, 1.5x tall, centred -->
         <ImageView
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
+            android:layout_width="500dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center_horizontal"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
             android:src="@drawable/zimpudo_logo"
             android:contentDescription="@string/app_name"
-            android:layout_marginBottom="@dimen/spacing_lg" />
+            android:layout_marginBottom="@dimen/spacing_md" />
 
         <!-- Welcome Message -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="WELCOME | MAUYA |\nSIYAKWAMUKELA"
+            android:text="WELCOME | MAUYA | SIYAKWAMUKELA"
             android:textColor="@color/text_white"
             android:textSize="26sp"
             android:textStyle="bold"
@@ -47,13 +50,17 @@
     <!-- Language Selection Container -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="3"
+        android:layout_height="wrap_content"
         android:background="@drawable/bg_white_rounded_top"
         android:orientation="vertical"
+        android:gravity="bottom"
         android:padding="@dimen/spacing_xl">
 
         <!-- Title -->
+
+        <!-- Subtitle -->
+
+        <!-- Language List — grows to fill available space -->
         <TextView
             android:id="@+id/tvTitle"
             style="@style/Text.Title"
@@ -62,34 +69,36 @@
             android:layout_marginBottom="@dimen/spacing_sm"
             android:text="@string/select_language" />
 
-        <!-- Subtitle -->
-        <TextView
-            android:id="@+id/tvSubtitle"
-            style="@style/Text.Subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_xl"
-            android:text="@string/language_subtitle" />
-
-        <!-- Language List -->
+        <!-- Continue Button — big kiosk button, centred, ~65% width -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvLanguages"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_xl"
             android:clipToPadding="false"
             android:overScrollMode="never" />
 
-        <!-- Continue Button -->
-        <Button
-            android:id="@+id/btnContinue"
-            style="@style/Button.Primary"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/button_height"
-            android:text="@string/continue_button"
-            android:drawableEnd="@drawable/ic_arrow_forward"
-            android:drawablePadding="@dimen/spacing_sm" />
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btnContinue"
+                style="@style/Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="100dp"
+                android:layout_marginEnd="100dp"
+                android:drawableEnd="@drawable/ic_arrow_forward"
+                android:drawablePadding="@dimen/spacing_md"
+                android:minWidth="0dp"
+                android:paddingStart="48dp"
+                android:paddingEnd="48dp"
+                android:text="@string/continue_button"
+                android:textSize="52sp" />
+
+        </FrameLayout>
 
     </LinearLayout>
 

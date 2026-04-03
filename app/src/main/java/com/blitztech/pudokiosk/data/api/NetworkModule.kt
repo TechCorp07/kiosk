@@ -1,8 +1,10 @@
 package com.blitztech.pudokiosk.data.api
 
 import android.content.Context
+import com.blitztech.pudokiosk.auth.AuthInterceptor
 import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.repository.ApiRepository
+import com.blitztech.pudokiosk.prefs.Prefs
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -16,7 +18,7 @@ object NetworkModule {
     /** Set from ZimpudoApp.onCreate(). Controls HTTP logging verbosity. */
     var isDebug: Boolean = false
 
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(prefs: Prefs): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (isDebug)
                 HttpLoggingInterceptor.Level.BODY
@@ -25,6 +27,7 @@ object NetworkModule {
         }
 
         return OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(prefs))  // Auth before logging
             .addInterceptor(loggingInterceptor)
             .connectTimeout(ApiConfig.CONNECT_TIMEOUT, TimeUnit.SECONDS)
             .readTimeout(ApiConfig.READ_TIMEOUT, TimeUnit.SECONDS)

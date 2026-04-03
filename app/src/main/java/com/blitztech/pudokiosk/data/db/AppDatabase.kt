@@ -8,18 +8,22 @@ import androidx.room.RoomDatabase
         UserEntity::class,
         ParcelEntity::class,
         LockerEntity::class,
+        CellEntity::class,
+        OfflineCollectionEntity::class,
         OutboxEventEntity::class,
         AuditLogEntity::class,
         ConfigEntity::class,
         SecurityPhotoEntity::class
     ],
-    version = 4
+    version = 5
 )
 
 abstract class AppDatabase : RoomDatabase() {
     abstract fun users(): UsersDao
     abstract fun parcels(): ParcelsDao
     abstract fun lockers(): LockersDao
+    abstract fun cells(): CellsDao
+    abstract fun offlineCollections(): OfflineCollectionDao
     abstract fun outbox(): OutboxDao
     abstract fun config(): ConfigDao
     abstract fun audit(): AuditDao

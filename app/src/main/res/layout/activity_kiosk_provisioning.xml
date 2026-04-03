@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F0F1E"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="ZIMPUDO"
+            android:textColor="#7C5CFC"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.25" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Kiosk Provisioning"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="First-time setup — contact your Zimpudo system\nadministrator for today's provisioning code."
+            android:textColor="#9999BB"
+            android:textSize="18sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:background="#2A2A4A" />
+
+        <!-- ── STEP 1: Daily OTP Auth ── -->
+        <LinearLayout
+            android:id="@+id/layoutStep1Passcode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Step 1 — Daily Provisioning Code"
+                android:textColor="#CCCCFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Enter the 6-digit code from your SYS_ADMIN dashboard."
+                android:textColor="#9999AA"
+                android:textSize="14sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="6-Digit Provisioning Code">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etProvisioningPasscode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="6"
+                    android:textColor="#FFFFFF"
+                    android:textSize="26sp"
+                    android:letterSpacing="0.3"
+                    android:gravity="center" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAuthStep1"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp"
+                android:text="Verify Code"
+                android:textSize="20sp" />
+
+        </LinearLayout>
+
+        <!-- ── STEP 2: Locker Configuration ── -->
+        <LinearLayout
+            android:id="@+id/layoutStep2Config"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Step 2 — Locker Configuration"
+                android:textColor="#CCCCFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Enter locker short codes from the Admin Portal (e.g. ZLK4X9M2). A kiosk can control up to 4 lockers."
+                android:textColor="#9999AA"
+                android:textSize="14sp" />
+
+            <!-- Locker 1 (required) -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Locker 1 Code (required)">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etLockerCode1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapCharacters|textNoSuggestions"
+                    android:maxLength="8"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:letterSpacing="0.15" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Locker 2 (optional) -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Locker 2 Code (optional)">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etLockerCode2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapCharacters|textNoSuggestions"
+                    android:maxLength="8"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:letterSpacing="0.15" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Locker 3 (optional) -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Locker 3 Code (optional)">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etLockerCode3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapCharacters|textNoSuggestions"
+                    android:maxLength="8"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:letterSpacing="0.15" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Locker 4 (optional) -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Locker 4 Code (optional)">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etLockerCode4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapCharacters|textNoSuggestions"
+                    android:maxLength="8"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:letterSpacing="0.15" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Site Name -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Site Name (e.g. Westgate Mall)">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSiteName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapWords"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- API URL Override (optional) -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="API URL Override (blank = production)">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etApiUrlOverride"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textUri"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:hint="https://api.zimpudo.com" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Provision button (calls backend POST /api/v1/kiosks/provision) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCompleteProvisioning"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="20dp"
+                android:text="Provision Kiosk"
+                android:textSize="20sp" />
+
+            <!-- Progress -->
+            <ProgressBar
+                android:id="@+id/provisioningProgressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:visibility="gone" />
+
+            <!-- Status message -->
+            <TextView
+                android:id="@+id/tvProvisioningStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="32dp"
+                android:padding="12dp"
+                android:background="#1A2A4A"
+                android:textColor="#AADDFF"
+                android:textSize="18sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

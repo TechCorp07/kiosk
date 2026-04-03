@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="@dimen/spacing_lg"
+        android:padding="32dp"
         android:gravity="center_vertical">
 
         <!-- Language Info -->
@@ -25,29 +25,31 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
+            <!-- Primary name (e.g. "English") — 3× original 22sp = 66sp -->
             <TextView
                 android:id="@+id/tvLanguageName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="English"
                 android:textColor="@color/text_primary"
-                android:textSize="22sp"
+                android:textSize="66sp"
                 android:textStyle="bold" />
 
+            <!-- Native name (e.g. "English") — 3× original 20sp = 60sp -->
             <TextView
                 android:id="@+id/tvLanguageNative"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="English"
                 android:textColor="@color/text_secondary"
-                android:textSize="20sp" />
+                android:textSize="60sp" />
         </LinearLayout>
 
-        <!-- Selection Indicator -->
+        <!-- Selection Indicator — 3× original 24dp = 72dp -->
         <ImageView
             android:id="@+id/ivSelected"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:src="@drawable/ic_check_circle"
             android:visibility="gone"
             app:tint="@color/zimpudo_primary" />

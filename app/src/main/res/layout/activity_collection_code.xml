@@ -1,102 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:fillViewport="true">
+    android:background="@drawable/bg_gradient_primary"
+    android:orientation="vertical">
 
+    <!-- Green header — 2/7 of screen -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="2"
         android:orientation="vertical"
-        android:padding="32dp"
-        android:gravity="center_horizontal">
+        android:gravity="center"
+        android:padding="@dimen/spacing_xl">
 
         <!-- Back button -->
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="start"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
-            android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <!-- Icon -->
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back"
+                android:contentDescription="Back"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- Logo -->
         <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginTop="24dp"
-            android:src="@drawable/ic_pickup"
-            android:tint="@color/zimpudo_primary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Collect Your Package"
-            android:textColor="@color/white"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="Enter the collection code from your\nSMS or email notification"
-            android:textColor="@color/text_secondary"
-            android:textSize="20sp" />
-
-        <!-- Collection code input -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilCollectionCode"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:hint="Collection Code">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etCollectionCode"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapCharacters"
-                android:letterSpacing="0.15"
-                android:textColor="@color/white"
-                android:textSize="28sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Open locker button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnOpenLocker"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="24dp"
-            android:text="Open Locker"
-            android:textSize="22sp" />
-
-        <!-- Progress bar -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:visibility="gone" />
-
-        <!-- Status message -->
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_status_card"
-            android:gravity="center"
-            android:padding="16dp"
-            android:textColor="@color/white"
-            android:textSize="22sp"
-            android:visibility="gone" />
+            android:layout_width="500dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center_horizontal"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/zimpudo_logo"
+            android:contentDescription="@string/app_name" />
 
     </LinearLayout>
-</ScrollView>
+
+    <!-- White panel — 5/7 of screen -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="5"
+        android:background="@drawable/bg_white_rounded_top"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_xl"
+            android:gravity="center_horizontal">
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Collect Your Package"
+                android:textColor="@color/text_primary"
+                android:textSize="60sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginBottom="@dimen/spacing_xl" />
+
+            <!-- Tracking Number Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilTrackingNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:hint="Tracking Number"
+                app:startIconDrawable="@drawable/ic_pickup"
+                app:startIconTint="@color/zimpudo_primary"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTrackingNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:hint="e.g. ZP-20260328-XXXX"
+                    android:textColorHint="@color/text_hint"
+                    android:inputType="textCapCharacters"
+                    android:textSize="32sp"
+                    android:letterSpacing="0.10"
+                    android:maxLines="1" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- OTP / Collection Code Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCollectionCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_xl"
+                android:hint="Collection OTP"
+                app:startIconDrawable="@drawable/ic_key"
+                app:startIconTint="@color/zimpudo_primary"
+                app:endIconMode="password_toggle"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etCollectionCode"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:hint="6-digit code from SMS"
+                    android:textColorHint="@color/text_hint"
+                    android:inputType="number"
+                    android:textSize="32sp"
+                    android:letterSpacing="0.25"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:maxLength="6" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Open Locker Button — centred, not edge-to-edge -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenLocker"
+                    android:layout_width="match_parent"
+                    android:layout_height="160dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginEnd="100dp"
+                    android:text="Open Locker"
+                    android:textSize="52sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/zimpudo_primary" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:indeterminateTint="@color/white" />
+
+            </FrameLayout>
+
+            <!-- Status message -->
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status_card"
+                android:gravity="center"
+                android:padding="@dimen/spacing_md"
+                android:textColor="@color/text_primary"
+                android:textSize="36sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

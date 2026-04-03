@@ -7,8 +7,9 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkResult
-import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
-import com.blitztech.pudokiosk.data.api.dto.courier.TransactionResponse
+import com.blitztech.pudokiosk.data.api.config.ApiEndpoints
+import com.blitztech.pudokiosk.data.api.dto.courier.CourierOpsResponse
+import com.blitztech.pudokiosk.data.db.OutboxEventEntity
 import com.blitztech.pudokiosk.databinding.ActivityCourierDeliverBinding
 import com.blitztech.pudokiosk.deviceio.DoorMonitor
 import com.blitztech.pudokiosk.deviceio.HardwareManager
@@ -19,6 +20,8 @@ import com.blitztech.pudokiosk.deviceio.camera.PhotoReason
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.main.CourierMainActivity
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -28,17 +31,19 @@ import java.util.*
 /**
  * Courier Delivery / Drop-off Flow
  *
- * Backend model: POST /api/v1/transactions/courier/dropoff
- * Each scan triggers a dropoff transaction that returns the assigned cell.
+ * Backend: POST /api/v1/orders/{orderId}/dropoff?barcode=...&destinationLockerId=...
+ * (Orders Service — uses COURIER role JWT)
  *
  * Flow:
  * 1. Screen shows "Scan parcel barcode to begin drop-off"
  * 2. Courier scans parcel barcode
- * 3. Call courierDropoff → TransactionResponse with cellNumber
- * 4. Kiosk opens assigned locker cell
- * 5. DoorMonitor waits for close
- * 6. Show success → loop for next parcel
- * 7. "Finish Drop-off" button ends session
+ * 3. Search order by barcode to resolve orderId
+ * 4. Kiosk assigns available cell locally from Room DB
+ * 5. Kiosk opens assigned locker cell via RS485
+ * 6. DoorMonitor waits for close
+ * 7. Call POST /orders/{orderId}/dropoff to confirm with backend
+ * 8. Print receipt → loop for next parcel
+ * 9. "Finish Drop-off" button ends session
  */
 class CourierDeliverActivity : BaseKioskActivity() {
 
@@ -47,6 +52,7 @@ class CourierDeliverActivity : BaseKioskActivity() {
     private val hw: HardwareManager by lazy { HardwareManager.getInstance(this) }
     private val api by lazy { ZimpudoApp.apiRepository }
     private val printer: CustomTG2480HIIIDriver by lazy { CustomTG2480HIIIDriver(this) }
+    private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
     private var deliveredCount = 0
@@ -55,8 +61,14 @@ class CourierDeliverActivity : BaseKioskActivity() {
     private var idleJob: Job? = null
     private var isWaitingForDoor = false
 
+    // State for the current parcel being processed
+    private var lastTxnTracking: String = ""
+    private var lastTxnCell: Int = 0
+    private var lastTxnOrderId: String = ""
+
     companion object {
         private const val IDLE_TIMEOUT_MS = 2 * 60 * 1000L // 2 minutes
+        private const val TAG = "CourierDeliverActivity"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,56 +135,74 @@ class CourierDeliverActivity : BaseKioskActivity() {
         }
     }
 
-    // ── Transaction flow ─────────────────────────────────────────
-    private fun processDropoff(trackingNumber: String) {
+    // ── Transaction flow ───────────────────────────────────────────
+    /**
+     * Step 1: Search order by barcode → get orderId.
+     * Step 2: Assign an available cell locally from Room DB.
+     * Step 3: Open the cell.
+     * Step 4: After door close → confirm with backend.
+     */
+    private fun processDropoff(barcode: String) {
         lifecycleScope.launch {
             val token = prefs.getAccessToken() ?: ""
-            val kioskId = prefs.getLocationId().ifBlank { "KIOSK-001" }
 
-            val request = TransactionRequest(
-                trackingNumber = trackingNumber,
-                kioskId = kioskId
-            )
-            val result = api.courierDropoff(request, token)
-
-            when (result) {
-                is NetworkResult.Success -> {
-                    val resp = result.data
-                    if (!resp.success) {
-                        showToast("Dropoff failed: ${resp.message}")
-                        enterScanMode()
-                        return@launch
-                    }
-                    val cellNumber = resp.cellNumber
-                    if (cellNumber != null && cellNumber > 0) {
-                        showStatus("✅ Assigned to Locker $cellNumber\nOpening…")
-                        lastTxnTracking = trackingNumber
-                        lastTxnCell = cellNumber
-                        openLockerForDropoff(resp)
-                    } else {
-                        showToast("No locker cell assigned: ${resp.message}")
-                        enterScanMode()
-                    }
-                }
-                is NetworkResult.Error -> {
-                    showToast("Dropoff failed: ${result.message}")
-                    enterScanMode()
-                }
-                is NetworkResult.Loading<*> -> { /* no-op */ }
+            // Search order to resolve orderId
+            showStatus("🔍 Looking up order for: $barcode…")
+            val orderResult = api.searchOrder(barcode, token)
+            val orderId = when (orderResult) {
+                is NetworkResult.Success -> orderResult.data.content.firstOrNull()?.orderId
+                else -> null
             }
+
+            if (orderId == null) {
+                showToast("⚠️ Parcel not found: $barcode")
+                enterScanMode()
+                return@launch
+            }
+
+            // Assign a cell locally from Room DB
+            val lockerUuid = prefs.getPrimaryLockerUuid()
+            val cell = try {
+                ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
+            } catch (_: Exception) { null }
+
+            if (cell == null) {
+                showToast("⛔ No available cells — kiosk may be full.")
+                enterScanMode()
+                return@launch
+            }
+
+            lastTxnTracking = barcode
+            lastTxnCell = cell.physicalDoorNumber
+            lastTxnOrderId = orderId
+
+            showStatus("✅ Assigned to cell ${cell.physicalDoorNumber} (${cell.cellSize})… Opening…")
+
+            // Mark cell as occupied locally immediately to prevent double-assignment
+            ZimpudoApp.database.cells().markCellOccupied(cell.cellUuid)
+
+            openLockerForDropoff(cell.physicalDoorNumber, orderId, barcode, lockerUuid)
         }
     }
 
     // ── Open locker ──────────────────────────────────────────────
-    private fun openLockerForDropoff(txn: TransactionResponse) {
+    private fun openLockerForDropoff(
+        cellNumber: Int,
+        orderId: String,
+        barcode: String,
+        destinationLockerId: String
+    ) {
         isWaitingForDoor = true
         binding.btnFinishDropoff.isEnabled = false
-        val cellNumber = txn.cellNumber ?: return
 
         lifecycleScope.launch {
             try {
                 val locker = hw.getLocker() ?: run {
                     showToast("Locker hardware unavailable")
+                    // Free cell reservation on failure
+                    ZimpudoApp.database.cells().markCellAvailable(
+                        ZimpudoApp.database.cells().getCellByDoorNumber(cellNumber)?.cellUuid ?: ""
+                    )
                     enterScanMode()
                     return@launch
                 }
@@ -181,33 +211,44 @@ class CourierDeliverActivity : BaseKioskActivity() {
                 // Security photo before locker opens
                 SecurityCameraManager.getInstance(this@CourierDeliverActivity).captureSecurityPhoto(
                     reason = PhotoReason.COURIER_DELIVER,
-                    referenceId = txn.transactionId ?: txn.orderId ?: "",
+                    referenceId = orderId,
                     userId = prefs.getString("courier_id", "")
                 )
 
                 val result = locker.unlockLock(cellNumber)
-                if (!result.success) {
+                if (result.status == com.blitztech.pudokiosk.deviceio.rs485.WinnsenProtocol.LockStatus.COOLDOWN) {
+                    showToast("This locker was recently used. Please wait ~15 seconds and try again.")
+                    ZimpudoApp.database.cells().markCellAvailable(
+                        ZimpudoApp.database.cells().getCellByDoorNumber(cellNumber)?.cellUuid ?: ""
+                    )
+                    enterScanMode()
+                    return@launch
+                } else if (!result.success) {
                     showToast("Failed to open locker: ${result.errorMessage}")
+                    // Free cell reservation
+                    ZimpudoApp.database.cells().markCellAvailable(
+                        ZimpudoApp.database.cells().getCellByDoorNumber(cellNumber)?.cellUuid ?: ""
+                    )
                     enterScanMode()
                     return@launch
                 }
 
-                showStatus("🔓 Locker $cellNumber open!\n\nPlace the parcel inside and close the door.")
+                showStatus("🔓 Cell $cellNumber open!\n\nPlace the parcel inside and close the door.")
 
                 doorMonitor?.stop()
                 doorMonitor = DoorMonitor(locker, cellNumber, lifecycleScope).also {
                     it.start(
-                        onDoorOpenTooLong = {
-                            hw.speaker.startDoorCloseReminder()
-                        },
+                        onDoorOpenTooLong = { hw.speaker.startDoorCloseReminder() },
                         onDoorTimeout = {
                             hw.speaker.stopDoorCloseReminder()
-                            showToast("Door timeout — please close the locker.")
+                            showToast("Door timeout — closing session.")
+                            enterScanMode()
                         },
                         onDoorClosed = {
                             hw.speaker.stopDoorCloseReminder()
                             hw.speaker.playSuccessChime()
-                            onDropoffComplete()
+                            // Confirm with backend after door close
+                            confirmDropoffWithBackend(orderId, barcode, destinationLockerId)
                         }
                     )
                 }
@@ -215,6 +256,37 @@ class CourierDeliverActivity : BaseKioskActivity() {
                 showToast("Error: ${e.message}")
                 enterScanMode()
             }
+        }
+    }
+
+    private fun confirmDropoffWithBackend(orderId: String, barcode: String, destinationLockerId: String) {
+        lifecycleScope.launch {
+            val token = prefs.getAccessToken() ?: ""
+            val dropoffUrl = ApiEndpoints.getCourierDropoffUrl(orderId)
+
+            val result = api.courierDropoffAtLocker(dropoffUrl, barcode, destinationLockerId, token)
+
+            if (result !is NetworkResult.Success || !result.data.success) {
+                // Write to outbox for background retry
+                writeDropoffToOutbox(orderId, barcode, destinationLockerId)
+                android.util.Log.w(TAG, "Dropoff confirmation queued to outbox for $barcode")
+            }
+
+            onDropoffComplete()
+        }
+    }
+
+    private suspend fun writeDropoffToOutbox(orderId: String, barcode: String, destinationLockerId: String) {
+        try {
+            val payload = """{"orderId":"$orderId","barcode":"$barcode","destinationLockerId":"$destinationLockerId"}"""
+            val event = OutboxEventEntity(
+                idempotencyKey = "dropoff_${barcode}_${System.currentTimeMillis()}",
+                type = "courier_dropoff",
+                payloadJson = payload
+            )
+            ZimpudoApp.database.outbox().insert(event)
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to write dropoff to outbox", e)
         }
     }
 
@@ -248,9 +320,8 @@ class CourierDeliverActivity : BaseKioskActivity() {
         finish()
     }
 
+
     // ── Receipt printing ──────────────────────────────────────────
-    private var lastTxnTracking: String = ""
-    private var lastTxnCell: Int = 0
 
     private suspend fun printCourierReceipt(trackingNumber: String, cellNumber: Int) {
         try {

@@ -4,187 +4,189 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient_primary"
-    android:orientation="vertical"
-    android:padding="@dimen/spacing_lg">
+    android:orientation="vertical">
 
-    <!-- Logo -->
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="@dimen/spacing_xxl"
-        android:layout_marginBottom="@dimen/spacing_xl"
-        android:src="@drawable/zimpudo_logo"
-        android:contentDescription="@string/app_name" />
-
-    <!-- Main Content Container -->
+    <!-- Green header — 2/7 of screen -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="2"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_xl">
+
+        <!-- Logo — centred -->
+        <ImageView
+            android:layout_width="1000dp"
+            android:layout_height="400dp"
+            android:layout_gravity="center_horizontal"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/zimpudo_logo"
+            android:contentDescription="@string/app_name" />
+
+    </LinearLayout>
+
+    <!-- White panel — 5/7 of screen, cards fill it completely -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="5"
         android:background="@drawable/bg_white_rounded_top"
         android:orientation="vertical"
-        android:padding="@dimen/spacing_lg">
+        android:paddingTop="@dimen/spacing_sm"
+        android:paddingBottom="@dimen/spacing_sm"
+        android:paddingStart="@dimen/spacing_md"
+        android:paddingEnd="@dimen/spacing_md">
 
-        <!-- Title -->
-        <TextView
-            android:id="@+id/tvTitle"
-            style="@style/Text.Title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_md"
-            android:layout_marginBottom="@dimen/spacing_sm"
-            android:text="@string/select_user_type" />
-
-        <!-- Subtitle -->
-        <TextView
-            android:id="@+id/tvSubtitle"
-            style="@style/Text.Subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_xl"
-            android:text="@string/user_type_subtitle" />
-
-        <!-- User Type Cards Container -->
-        <LinearLayout
+        <!-- Customer Receive Card — fills 1/3 of white area -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardCustomerReceive"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:layout_marginBottom="@dimen/spacing_sm"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:cardCornerRadius="@dimen/corner_radius_md"
+            app:cardElevation="@dimen/elevation_md">
 
-            <!-- Customer Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardCustomer"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:layout_marginBottom="@dimen/spacing_lg"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:cardCornerRadius="@dimen/corner_radius_md"
-                app:cardElevation="@dimen/elevation_md">
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_md">
 
-                <LinearLayout
+                <ImageView
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:layout_marginBottom="@dimen/spacing_sm"
+                    android:src="@drawable/ic_customer"
+                    android:contentDescription="Customer Receive icon"
+                    app:tint="@color/zimpudo_primary" />
+
+                <TextView
+                    android:id="@+id/tvCustomerReceiveTitle"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/spacing_lg">
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/user_type_customer_receive"
+                    android:textColor="@color/text_primary"
+                    android:textSize="50sp"
+                    android:textStyle="bold" />
 
-                    <!-- Customer Icon -->
-                    <ImageView
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginEnd="@dimen/spacing_md"
-                        android:src="@drawable/ic_customer"
-                        android:contentDescription="Customer icon" />
+                <TextView
+                    android:id="@+id/tvCustomerReceiveDesc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/user_type_customer_receive_desc"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="36sp" />
 
-                    <!-- Customer Text Content -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-                        <TextView
-                            android:id="@+id/tvCustomerTitle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/user_type_customer"
-                            android:textColor="@color/text_primary"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
+        <!-- Customer Send Card — fills 1/3 of white area -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardCustomerSend"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginBottom="@dimen/spacing_sm"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:cardCornerRadius="@dimen/corner_radius_md"
+            app:cardElevation="@dimen/elevation_md">
 
-                        <TextView
-                            android:id="@+id/tvCustomerDescription"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/spacing_xs"
-                            android:text="@string/user_type_customer_desc"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="20sp" />
-
-                    </LinearLayout>
-
-                    <!-- Arrow Icon -->
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_arrow_forward"
-                        android:contentDescription="Navigate"
-                        app:tint="@color/zimpudo_primary" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- Courier Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardCourier"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:cardCornerRadius="@dimen/corner_radius_md"
-                app:cardElevation="@dimen/elevation_md">
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_md">
 
-                <LinearLayout
+                <ImageView
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:layout_marginBottom="@dimen/spacing_sm"
+                    android:src="@drawable/ic_customer"
+                    android:contentDescription="Customer Send icon"
+                    app:tint="@color/zimpudo_primary" />
+
+                <TextView
+                    android:id="@+id/tvCustomerSendTitle"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/spacing_lg">
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/user_type_customer_send"
+                    android:textColor="@color/text_primary"
+                    android:textSize="50sp"
+                    android:textStyle="bold" />
 
-                    <!-- Courier Icon -->
-                    <ImageView
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginEnd="@dimen/spacing_md"
-                        android:src="@drawable/ic_courier"
-                        android:contentDescription="Courier icon" />
+                <TextView
+                    android:id="@+id/tvCustomerSendDesc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/user_type_customer_send_desc"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="36sp" />
 
-                    <!-- Courier Text Content -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-                        <TextView
-                            android:id="@+id/tvCourierTitle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/user_type_courier"
-                            android:textColor="@color/text_primary"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
+        <!-- Courier Card — fills 1/3 of white area -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardCourier"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:cardCornerRadius="@dimen/corner_radius_md"
+            app:cardElevation="@dimen/elevation_md">
 
-                        <TextView
-                            android:id="@+id/tvCourierDescription"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/spacing_xs"
-                            android:text="@string/user_type_courier_desc"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="20sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_md">
 
-                    </LinearLayout>
+                <ImageView
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:layout_marginBottom="@dimen/spacing_sm"
+                    android:src="@drawable/ic_courier"
+                    android:contentDescription="Courier icon"
+                    app:tint="@color/zimpudo_primary" />
 
-                    <!-- Arrow Icon -->
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_arrow_forward"
-                        android:contentDescription="Navigate"
-                        app:tint="@color/zimpudo_primary" />
+                <TextView
+                    android:id="@+id/tvCourierTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/user_type_courier"
+                    android:textColor="@color/text_primary"
+                    android:textSize="50sp"
+                    android:textStyle="bold" />
 
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/tvCourierDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/user_type_courier_desc"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="36sp" />
 
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
 

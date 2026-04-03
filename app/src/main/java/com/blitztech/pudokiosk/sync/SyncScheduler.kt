@@ -6,26 +6,28 @@ import androidx.work.*
 import java.util.concurrent.TimeUnit
 
 /**
- * SyncScheduler — manages the WorkManager periodic sync job.
+ * SyncScheduler — manages WorkManager periodic jobs.
  *
- * Call [schedule] once from [ZimpudoApp.onCreate] to keep the outbox
- * continuously drained in the background. Call [enqueueImmediate] after
- * any operation that creates an outbox event while the device might be offline.
+ * Jobs managed:
+ *   - [SyncWorker]        — drains outbox events every 15 min (network required)
+ *   - [LockerSyncWorker]  — syncs cell inventory + sends heartbeat every 15 min (network required)
+ *
+ * Call [schedule] and [scheduleLockerSync] once from [ZimpudoApp.onCreate].
  */
 object SyncScheduler {
 
     private const val TAG = "SyncScheduler"
-
-    /** Minimum interval between periodic syncs (WorkManager enforces ≥ 15 min). */
     private const val PERIODIC_INTERVAL_MINUTES = 15L
 
     private val constraints = Constraints.Builder()
         .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
+    // ── Outbox sync ──────────────────────────────────────────────────────
+
     /**
-     * Registers a periodic sync job that survives app restarts.
-     * Safe to call multiple times — WorkManager deduplicates via [SyncWorker.WORK_NAME].
+     * Registers a periodic outbox-drain job.
+     * Safe to call multiple times — deduplicates via [SyncWorker.WORK_NAME].
      */
     fun schedule(context: Context) {
         val request = PeriodicWorkRequestBuilder<SyncWorker>(
@@ -38,23 +40,54 @@ object SyncScheduler {
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             SyncWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,   // don't reset timer if already scheduled
+            ExistingPeriodicWorkPolicy.KEEP,
             request
         )
-
-        Log.d(TAG, "Periodic sync scheduled (every ${PERIODIC_INTERVAL_MINUTES}m, network required)")
+        Log.d(TAG, "Outbox sync scheduled (every ${PERIODIC_INTERVAL_MINUTES}m)")
     }
 
     /**
-     * Enqueues a one-time sync right now (when online).
-     * Use after writing an event to the outbox during an active session.
+     * Enqueues a one-time outbox sync immediately (when back online after offline session).
      */
     fun enqueueImmediate(context: Context) {
         val request = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(constraints)
             .build()
-
         WorkManager.getInstance(context).enqueue(request)
-        Log.d(TAG, "Immediate sync enqueued")
+        Log.d(TAG, "Immediate outbox sync enqueued")
+    }
+
+    // ── Locker sync (cells + heartbeat) ─────────────────────────────────
+
+    /**
+     * Registers a periodic locker-sync job for cell inventory and heartbeat.
+     * Safe to call multiple times — deduplicates via [LockerSyncWorker.WORK_NAME].
+     */
+    fun scheduleLockerSync(context: Context) {
+        val request = PeriodicWorkRequestBuilder<LockerSyncWorker>(
+            PERIODIC_INTERVAL_MINUTES,
+            TimeUnit.MINUTES
+        )
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 2, TimeUnit.MINUTES)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            LockerSyncWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            request
+        )
+        Log.d(TAG, "Locker sync scheduled (every ${PERIODIC_INTERVAL_MINUTES}m)")
+    }
+
+    /**
+     * Runs a one-time locker sync immediately (e.g. on app start or after provisioning).
+     */
+    fun enqueueLockerSyncNow(context: Context) {
+        val request = OneTimeWorkRequestBuilder<LockerSyncWorker>()
+            .setConstraints(constraints)
+            .build()
+        WorkManager.getInstance(context).enqueue(request)
+        Log.d(TAG, "Immediate locker sync enqueued")
     }
 }

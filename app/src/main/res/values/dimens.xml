@@ -1,88 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Spacing -->
-    <dimen name="spacing_xs">4dp</dimen>
-    <dimen name="spacing_sm">8dp</dimen>
-    <dimen name="spacing_md">16dp</dimen>
-    <dimen name="spacing_lg">24dp</dimen>
-    <dimen name="spacing_xl">32dp</dimen>
-    <dimen name="spacing_xxl">48dp</dimen>
+    <!--
+        -
+        Zimpudo Kiosk - 10" (1280-800 / 1920-1200) Display
+        All dimensions are tuned for arm's-length touch interaction
+        on a wall-mounted or counter-mounted 10-inch panel.
+        -
+    -->
 
-    <!-- Corner radius -->
-    <dimen name="corner_radius_sm">4dp</dimen>
-    <dimen name="corner_radius_md">8dp</dimen>
-    <dimen name="corner_radius_lg">12dp</dimen>
-    <dimen name="corner_radius_xl">16dp</dimen>
+    <!-- - Spacing - -->
+    <dimen name="spacing_xs">6dp</dimen>
+    <dimen name="spacing_sm">12dp</dimen>
+    <dimen name="spacing_md">20dp</dimen>
+    <dimen name="spacing_lg">32dp</dimen>
+    <dimen name="spacing_xl">44dp</dimen>
+    <dimen name="spacing_xxl">64dp</dimen>
 
-    <!-- Elevation -->
+    <!-- - Corner radius - -->
+    <dimen name="corner_radius_sm">6dp</dimen>
+    <dimen name="corner_radius_md">12dp</dimen>
+    <dimen name="corner_radius_lg">16dp</dimen>
+    <dimen name="corner_radius_xl">20dp</dimen>
+
+    <!-- - Elevation - -->
     <dimen name="elevation_sm">2dp</dimen>
     <dimen name="elevation_md">4dp</dimen>
     <dimen name="elevation_lg">8dp</dimen>
     <dimen name="elevation_xl">12dp</dimen>
 
-    <!-- Button dimensions -->
-    <dimen name="button_height">64dp</dimen>
-    <dimen name="button_height_sm">56dp</dimen>
-    <dimen name="button_height_lg">72dp</dimen>
+    <!-- - Button dimensions (10" kiosk - big touch targets) - -->
+    <dimen name="button_height">72dp</dimen>
+    <dimen name="button_height_sm">64dp</dimen>
+    <dimen name="button_height_lg">84dp</dimen>
 
-    <!-- Input field dimensions -->
-    <dimen name="input_height">64dp</dimen>
-    <dimen name="input_min_height">56dp</dimen>
+    <!-- - Input field dimensions - -->
+    <dimen name="input_height">72dp</dimen>
+    <dimen name="input_min_height">64dp</dimen>
 
-    <!-- Icon sizes -->
-    <dimen name="icon_size_sm">16dp</dimen>
-    <dimen name="icon_size_md">24dp</dimen>
-    <dimen name="icon_size_lg">32dp</dimen>
-    <dimen name="icon_size_xl">48dp</dimen>
+    <!-- - Icon sizes - -->
+    <dimen name="icon_size_sm">24dp</dimen>
+    <dimen name="icon_size_md">32dp</dimen>
+    <dimen name="icon_size_lg">48dp</dimen>
+    <dimen name="icon_size_xl">64dp</dimen>
 
-    <!-- Card dimensions -->
-    <dimen name="card_min_height">120dp</dimen>
-    <dimen name="card_padding">16dp</dimen>
+    <!-- - Card dimensions - -->
+    <dimen name="card_min_height">140dp</dimen>
+    <dimen name="card_padding">20dp</dimen>
 
-    <!-- List item dimensions -->
-    <dimen name="list_item_height">84dp</dimen>
-    <dimen name="list_item_height_sm">64dp</dimen>
-    <dimen name="list_item_height_lg">100dp</dimen>
+    <!-- - List item dimensions - -->
+    <dimen name="list_item_height">96dp</dimen>
+    <dimen name="list_item_height_sm">72dp</dimen>
+    <dimen name="list_item_height_lg">120dp</dimen>
 
-    <!-- Text sizes (scaled up for kiosk readability) -->
-    <dimen name="text_size_micro">14sp</dimen>
-    <dimen name="text_size_small">16sp</dimen>
-    <dimen name="text_size_body">20sp</dimen>
-    <dimen name="text_size_body_large">22sp</dimen>
-    <dimen name="text_size_title">26sp</dimen>
-    <dimen name="text_size_title_large">28sp</dimen>
-    <dimen name="text_size_headline">32sp</dimen>
-    <dimen name="text_size_display">36sp</dimen>
+    <!-- - Text sizes (10" kiosk - clearly readable at arm's length) - -->
+    <dimen name="text_size_micro">18sp</dimen>
+    <dimen name="text_size_small">20sp</dimen>
+    <dimen name="text_size_body">24sp</dimen>
+    <dimen name="text_size_body_large">26sp</dimen>
+    <dimen name="text_size_title">30sp</dimen>
+    <dimen name="text_size_title_large">34sp</dimen>
+    <dimen name="text_size_headline">40sp</dimen>
+    <dimen name="text_size_display">48sp</dimen>
 
-    <!-- App bar -->
-    <dimen name="app_bar_height">64dp</dimen>
-    <dimen name="toolbar_height">64dp</dimen>
+    <!-- - App bar - -->
+    <dimen name="app_bar_height">72dp</dimen>
+    <dimen name="toolbar_height">72dp</dimen>
 
-    <!-- Bottom navigation -->
-    <dimen name="bottom_nav_height">64dp</dimen>
+    <!-- - Bottom navigation - -->
+    <dimen name="bottom_nav_height">72dp</dimen>
 
-    <!-- Divider -->
+    <!-- - Divider - -->
     <dimen name="divider_height">1dp</dimen>
 
-    <!-- Progress indicator -->
-    <dimen name="progress_size">24dp</dimen>
-    <dimen name="progress_size_large">48dp</dimen>
+    <!-- - Progress indicator - -->
+    <dimen name="progress_size">32dp</dimen>
+    <dimen name="progress_size_large">56dp</dimen>
 
-    <!-- Avatar sizes -->
-    <dimen name="avatar_size_sm">32dp</dimen>
-    <dimen name="avatar_size_md">48dp</dimen>
-    <dimen name="avatar_size_lg">64dp</dimen>
-    <dimen name="avatar_size_xl">96dp</dimen>
+    <!-- - Avatar sizes - -->
+    <dimen name="avatar_size_sm">40dp</dimen>
+    <dimen name="avatar_size_md">56dp</dimen>
+    <dimen name="avatar_size_lg">80dp</dimen>
+    <dimen name="avatar_size_xl">112dp</dimen>
 
-    <!-- Minimum touch target -->
-    <dimen name="touch_target_min">48dp</dimen>
+    <!-- - Minimum touch target (WCAG AA: - 48dp) - -->
+    <dimen name="touch_target_min">56dp</dimen>
 
-    <!-- Onboarding specific -->
-    <dimen name="onboarding_image_size">200dp</dimen>
-    <dimen name="onboarding_indicator_size">8dp</dimen>
+    <!-- - Onboarding specific - -->
+    <dimen name="onboarding_image_size">260dp</dimen>
+    <dimen name="onboarding_indicator_size">12dp</dimen>
 
-    <!-- Kiosk specific dimensions -->
-    <dimen name="kiosk_button_height">84dp</dimen>
-    <dimen name="kiosk_card_height">160dp</dimen>
-    <dimen name="kiosk_icon_size">64dp</dimen>
+    <!-- - Kiosk-specific overrides - -->
+    <dimen name="kiosk_button_height">96dp</dimen>
+    <dimen name="kiosk_card_height">180dp</dimen>
+    <dimen name="kiosk_icon_size">80dp</dimen>
+
+    <!-- - Spinner / dropdown - -->
+    <dimen name="spinner_height">72dp</dimen>
+    <dimen name="spinner_text_size">24sp</dimen>
 </resources>

@@ -24,7 +24,8 @@ object STM32LockerConfig {
     const val TOTAL_LOCKS = 32          // 2 boards × 16 locks each
     const val LOCKS_PER_BOARD = 16
     const val NUM_BOARDS = 2
-    const val LOCK_PULSE_TIME_MS = 200L
+    const val LOCK_PULSE_TIME_MS = 750L   // AS.500X.12G02: 0.5–1s recommended, max <1s
+    const val LOCK_COOLDOWN_MS = 15000L    // 5% duty cycle: 750ms / 0.05 = 15s total cycle
     const val LOCK_TYPE = "Solenoid (Normally Closed)"
 
     // === COMMUNICATION CONFIGURATION ===
@@ -38,7 +39,7 @@ object STM32LockerConfig {
     const val FRAME_TIMEOUT_MS = 1000L
     const val UART_ERROR_RETRY_COUNT = 3
     const val HEARTBEAT_INTERVAL_MS = 5000L
-    const val RESPONSE_TIMEOUT_MS = 2000L
+    const val RESPONSE_TIMEOUT_MS = 1500L  // 750ms pulse + 50ms settle + margin
 
     // === PIN MAPPING (for reference/documentation) ===
     object PinMapping {

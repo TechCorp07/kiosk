@@ -6,7 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkResult
-import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
+import com.blitztech.pudokiosk.data.api.config.ApiEndpoints
 import com.blitztech.pudokiosk.data.api.dto.collection.LockerPickupRequest
 import com.blitztech.pudokiosk.data.db.AppDatabase
 import com.blitztech.pudokiosk.data.db.OutboxEventEntity
@@ -69,6 +69,11 @@ class SyncWorker(
                 Log.d(TAG, "✅ Marked ${deliveredKeys.size} event(s) as delivered")
             }
 
+            // Cleanup: purge delivered entries older than 7 days
+            val cutoff = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000)
+            outboxDao.deleteDeliveredBefore(cutoff)
+            Log.d(TAG, "🧹 Purged outbox events older than 7 days (cutoff=${java.util.Date(cutoff)})")  
+
             if (failures > 0) {
                 Log.w(TAG, "Sync had $failures failure(s) — will retry")
                 Result.retry()
@@ -92,30 +97,57 @@ class SyncWorker(
         }
 
         return when (event.type) {
-            "courier_dropoff" -> {
-                val req = moshi.adapter(TransactionRequest::class.java).fromJson(event.payloadJson)
-                    ?: return false
-                val result = api.courierDropoff(req, token)
-                result is NetworkResult.Success
-            }
-            "courier_pickup" -> {
-                val req = moshi.adapter(TransactionRequest::class.java).fromJson(event.payloadJson)
-                    ?: return false
-                val result = api.courierPickup(req, token)
-                result is NetworkResult.Success
-            }
+
+            // ── Recipient collection (public endpoint — no Bearer token needed) ──
             "collection_confirmed" -> {
                 val req = moshi.adapter(LockerPickupRequest::class.java).fromJson(event.payloadJson)
                     ?: return false
-                val result = api.completePickup(req, token)
+                val result = api.completePickup(req, token)  // Pass token as required by repository
                 result is NetworkResult.Success
             }
+
+            // ── Courier pickup scan (barcode → orders-service) ──────────────────
+            "courier_pickup_scan" -> {
+                val map = moshi.adapter(Map::class.java).fromJson(event.payloadJson)
+                    ?: return false
+                @Suppress("UNCHECKED_CAST")
+                val orderId = (map as Map<String, Any?>)["orderId"] as? String ?: return false
+                val barcode = map["barcode"] as? String ?: return false
+                val result = api.courierPickupScan(orderId, barcode, token)
+                result is NetworkResult.Success
+            }
+
+            // ── Courier dropoff at locker (orders-service) ──────────────────────
+            "courier_dropoff" -> {
+                val map = moshi.adapter(Map::class.java).fromJson(event.payloadJson)
+                    ?: return false
+                @Suppress("UNCHECKED_CAST")
+                val m = map as Map<String, Any?>
+                val dropoffUrl = m["dropoffUrl"] as? String
+                    ?: ApiEndpoints.getCourierDropoffUrl(m["orderId"] as? String ?: return false)
+                val barcode = m["barcode"] as? String ?: return false
+                val lockerId = m["lockerId"] as? String ?: return false
+                val result = api.courierDropoffAtLocker(dropoffUrl, barcode, lockerId, token)
+                result is NetworkResult.Success
+            }
+
+            // ── Issue report (pending backend endpoint) ─────────────────────────
             "courier_issue_report" -> {
                 // TODO: Wire to dedicated backend issue-reporting endpoint when available.
-                // For now, keep in outbox (return false) so it retries once the endpoint exists.
                 Log.d(TAG, "courier_issue_report event pending backend endpoint — will retry")
                 false
             }
+
+            // ── Security Photo Upload (pending backend endpoint) ────────────────
+            "security_photo_upload" -> {
+                // TODO [POST-LAUNCH BACKEND]: Upload captured security photos
+                // Endpoint POST /api/v1/kiosks/security-photos
+                // Action: Fetch photo from device storage using event.payloadJson info,
+                //         upload via multipart/form-data, mark event delivered on 200 OK.
+                Log.d(TAG, "security_photo_upload event pending backend endpoint — will retry")
+                false
+            }
+
             else -> {
                 // Unknown type — mark as delivered to avoid blocking the queue
                 Log.w(TAG, "Unknown event type '${event.type}' — marking delivered without dispatch")
@@ -130,5 +162,3 @@ class SyncWorker(
         return ZimpudoApp.database
     }
 }
-
-
