@@ -106,6 +106,10 @@ class Prefs(context: Context) {
         return prefs.getString(KEY_USER_TYPE, null)
     }
 
+    fun saveUserMobile(mobile: String) {
+        prefs.edit().putString(KEY_USER_MOBILE, mobile).apply()
+    }
+
     fun getUserMobile(): String? {
         return prefs.getString(KEY_USER_MOBILE, null)
     }

@@ -8,7 +8,7 @@ import com.blitztech.pudokiosk.data.api.dto.location.*
 import com.blitztech.pudokiosk.data.api.dto.order.*
 import com.blitztech.pudokiosk.data.api.dto.collection.*
 import com.blitztech.pudokiosk.data.api.dto.courier.*
-import com.blitztech.pudokiosk.data.api.dto.locker.CellDto
+import com.blitztech.pudokiosk.data.api.dto.locker.*
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -103,13 +103,13 @@ interface ApiService {
     //  Order Service – Locations
     // ─────────────────────────────────────────────────────────────
     @GET(ApiEndpoints.GET_CITIES)
-    suspend fun getCities(): Response<List<CityDto>>
+    suspend fun getCities(): Response<PageCity>
 
     @GET(ApiEndpoints.GET_SUBURBS)
-    suspend fun getSuburbs(@Path("cityId") cityId: String): Response<List<SuburbDto>>
+    suspend fun getSuburbs(@Path("cityId") cityId: String): Response<PageSuburb>
 
     @GET(ApiEndpoints.PACKAGE_CONTENT_TYPES)
-    suspend fun getPackageContentTypes(): Response<List<String>>
+    suspend fun getPackageContentTypes(): Response<PageContents>
 
     // ─────────────────────────────────────────────────────────────
     //  Order Service – Locker operations (recipient collection)
@@ -175,7 +175,7 @@ interface ApiService {
     suspend fun verifyReservation(
         @Body request: VerifyReservationRequest,
         @Header("Authorization") token: String
-    ): Response<TransactionResponse>
+    ): Response<TransactionApiResponse>
 
     /**
      * Sender drop-off — multipart/form-data matching backend SenderDropOffRequest:
@@ -190,7 +190,7 @@ interface ApiService {
         @Part("cellId") cellId: RequestBody,
         @Part photos: List<MultipartBody.Part>?,
         @Header("Authorization") token: String
-    ): Response<TransactionResponse>
+    ): Response<com.blitztech.pudokiosk.data.api.dto.common.ApiResponse>
 
     /**
      * Courier pickup at source locker — POST /api/v1/transactions/courier/pickup
@@ -200,7 +200,7 @@ interface ApiService {
     @POST(ApiEndpoints.COURIER_PICKUP_LOCKER)
     suspend fun courierPickupFromLocker(
         @Header("Authorization") token: String
-    ): Response<TransactionResponse>
+    ): Response<CourierPickupApiResponse>
 
     // ─────────────────────────────────────────────────────────────
     //  Locker Service – Cell & locker sync (API role / device-level token)
@@ -211,7 +211,7 @@ interface ApiService {
     suspend fun getLockerCells(
         @Url url: String,
         @Header("Authorization") token: String
-    ): Response<List<CellDto>>
+    ): Response<KioskCellsApiResponse>
 
     /** PATCH /api/v1/lockers/{lockerId}/status?status=ONLINE — kiosk heartbeat */
     @PATCH

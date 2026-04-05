@@ -9,6 +9,8 @@ import com.blitztech.pudokiosk.data.api.config.ApiEndpoints
 import com.blitztech.pudokiosk.data.api.dto.auth.*
 import com.blitztech.pudokiosk.data.api.dto.user.*
 import com.blitztech.pudokiosk.data.api.dto.common.*
+import com.blitztech.pudokiosk.data.api.dto.locker.*
+import com.blitztech.pudokiosk.data.api.dto.courier.*
 import com.blitztech.pudokiosk.data.api.dto.location.CityDto
 import com.blitztech.pudokiosk.data.api.dto.location.SuburbDto
 import com.blitztech.pudokiosk.data.api.dto.order.CreateOrderRequest
@@ -194,11 +196,19 @@ class ApiRepository(
     //  Location methods with retry logic
     // ─────────────────────────────────────────────────────────────
     suspend fun getCities(): NetworkResult<List<CityDto>> {
-        return safeApiCallWithRetry { apiService.getCities() }
+        return when (val result = safeApiCallWithRetry { apiService.getCities() }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
+            is NetworkResult.Loading -> NetworkResult.Loading()
+        }
     }
 
     suspend fun getSuburbs(cityId: String): NetworkResult<List<SuburbDto>> {
-        return safeApiCallWithRetry { apiService.getSuburbs(cityId) }
+        return when (val result = safeApiCallWithRetry { apiService.getSuburbs(cityId) }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content)
+            is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
+            is NetworkResult.Loading -> NetworkResult.Loading()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -271,7 +281,11 @@ class ApiRepository(
     }
 
     suspend fun getPackageContentTypes(): NetworkResult<List<String>> {
-        return safeApiCall { apiService.getPackageContentTypes() }
+        return when (val result = safeApiCall { apiService.getPackageContentTypes() }) {
+            is NetworkResult.Success -> NetworkResult.Success(result.data.content.map { it.name })
+            is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
+            is NetworkResult.Loading -> NetworkResult.Loading()
+        }
     }
 
     suspend fun openCell(
@@ -355,7 +369,14 @@ class ApiRepository(
         request: VerifyReservationRequest,
         token: String
     ): NetworkResult<TransactionResponse> {
-        return safeApiCall { apiService.verifyReservation(request, "Bearer $token") }
+        return when (val result = safeApiCall { apiService.verifyReservation(request, "Bearer $token") }) {
+            is NetworkResult.Success -> {
+                result.data.body?.let { NetworkResult.Success(it) } 
+                    ?: NetworkResult.Error("Empty response body", 204)
+            }
+            is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
+            is NetworkResult.Loading -> NetworkResult.Loading() // Should not happen here
+        }
     }
 
     /**
@@ -389,7 +410,14 @@ class ApiRepository(
                 null
             }
 
-            apiService.senderDropoff(orderIdBody, cellIdBody, photos, "Bearer $token")
+            val response = apiService.senderDropoff(orderIdBody, cellIdBody, photos, "Bearer $token")
+            // Create a pseudo-TransactionResponse since senderDropoff only returns void body
+            Response.success(
+                TransactionResponse(
+                    success = response.body()?.success ?: false,
+                    message = response.body()?.message ?: ""
+                )
+            )
         }
     }
 
@@ -399,9 +427,14 @@ class ApiRepository(
      */
     suspend fun courierPickupFromLocker(
         token: String
-    ): NetworkResult<TransactionResponse> {
-        return safeApiCall {
-            apiService.courierPickupFromLocker("Bearer $token")
+    ): NetworkResult<com.blitztech.pudokiosk.data.api.dto.courier.CourierPickupResponseDto> {
+        return when (val result = safeApiCall { apiService.courierPickupFromLocker("Bearer $token") }) {
+            is NetworkResult.Success -> {
+                result.data.body?.let { NetworkResult.Success(it) }
+                    ?: NetworkResult.Error("Empty response body", 204)
+            }
+            is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
+            is NetworkResult.Loading -> NetworkResult.Loading()
         }
     }
 
@@ -418,7 +451,13 @@ class ApiRepository(
         token: String
     ): NetworkResult<List<CellDto>> {
         val url = ApiEndpoints.getLockerCellsUrl(lockerId)
-        return safeApiCall { apiService.getLockerCells(url, "Bearer $token") }
+        return when (val result = safeApiCall { apiService.getLockerCells(url, "Bearer $token") }) {
+            is NetworkResult.Success -> {
+                NetworkResult.Success(result.data.body ?: emptyList())
+            }
+            is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
+            is NetworkResult.Loading -> NetworkResult.Loading()
+        }
     }
 
     /**

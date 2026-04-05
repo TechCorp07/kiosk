@@ -86,12 +86,17 @@ data class PaymentRequest(
     @Json(name = "currency") val currency: String // "ZWL" or "USD"
 )
 
+/**
+ * Matches backend GenericResponse { success, message, errors }.
+ * The backend payment endpoint (POST /api/v1/payments) returns HTTP 202 with this shape.
+ * Payment confirmation arrives asynchronously via Paynow webhook — the kiosk polls
+ * order status to detect when the order moves to AWAITING_COURIER.
+ */
 @JsonClass(generateAdapter = true)
 data class PaymentResponse(
     @Json(name = "success") val success: Boolean,
     @Json(name = "message") val message: String,
-    @Json(name = "transactionId") val transactionId: String?,
-    @Json(name = "lockNumber") val lockNumber: Int? // Lock number assigned for the package
+    @Json(name = "errors") val errors: Map<String, String>? = null
 )
 
 // Enum for package sizes with dimension thresholds

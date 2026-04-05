@@ -192,6 +192,12 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <activity android:name=".ui.auth.WalkInRegistrationActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
         <!-- Main Menu Activities -->
         <activity android:name=".ui.main.CustomerMainActivity"
             android:exported="false"

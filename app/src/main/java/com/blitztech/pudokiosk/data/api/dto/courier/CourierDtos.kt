@@ -110,3 +110,43 @@ data class ParcelLookupRequest(
     @Json(name = "barcode") val barcode: String,
     @Json(name = "kioskId") val kioskId: String
 )
+
+/**
+ * Backend wraps all responses in ApiResponseWrapper { success, message, body }.
+ * This typed wrapper extracts the transaction response from the body field.
+ */
+@JsonClass(generateAdapter = true)
+data class TransactionApiResponse(
+    @Json(name = "success") val success: Boolean,
+    @Json(name = "message") val message: String,
+    @Json(name = "body") val body: TransactionResponse? = null
+)
+
+/**
+ * Details of picked-up packages.
+ */
+@JsonClass(generateAdapter = true)
+data class PackageDeliveryDetails(
+    @Json(name = "trackingNumber") val trackingNumber: String,
+    @Json(name = "cellNumber") val cellNumber: Int
+)
+
+/**
+ * Backend CourierPickupResponse.
+ */
+@JsonClass(generateAdapter = true)
+data class CourierPickupResponseDto(
+    @Json(name = "pickedUpPackages") val pickedUpPackages: List<PackageDeliveryDetails>? = null,
+    @Json(name = "totalPackages") val totalPackages: Int = 0,
+    @Json(name = "pickupTimestamp") val pickupTimestamp: String? = null
+)
+
+/**
+ * Backend wraps all responses in ApiResponseWrapper { success, message, body }.
+ */
+@JsonClass(generateAdapter = true)
+data class CourierPickupApiResponse(
+    @Json(name = "success") val success: Boolean,
+    @Json(name = "message") val message: String,
+    @Json(name = "body") val body: CourierPickupResponseDto? = null
+)

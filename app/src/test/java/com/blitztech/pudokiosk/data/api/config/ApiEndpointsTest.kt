@@ -78,11 +78,6 @@ class ApiEndpointsTest {
         assertEquals("api/v1/payments", ApiEndpoints.CREATE_PAYMENT)
     }
 
-    @Test
-    fun paymentStatus_containsTransactionIdPlaceholder() {
-        assertTrue(ApiEndpoints.PAYMENT_STATUS.contains("{transactionId}"))
-    }
-
     // ── Locker Transaction endpoints ─────────────────────────────
     @Test
     fun lockerTransactionEndpoints_haveApiV1Prefix() {
@@ -126,13 +121,6 @@ class ApiEndpointsTest {
         val url = ApiEndpoints.getTrackOrderUrl("TRK-12345")
         assertEquals("api/v1/orders/track/TRK-12345", url)
         assertFalse(url.contains("{trackingNumber}"))
-    }
-
-    @Test
-    fun getPaymentStatusUrl_replacesPlaceholder() {
-        val url = ApiEndpoints.getPaymentStatusUrl("tx-abc")
-        assertEquals("api/v1/payments/status/tx-abc", url)
-        assertFalse(url.contains("{transactionId}"))
     }
 
     @Test

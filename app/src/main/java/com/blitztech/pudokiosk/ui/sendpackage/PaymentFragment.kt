@@ -177,9 +177,6 @@ class PaymentFragment : Fragment() {
                         val response = result.data
 
                         if (response.success) {
-                            data.transactionId = response.transactionId ?: ""
-                            data.assignedLockNumber = response.lockNumber ?: 1
-
                             Toast.makeText(
                                 requireContext(),
                                 "Payment initiated. Waiting for confirmation...",
@@ -190,11 +187,14 @@ class PaymentFragment : Fragment() {
                             binding.tvStatus.visibility = View.VISIBLE
                             binding.tvStatus.text = "Waiting for payment approval..."
                             
-                            pollPaymentStatus(data.orderId, accessToken, data.assignedLockNumber)
+                            // Backend uses Paynow webhook to update order status.
+                            // We poll the order to detect when it transitions to AWAITING_COURIER.
+                            pollPaymentStatus(data.orderId, accessToken)
                         } else {
+                            val errorMsg = response.errors?.values?.firstOrNull() ?: response.message
                             Toast.makeText(
                                 requireContext(),
-                                "Payment failed: ${response.message}",
+                                "Payment failed: $errorMsg",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
@@ -220,7 +220,7 @@ class PaymentFragment : Fragment() {
         }
     }
 
-    private fun pollPaymentStatus(orderId: String, token: String, lockNumber: Int) {
+    private fun pollPaymentStatus(orderId: String, token: String) {
         lifecycleScope.launch {
             val startTime = System.currentTimeMillis()
             var isApproved = false

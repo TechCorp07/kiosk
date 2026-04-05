@@ -21,3 +21,13 @@ data class CellDto(
     @Json(name = "status") val status: String,           // AVAILABLE / OCCUPIED / RESERVED / MAINTENANCE
     @Json(name = "cabinetId") val cabinetId: String? = null  // Board identifier e.g. "CAB-001"
 )
+
+/**
+ * Backend wraps the cell list in ApiResponseWrapper { success, message, body }.
+ */
+@JsonClass(generateAdapter = true)
+data class KioskCellsApiResponse(
+    @Json(name = "success") val success: Boolean,
+    @Json(name = "message") val message: String,
+    @Json(name = "body") val body: List<CellDto>? = null
+)
