@@ -97,8 +97,8 @@ data class SendPackageData(
             nationalId = recipientNationalId,
             address = RecipientAddress(
                 streetAddress = recipientStreet,
-                suburb = recipientSuburbId,
-                city = recipientCityId,
+                suburb = recipientSuburbName,
+                city = recipientCityName,
                 houseNumber = recipientHouseNumber,
                 country = "Zimbabwe"
             )

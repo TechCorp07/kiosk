@@ -320,9 +320,7 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
     }
 
     private fun returnToTechMenu() {
-        val intent = Intent(this, TechnicianMenuActivity::class.java)
-        startActivity(intent)
-        finish()
+        finishSafely()
     }
 
     private fun showToast(message: String) {

@@ -14,8 +14,9 @@
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="start|center_vertical"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:contentDescription="@string/back"
@@ -28,7 +29,7 @@
             android:layout_gravity="center"
             android:text="System Logs"
             android:textColor="@color/text_white"
-            android:textSize="28sp"
+            android:textSize="48sp"
             android:textStyle="bold" />
 
         <ProgressBar
@@ -48,7 +49,7 @@
         android:gravity="center"
         android:text="Application and system diagnostic logs"
         android:textColor="@color/text_white"
-        android:textSize="20sp" />
+        android:textSize="28sp" />
 
     <!-- Main Content -->
     <LinearLayout

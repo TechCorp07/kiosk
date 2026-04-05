@@ -101,6 +101,21 @@ class ApiRepository(
     // ─────────────────────────────────────────────────────────────
     //  Core Service – User registration & KYC
     // ─────────────────────────────────────────────────────────────
+    suspend fun getUserProfile(token: String): NetworkResult<UserProfileDto> {
+        return safeApiCall {
+            apiService.getUserProfile("Bearer $token")
+        }
+    }
+
+    suspend fun updateUserProfile(
+        request: UserProfileUpdateRequest,
+        token: String
+    ): NetworkResult<com.blitztech.pudokiosk.data.api.dto.common.ApiResponse> {
+        return safeApiCall {
+            apiService.updateUserProfile(request, "Bearer $token")
+        }
+    }
+
     suspend fun registerUser(
         name: String,
         surname: String,
@@ -259,8 +274,8 @@ class ApiRepository(
         return safeApiCall { apiService.getLoggedInOrders("Bearer $token", page, size) }
     }
 
-    suspend fun trackOrder(trackingNumber: String): NetworkResult<OrderDto> {
-        return safeApiCall { apiService.trackOrder(trackingNumber) }
+    suspend fun trackOrder(trackingNumber: String): NetworkResult<com.blitztech.pudokiosk.data.api.dto.order.PageOrderTrackerDto> {
+        return safeApiCall { apiService.trackOrder(trackingNumber, 0, 50) }
     }
 
     // ─────────────────────────────────────────────────────────────

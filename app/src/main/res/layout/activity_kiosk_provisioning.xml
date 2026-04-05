@@ -47,6 +47,84 @@
             android:layout_marginBottom="24dp"
             android:background="#2A2A4A" />
 
+        <!-- ── PERMISSIONS SECTION ── -->
+        <LinearLayout
+            android:id="@+id/layoutPermissions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="#1A1A3A"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Device Permissions"
+                android:textColor="#CCCCFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="All permissions must be granted before the kiosk can operate."
+                android:textColor="#9999AA"
+                android:textSize="14sp" />
+
+            <!-- Permission status indicators -->
+            <TextView
+                android:id="@+id/tvPermCamera"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="📷 Camera: checking…"
+                android:textColor="#AADDFF"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvPermLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="📍 Location: checking…"
+                android:textColor="#AADDFF"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvPermStorage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="💾 Storage: checking…"
+                android:textColor="#AADDFF"
+                android:textSize="16sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGrantPermissions"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:text="Grant All Permissions"
+                android:textColor="#7C5CFC"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvPermAllGranted"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="✅ All permissions granted"
+                android:textColor="#44DD88"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+
         <!-- ── STEP 1: Daily OTP Auth ── -->
         <LinearLayout
             android:id="@+id/layoutStep1Passcode"
@@ -258,12 +336,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:layout_marginBottom="32dp"
                 android:padding="12dp"
                 android:background="#1A2A4A"
                 android:textColor="#AADDFF"
                 android:textSize="18sp"
                 android:visibility="gone" />
+
+            <!-- Developer Access -->
+            <Button
+                android:id="@+id/btnDeveloperOptions"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="48dp"
+                android:layout_marginBottom="32dp"
+                android:text="Developer Settings"
+                android:textColor="#666688"
+                android:textSize="14sp" />
 
         </LinearLayout>
 

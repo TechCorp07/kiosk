@@ -196,67 +196,6 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Collect Package Card -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardCollectPackage"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/kiosk_card_height"
-                android:layout_marginBottom="@dimen/spacing_md"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:cardCornerRadius="@dimen/corner_radius_lg"
-                app:cardElevation="@dimen/elevation_md">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/spacing_lg">
-
-                    <ImageView
-                        android:layout_width="@dimen/kiosk_icon_size"
-                        android:layout_height="@dimen/kiosk_icon_size"
-                        android:layout_gravity="center"
-                        android:layout_marginEnd="@dimen/spacing_lg"
-                        android:src="@drawable/ic_collect_package"
-                        app:tint="@color/success" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvCollectPackage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="Collect Package"
-                            android:textColor="@color/text_primary"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvCollectDescription"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Collect packages waiting for you at this location"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="20sp" />
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_arrow_forward"
-                        app:tint="@color/text_hint" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
             <!-- Track Delivery Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardTrackDelivery"

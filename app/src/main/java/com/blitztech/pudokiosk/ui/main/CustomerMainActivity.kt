@@ -59,7 +59,7 @@ class CustomerMainActivity : BaseKioskActivity() {
                     val page = result.data
                     // Backend OrderStatus values for pending drop-offs:
                     //   LOCKER_RESERVED  → cell allocated, awaiting deposit
-                    //   AWAITING_DEPOSIT → QR generated, awaiting physical drop-off
+                    //   AWAITING_DEPOSIT → Barcode generated, awaiting physical drop-off
                     //   AWAITING_COURIER → payment done, parcel ready for courier pickup
                     val dropOffStatuses = setOf("LOCKER_RESERVED", "AWAITING_DEPOSIT", "AWAITING_COURIER")
                     val pendingOrder = page.content.firstOrNull { it.status in dropOffStatuses }
@@ -89,9 +89,6 @@ class CustomerMainActivity : BaseKioskActivity() {
         binding.tvSendPackage.text = getString(R.string.send_package)
         binding.tvSendDescription.text = getString(R.string.send_description)
 
-        binding.tvCollectPackage.text = getString(R.string.collect_package)
-        binding.tvCollectDescription.text = getString(R.string.collect_description)
-
         binding.tvTrackDelivery.text = getString(R.string.track_delivery)
         binding.tvTrackDescription.text = getString(R.string.track_description)
 
@@ -107,10 +104,6 @@ class CustomerMainActivity : BaseKioskActivity() {
         binding.cardSendPackage.setOnClickListener {
             val intent = Intent(this, SendPackageActivity::class.java)
             startActivity(intent)
-        }
-
-        binding.cardCollectPackage.setOnClickListener {
-            startActivity(Intent(this, CollectionCodeActivity::class.java))
         }
 
         binding.cardTrackDelivery.setOnClickListener {

@@ -14,24 +14,66 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white"
-            android:contentDescription="Back" />
-
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="My Parcels"
             android:textColor="@color/white"
-            android:textSize="30sp"
+            android:textSize="60sp"
             android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="16dp" />
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="@color/white"
+            android:contentDescription="Back" />
+    </LinearLayout>
+
+    <!-- Search Bar for Manual Tracking -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:layout_marginTop="-8dp"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="16dp"
+            app:boxBackgroundColor="@color/white"
+            app:boxCornerRadiusTopStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:hintEnabled="false">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSearchTracking"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:hint="Enter Tracking Number"
+                android:inputType="textCapCharacters"
+                android:textSize="32sp"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btnSearchTracking"
+            android:layout_width="200dp"
+            android:layout_height="120dp"
+            android:text="Search"
+            android:textSize="32sp"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/zimpudo_secondary"
+            app:cornerRadius="16dp" />
     </LinearLayout>
 
     <!-- Main content card -->
@@ -64,8 +106,8 @@
                 android:visibility="gone">
 
                 <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
                     android:src="@drawable/ic_pickup"
                     android:alpha="0.3"
                     android:contentDescription="No parcels" />
@@ -74,9 +116,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="No parcels found"
-                    android:textSize="26sp"
+                    android:textSize="48sp"
                     android:textColor="@color/text_secondary"
-                    android:layout_marginTop="12dp" />
+                    android:layout_marginTop="24dp" />
             </LinearLayout>
 
             <!-- Progress bar -->

@@ -21,6 +21,7 @@ import com.blitztech.pudokiosk.deviceio.camera.SecurityCameraManager
 import com.blitztech.pudokiosk.deviceio.printer.CustomTG2480HIIIDriver
 import com.blitztech.pudokiosk.deviceio.rs485.LockerController
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.utils.ValidationUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -121,15 +122,16 @@ class PaymentFragment : Fragment() {
      * Validate payment inputs
      */
     private fun validateInputs(): Boolean {
-        val mobileNumber = binding.etPaymentMobile.text.toString().trim()
+        val rawMobile = binding.etPaymentMobile.text.toString().trim()
 
-        if (mobileNumber.isEmpty()) {
+        if (rawMobile.isEmpty()) {
             binding.tilPaymentMobile.error = "Mobile number is required"
             return false
         }
 
-        if (!mobileNumber.startsWith("+263") || mobileNumber.length < 13) {
-            binding.tilPaymentMobile.error = "Invalid mobile number"
+        val normalized = ValidationUtils.formatPhoneNumber(rawMobile)
+        if (!ValidationUtils.isValidPhoneNumber(normalized)) {
+            binding.tilPaymentMobile.error = ValidationUtils.getPhoneErrorMessage()
             return false
         }
 
@@ -156,7 +158,7 @@ class PaymentFragment : Fragment() {
 
         // Save payment details
         data.paymentMethod = PaymentMethod.values()[binding.spinnerPaymentMethod.selectedItemPosition]
-        data.paymentMobileNumber = binding.etPaymentMobile.text.toString().trim()
+        data.paymentMobileNumber = ValidationUtils.formatPhoneNumber(binding.etPaymentMobile.text.toString().trim())
 
         lifecycleScope.launch {
             try {

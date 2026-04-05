@@ -5,6 +5,7 @@ import com.blitztech.pudokiosk.auth.AuthInterceptor
 import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.prefs.Prefs
+import com.blitztech.pudokiosk.ui.technician.DeveloperModeActivity
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -41,9 +42,16 @@ object NetworkModule {
             .build()
     }
 
-    fun provideRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit {
+    fun provideRetrofit(okHttpClient: OkHttpClient, moshi: Moshi, prefs: Prefs): Retrofit {
+        val baseUrl = when (prefs.getString(DeveloperModeActivity.KEY_ENVIRONMENT, DeveloperModeActivity.ENV_PRODUCTION)) {
+            DeveloperModeActivity.ENV_STAGING -> "https://staging.zimpudo.com:8222/"
+            DeveloperModeActivity.ENV_LOCAL -> "http://10.0.2.2:8222/" // Emulator localhost
+            DeveloperModeActivity.ENV_CUSTOM -> prefs.getString(DeveloperModeActivity.KEY_CUSTOM_URL, ApiConfig.BASE_URL).ifBlank { ApiConfig.BASE_URL }
+            else -> ApiConfig.BASE_URL
+        }
+
         return Retrofit.Builder()
-            .baseUrl(ApiConfig.BASE_URL)
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()

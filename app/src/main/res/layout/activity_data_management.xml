@@ -18,8 +18,9 @@
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="start|center_vertical"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
                 android:contentDescription="@string/back"
@@ -32,7 +33,7 @@
                 android:layout_gravity="center"
                 android:text="Data Management"
                 android:textColor="@color/text_white"
-                android:textSize="28sp"
+                android:textSize="48sp"
                 android:textStyle="bold" />
 
             <ProgressBar
@@ -52,7 +53,7 @@
             android:gravity="center"
             android:text="Clear cache, logs, and manage app data"
             android:textColor="@color/text_white"
-            android:textSize="20sp" />
+            android:textSize="28sp" />
 
         <!-- Main Content -->
         <LinearLayout

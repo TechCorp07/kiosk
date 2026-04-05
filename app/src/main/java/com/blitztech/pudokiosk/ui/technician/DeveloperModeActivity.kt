@@ -29,6 +29,7 @@ class DeveloperModeActivity : BaseKioskActivity() {
         const val KEY_SIM_HARDWARE    = "dev_sim_hardware"
         const val KEY_DEBUG_LOGGING   = "dev_debug_logging"
         const val KEY_MOCK_API        = "dev_mock_api"
+        const val KEY_MOCK_LOCATION   = "dev_mock_location"
         const val KEY_SKIP_OTP        = "dev_skip_otp"
         const val KEY_ENVIRONMENT     = "dev_environment"   // "prod" | "staging" | "local" | "custom"
         const val KEY_CUSTOM_URL      = "dev_custom_url"
@@ -78,6 +79,7 @@ class DeveloperModeActivity : BaseKioskActivity() {
         binding.chkSimulateHardware.isChecked = prefs.getBoolean(KEY_SIM_HARDWARE, false)
         binding.chkDebugLogging.isChecked     = prefs.getBoolean(KEY_DEBUG_LOGGING, false)
         binding.chkMockApi.isChecked          = prefs.getBoolean(KEY_MOCK_API, false)
+        binding.chkMockLocation.isChecked     = prefs.getBoolean(KEY_MOCK_LOCATION, false)
         binding.chkSkipOtp.isChecked          = prefs.getBoolean(KEY_SKIP_OTP, false)
 
         // Environment
@@ -131,6 +133,7 @@ class DeveloperModeActivity : BaseKioskActivity() {
         prefs.putBoolean(KEY_SIM_HARDWARE,  binding.chkSimulateHardware.isChecked)
         prefs.putBoolean(KEY_DEBUG_LOGGING, binding.chkDebugLogging.isChecked)
         prefs.putBoolean(KEY_MOCK_API,      binding.chkMockApi.isChecked)
+        prefs.putBoolean(KEY_MOCK_LOCATION, binding.chkMockLocation.isChecked)
         prefs.putBoolean(KEY_SKIP_OTP,      binding.chkSkipOtp.isChecked)
 
         // Environment
@@ -181,8 +184,6 @@ class DeveloperModeActivity : BaseKioskActivity() {
     // ─── Navigation ──────────────────────────────────────────────────────────
 
     private fun returnToTechMenu() {
-        val intent = Intent(this, TechnicianMenuActivity::class.java)
-        startActivity(intent)
-        finish()
+        finishSafely()
     }
 }

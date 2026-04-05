@@ -7,25 +7,42 @@
     android:orientation="vertical">
 
     <!-- Green header — 2/7 of screen -->
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="@dimen/spacing_xl">
+        android:layout_weight="2">
 
-        <!-- Logo — centred -->
-        <ImageView
-            android:layout_width="1000dp"
-            android:layout_height="400dp"
-            android:layout_gravity="center_horizontal"
-            android:adjustViewBounds="true"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="@dimen/spacing_xl">
+
+            <!-- Logo — centred -->
+            <ImageView
+                android:layout_width="1000dp"
+                android:layout_height="400dp"
+                android:layout_gravity="center_horizontal"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/zimpudo_logo"
+                android:contentDescription="@string/app_name" />
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="start|top"
+            android:layout_margin="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_arrow_back"
             android:scaleType="fitCenter"
-            android:src="@drawable/zimpudo_logo"
-            android:contentDescription="@string/app_name" />
-
-    </LinearLayout>
+            android:tint="@color/white"
+            android:contentDescription="Back" />
+    </FrameLayout>
 
     <!-- White panel — 5/7 of screen, cards fill it completely -->
     <LinearLayout

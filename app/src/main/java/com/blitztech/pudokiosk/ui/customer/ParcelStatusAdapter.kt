@@ -13,7 +13,8 @@ import com.blitztech.pudokiosk.data.api.dto.customer.CustomerParcel
  * Adapter for the customer parcel status list in [TrackDeliveryActivity].
  */
 class ParcelStatusAdapter(
-    private val parcels: List<CustomerParcel>
+    private val parcels: List<CustomerParcel>,
+    private val onClick: (CustomerParcel) -> Unit
 ) : RecyclerView.Adapter<ParcelStatusAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -47,6 +48,10 @@ class ParcelStatusAdapter(
             else -> R.color.text_primary
         }
         holder.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.context, statusColor))
+
+        holder.itemView.setOnClickListener {
+            onClick(parcel)
+        }
     }
 
     override fun getItemCount() = parcels.size

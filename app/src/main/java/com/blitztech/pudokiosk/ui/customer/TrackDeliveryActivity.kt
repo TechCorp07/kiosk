@@ -32,6 +32,16 @@ class TrackDeliveryActivity : BaseKioskActivity() {
         prefs = ZimpudoApp.prefs
 
         binding.btnBack.setOnClickListener { finishSafely() }
+        
+        binding.btnSearchTracking.setOnClickListener {
+            val trackingNum = binding.etSearchTracking.text.toString().trim()
+            if (trackingNum.isNotEmpty()) {
+                showTrackingDetails(trackingNum)
+            } else {
+                Toast.makeText(this, "Please enter a tracking number", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
         loadParcels()
     }
 
@@ -85,7 +95,14 @@ class TrackDeliveryActivity : BaseKioskActivity() {
         binding.tvEmpty.visibility = View.GONE
         binding.rvParcels.visibility = View.VISIBLE
         binding.rvParcels.layoutManager = LinearLayoutManager(this)
-        binding.rvParcels.adapter = ParcelStatusAdapter(parcels)
+        binding.rvParcels.adapter = ParcelStatusAdapter(parcels) { parcel ->
+            showTrackingDetails(parcel.trackingCode)
+        }
+    }
+
+    private fun showTrackingDetails(trackingNumber: String) {
+        val dialog = ParcelDetailsDialog(this, trackingNumber, api)
+        dialog.show()
     }
 
     private fun showEmpty() {

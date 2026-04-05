@@ -44,7 +44,7 @@ class ZimpudoApp : Application() {
                 Log.d(TAG, "Initializing API Repository...")
                 val okHttpClient = NetworkModule.provideOkHttpClient(prefs)
                 val moshi = NetworkModule.provideMoshi()
-                val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi)
+                val retrofit = NetworkModule.provideRetrofit(okHttpClient, moshi, prefs)
                 val apiService = NetworkModule.provideApiService(retrofit)
                 NetworkModule.provideApiRepository(apiService, instance)
             } catch (e: Exception) {

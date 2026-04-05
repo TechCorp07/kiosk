@@ -141,6 +141,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         progressBar = findViewById(R.id.progressBar)
         btnRunAllTests = findViewById(R.id.btnRunAllTests)
         btnResetAll = findViewById(R.id.btnResetAll)
+        findViewById<android.widget.ImageButton>(R.id.btnBack)?.setOnClickListener { finishSafely() }
 
         initializeLockerController()
     }

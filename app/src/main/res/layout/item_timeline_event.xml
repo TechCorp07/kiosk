@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginBottom="16dp">
+
+    <!-- Timeline Line/Dot visual -->
+    <LinearLayout
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <View
+            android:id="@+id/vLineTop"
+            android:layout_width="4dp"
+            android:layout_height="16dp"
+            android:background="@color/zimpudo_primary" />
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_check_circle"
+            android:tint="@color/zimpudo_primary"
+            android:contentDescription="Event" />
+
+        <View
+            android:id="@+id/vLineBottom"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:background="@color/zimpudo_primary" />
+    </LinearLayout>
+
+    <!-- Details -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingBottom="16dp"
+        android:layout_marginStart="16dp">
+
+        <TextView
+            android:id="@+id/tvActivity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PACKAGE CREATED"
+            android:textColor="@color/text_primary"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="The order has been created and is awaiting drop-off."
+            android:textColor="@color/text_secondary"
+            android:textSize="28sp"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2026-04-05 14:00"
+            android:textColor="@color/text_secondary"
+            android:textSize="22sp"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+
+</LinearLayout>

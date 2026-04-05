@@ -35,7 +35,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="Payment"
                 android:textColor="@color/text_primary"
-                android:textSize="32sp"
+                android:textSize="36sp"
                 android:textStyle="bold" />
 
             <!-- Order Summary Card -->
@@ -58,7 +58,7 @@
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:text="Order Summary"
                         android:textColor="@color/text_primary"
-                        android:textSize="26sp"
+                        android:textSize="28sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -66,6 +66,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Order ID: ORD-123456"
+                        android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -73,6 +74,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="To: John Doe"
+                        android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -80,6 +82,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Size: Medium"
+                        android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -87,6 +90,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Distance: 15 km"
+                        android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
                     <View
@@ -106,7 +110,7 @@
                             android:layout_weight="1"
                             android:text="Total Amount:"
                             android:textColor="@color/text_primary"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -115,7 +119,7 @@
                             android:layout_height="wrap_content"
                             android:text="$10.00"
                             android:textColor="@color/zimpudo_primary"
-                            android:textSize="28sp"
+                            android:textSize="36sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -137,12 +141,12 @@
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:text="Payment Method"
                 android:textColor="@color/text_secondary"
-                android:textSize="16sp" />
+                android:textSize="20sp" />
 
             <Spinner
                 android:id="@+id/spinnerPaymentMethod"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:minHeight="48dp"
                 android:padding="@dimen/spacing_md" />
@@ -161,13 +165,13 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etPaymentMobile"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="90dp"
                     android:hint="Mobile Money Number"
                     android:inputType="phone"
+                    android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Status Text -->
             <TextView
                 android:id="@+id/tvStatus"
                 android:layout_width="match_parent"
@@ -178,7 +182,7 @@
                 android:text="Processing..."
                 android:textAlignment="center"
                 android:textColor="@color/info"
-                android:textSize="22sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -197,21 +201,23 @@
             android:id="@+id/btnBack"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="@dimen/button_height"
+            android:layout_height="80dp"
             android:layout_marginEnd="@dimen/spacing_sm"
             android:layout_weight="1"
             android:text="Back"
+            android:textSize="24sp"
             android:textColor="@color/zimpudo_primary"
             app:strokeColor="@color/zimpudo_primary" />
 
         <Button
             android:id="@+id/btnPay"
             android:layout_width="0dp"
-            android:layout_height="@dimen/button_height"
+            android:layout_height="80dp"
             android:layout_marginStart="@dimen/spacing_sm"
             android:layout_weight="1"
             android:backgroundTint="@color/success"
             android:text="Pay Now"
+            android:textSize="24sp"
             android:textColor="@color/white" />
     </LinearLayout>
 

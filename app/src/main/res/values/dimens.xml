@@ -29,38 +29,38 @@
     <dimen name="elevation_xl">12dp</dimen>
 
     <!-- - Button dimensions (10" kiosk - big touch targets) - -->
-    <dimen name="button_height">72dp</dimen>
-    <dimen name="button_height_sm">64dp</dimen>
-    <dimen name="button_height_lg">84dp</dimen>
+    <dimen name="button_height">160dp</dimen>
+    <dimen name="button_height_sm">140dp</dimen>
+    <dimen name="button_height_lg">180dp</dimen>
 
     <!-- - Input field dimensions - -->
-    <dimen name="input_height">72dp</dimen>
-    <dimen name="input_min_height">64dp</dimen>
+    <dimen name="input_height">180dp</dimen>
+    <dimen name="input_min_height">180dp</dimen>
 
     <!-- - Icon sizes - -->
-    <dimen name="icon_size_sm">24dp</dimen>
-    <dimen name="icon_size_md">32dp</dimen>
-    <dimen name="icon_size_lg">48dp</dimen>
-    <dimen name="icon_size_xl">64dp</dimen>
+    <dimen name="icon_size_sm">48dp</dimen>
+    <dimen name="icon_size_md">64dp</dimen>
+    <dimen name="icon_size_lg">80dp</dimen>
+    <dimen name="icon_size_xl">120dp</dimen>
 
     <!-- - Card dimensions - -->
-    <dimen name="card_min_height">140dp</dimen>
-    <dimen name="card_padding">20dp</dimen>
+    <dimen name="card_min_height">240dp</dimen>
+    <dimen name="card_padding">32dp</dimen>
 
     <!-- - List item dimensions - -->
-    <dimen name="list_item_height">96dp</dimen>
-    <dimen name="list_item_height_sm">72dp</dimen>
-    <dimen name="list_item_height_lg">120dp</dimen>
+    <dimen name="list_item_height">140dp</dimen>
+    <dimen name="list_item_height_sm">100dp</dimen>
+    <dimen name="list_item_height_lg">180dp</dimen>
 
     <!-- - Text sizes (10" kiosk - clearly readable at arm's length) - -->
-    <dimen name="text_size_micro">18sp</dimen>
-    <dimen name="text_size_small">20sp</dimen>
-    <dimen name="text_size_body">24sp</dimen>
-    <dimen name="text_size_body_large">26sp</dimen>
-    <dimen name="text_size_title">30sp</dimen>
-    <dimen name="text_size_title_large">34sp</dimen>
-    <dimen name="text_size_headline">40sp</dimen>
-    <dimen name="text_size_display">48sp</dimen>
+    <dimen name="text_size_micro">28sp</dimen>
+    <dimen name="text_size_small">32sp</dimen>
+    <dimen name="text_size_body">36sp</dimen>
+    <dimen name="text_size_body_large">40sp</dimen>
+    <dimen name="text_size_title">48sp</dimen>
+    <dimen name="text_size_title_large">56sp</dimen>
+    <dimen name="text_size_headline">60sp</dimen>
+    <dimen name="text_size_display">72sp</dimen>
 
     <!-- - App bar - -->
     <dimen name="app_bar_height">72dp</dimen>
@@ -90,11 +90,11 @@
     <dimen name="onboarding_indicator_size">12dp</dimen>
 
     <!-- - Kiosk-specific overrides - -->
-    <dimen name="kiosk_button_height">96dp</dimen>
-    <dimen name="kiosk_card_height">180dp</dimen>
-    <dimen name="kiosk_icon_size">80dp</dimen>
+    <dimen name="kiosk_button_height">160dp</dimen>
+    <dimen name="kiosk_card_height">300dp</dimen>
+    <dimen name="kiosk_icon_size">120dp</dimen>
 
     <!-- - Spinner / dropdown - -->
-    <dimen name="spinner_height">72dp</dimen>
-    <dimen name="spinner_text_size">24sp</dimen>
+    <dimen name="spinner_height">120dp</dimen>
+    <dimen name="spinner_text_size">32sp</dimen>
 </resources>

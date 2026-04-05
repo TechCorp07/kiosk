@@ -1,11 +1,15 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.ZimpudoApp
@@ -31,6 +35,18 @@ class KioskProvisioningActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "KioskProvisioning"
+        private const val REQ_CODE_PERMISSIONS = 2001
+
+        private val REQUIRED_PERMISSIONS = mutableListOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ).apply {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }.toTypedArray()
     }
 
     private val prefs by lazy { ZimpudoApp.prefs }
@@ -45,6 +61,7 @@ class KioskProvisioningActivity : AppCompatActivity() {
     private lateinit var etSiteName: android.widget.EditText
     private lateinit var etApiUrlOverride: android.widget.EditText
     private lateinit var btnProvision: android.widget.Button
+    private lateinit var btnDeveloperOptions: android.widget.Button
     private lateinit var progressBar: android.widget.ProgressBar
     private lateinit var tvStatus: android.widget.TextView
     private lateinit var layoutStep1: android.view.View
@@ -52,12 +69,28 @@ class KioskProvisioningActivity : AppCompatActivity() {
 
     private var dailyOtpCode: String = ""
 
+    // Permission UI views
+    private lateinit var tvPermCamera: android.widget.TextView
+    private lateinit var tvPermLocation: android.widget.TextView
+    private lateinit var tvPermStorage: android.widget.TextView
+    private lateinit var btnGrantPermissions: android.widget.Button
+    private lateinit var tvPermAllGranted: android.widget.TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_kiosk_provisioning)
 
         bindViews()
+        refreshPermissionStatus()
         showStep1()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh permission status when returning from system settings
+        if (::tvPermCamera.isInitialized) {
+            refreshPermissionStatus()
+        }
     }
 
     private fun bindViews() {
@@ -69,6 +102,7 @@ class KioskProvisioningActivity : AppCompatActivity() {
         etSiteName      = findViewById(R.id.etSiteName)
         etApiUrlOverride = findViewById(R.id.etApiUrlOverride)
         btnProvision    = findViewById(R.id.btnCompleteProvisioning)
+        btnDeveloperOptions = findViewById(R.id.btnDeveloperOptions)
         progressBar     = findViewById(R.id.provisioningProgressBar)
         tvStatus        = findViewById(R.id.tvProvisioningStatus)
         layoutStep1     = findViewById(R.id.layoutStep1Passcode)
@@ -77,6 +111,20 @@ class KioskProvisioningActivity : AppCompatActivity() {
         val btnAuthStep1 = findViewById<android.widget.Button>(R.id.btnAuthStep1)
         btnAuthStep1.setOnClickListener { onDailyOtpSubmit() }
         btnProvision.setOnClickListener { onCompleteProvisioning() }
+        
+        btnDeveloperOptions.setOnClickListener {
+            val intent = Intent(this, DeveloperModeActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Permission views
+        tvPermCamera       = findViewById(R.id.tvPermCamera)
+        tvPermLocation     = findViewById(R.id.tvPermLocation)
+        tvPermStorage      = findViewById(R.id.tvPermStorage)
+        btnGrantPermissions = findViewById(R.id.btnGrantPermissions)
+        tvPermAllGranted   = findViewById(R.id.tvPermAllGranted)
+
+        btnGrantPermissions.setOnClickListener { requestAllPermissions() }
     }
 
     private fun showStep1() {
@@ -216,6 +264,67 @@ class KioskProvisioningActivity : AppCompatActivity() {
             packageManager.getPackageInfo(packageName, 0).versionName ?: "unknown"
         } catch (_: Exception) {
             "unknown"
+        }
+    }
+
+    // ── Permission Management ────────────────────────────────────────
+
+    private fun isPermGranted(perm: String): Boolean =
+        ContextCompat.checkSelfPermission(this, perm) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Refreshes the permission status display.
+     * Shows ✅ for granted, ❌ for denied.
+     */
+    private fun refreshPermissionStatus() {
+        val camera   = isPermGranted(Manifest.permission.CAMERA)
+        val location = isPermGranted(Manifest.permission.ACCESS_FINE_LOCATION)
+        val storage  = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) true
+                       else isPermGranted(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+        tvPermCamera.text   = if (camera)   "📷 Camera: ✅ Granted" else "📷 Camera: ❌ Denied"
+        tvPermLocation.text = if (location) "📍 Location: ✅ Granted" else "📍 Location: ❌ Denied"
+        tvPermStorage.text  = if (storage)  "💾 Storage: ✅ Granted" else "💾 Storage: ❌ Denied"
+
+        tvPermCamera.setTextColor(if (camera) 0xFF44DD88.toInt() else 0xFFFF6666.toInt())
+        tvPermLocation.setTextColor(if (location) 0xFF44DD88.toInt() else 0xFFFF6666.toInt())
+        tvPermStorage.setTextColor(if (storage) 0xFF44DD88.toInt() else 0xFFFF6666.toInt())
+
+        val allGranted = camera && location && storage
+        btnGrantPermissions.visibility = if (allGranted) View.GONE else View.VISIBLE
+        tvPermAllGranted.visibility    = if (allGranted) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * Requests all missing dangerous permissions in a single batch.
+     */
+    private fun requestAllPermissions() {
+        val missing = REQUIRED_PERMISSIONS.filter { !isPermGranted(it) }
+        if (missing.isEmpty()) {
+            Toast.makeText(this, "All permissions already granted ✅", Toast.LENGTH_SHORT).show()
+            refreshPermissionStatus()
+            return
+        }
+        ActivityCompat.requestPermissions(this, missing.toTypedArray(), REQ_CODE_PERMISSIONS)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_CODE_PERMISSIONS) {
+            refreshPermissionStatus()
+
+            val denied = permissions.zip(grantResults.toList())
+                .filter { it.second != PackageManager.PERMISSION_GRANTED }
+                .map { it.first.substringAfterLast('.') }
+            if (denied.isEmpty()) {
+                Toast.makeText(this, "✅ All permissions granted!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "⚠️ Still denied: ${denied.joinToString()}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 }

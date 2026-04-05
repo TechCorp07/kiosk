@@ -45,3 +45,29 @@ data class PageOrder(
     @Json(name = "first") val first: Boolean = true,
     @Json(name = "last") val last: Boolean = true
 )
+
+/**
+ * Represents a single transit or event tracking entry from the backend.
+ * Returned by GET /api/v1/orders/track/{trackingNumber}
+ */
+@JsonClass(generateAdapter = true)
+data class OrderTrackerDto(
+    @Json(name = "id") val id: String? = null,
+    @Json(name = "trackingNumber") val trackingNumber: String? = null,
+    @Json(name = "activity") val activity: String? = null,
+    @Json(name = "description") val description: String? = null,
+    @Json(name = "createdDate") val createdDate: String? = null,
+    @Json(name = "createdBy") val createdBy: String? = null
+)
+
+/**
+ * Paginated tracking history list.
+ */
+@JsonClass(generateAdapter = true)
+data class PageOrderTrackerDto(
+    @Json(name = "content") val content: List<OrderTrackerDto> = emptyList(),
+    @Json(name = "totalElements") val totalElements: Long = 0,
+    @Json(name = "totalPages") val totalPages: Int = 0,
+    @Json(name = "number") val page: Int = 0,
+    @Json(name = "size") val size: Int = 20
+)

@@ -131,9 +131,9 @@ class PackageDetailsFragment : Fragment() {
      */
     private fun calculatePackageSize() {
         try {
-            val length = binding.etLength.text.toString().toDoubleOrNull() ?: 0.0
-            val width = binding.etWidth.text.toString().toDoubleOrNull() ?: 0.0
-            val height = binding.etHeight.text.toString().toDoubleOrNull() ?: 0.0
+            val length = (binding.etLength.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
+            val width = (binding.etWidth.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
+            val height = (binding.etHeight.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
 
             if (length > 0 && width > 0 && height > 0) {
                 val size = PackageSize.fromDimensions(length, width, height)
@@ -156,7 +156,7 @@ class PackageDetailsFragment : Fragment() {
         // Length
         val length = binding.etLength.text.toString().toDoubleOrNull()
         if (length == null || length <= 0) {
-            binding.tilLength.error = "Enter valid length in meters"
+            binding.tilLength.error = "Enter valid length in mm"
             isValid = false
         } else {
             binding.tilLength.error = null
@@ -165,7 +165,7 @@ class PackageDetailsFragment : Fragment() {
         // Width
         val width = binding.etWidth.text.toString().toDoubleOrNull()
         if (width == null || width <= 0) {
-            binding.tilWidth.error = "Enter valid width in meters"
+            binding.tilWidth.error = "Enter valid width in mm"
             isValid = false
         } else {
             binding.tilWidth.error = null
@@ -174,7 +174,7 @@ class PackageDetailsFragment : Fragment() {
         // Height
         val height = binding.etHeight.text.toString().toDoubleOrNull()
         if (height == null || height <= 0) {
-            binding.tilHeight.error = "Enter valid height in meters"
+            binding.tilHeight.error = "Enter valid height in mm"
             isValid = false
         } else {
             binding.tilHeight.error = null
@@ -198,9 +198,9 @@ class PackageDetailsFragment : Fragment() {
     private fun saveData() {
         val data = sendPackageActivity.sendPackageData
 
-        data.packageLength = binding.etLength.text.toString().toDouble()
-        data.packageWidth = binding.etWidth.text.toString().toDouble()
-        data.packageHeight = binding.etHeight.text.toString().toDouble()
+        data.packageLength = (binding.etLength.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
+        data.packageWidth = (binding.etWidth.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
+        data.packageHeight = (binding.etHeight.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
         data.packageContents = binding.etContents.text.toString().trim()
         data.packageSize = PackageSize.fromDimensions(
             data.packageLength,
@@ -291,6 +291,11 @@ class PackageDetailsFragment : Fragment() {
         }
     }
 
+    private fun formatMm(meters: Double): String {
+        val mm = meters * 1000.0
+        return if (mm % 1.0 == 0.0) mm.toInt().toString() else mm.toString()
+    }
+
     /**
      * Restore previously entered data
      */
@@ -298,13 +303,13 @@ class PackageDetailsFragment : Fragment() {
         val data = sendPackageActivity.sendPackageData
 
         if (data.packageLength > 0) {
-            binding.etLength.setText(data.packageLength.toString())
+            binding.etLength.setText(formatMm(data.packageLength))
         }
         if (data.packageWidth > 0) {
-            binding.etWidth.setText(data.packageWidth.toString())
+            binding.etWidth.setText(formatMm(data.packageWidth))
         }
         if (data.packageHeight > 0) {
-            binding.etHeight.setText(data.packageHeight.toString())
+            binding.etHeight.setText(formatMm(data.packageHeight))
         }
         if (data.packageContents.isNotEmpty()) {
             binding.etContents.setText(data.packageContents)

@@ -18,11 +18,13 @@
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_back_button"
             android:src="@drawable/ic_arrow_back"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
             app:tint="@color/white" />
 
         <TextView
@@ -38,8 +40,8 @@
 
         <!-- Placeholder for symmetry -->
         <View
-            android:layout_width="48dp"
-            android:layout_height="48dp" />
+            android:layout_width="64dp"
+            android:layout_height="64dp" />
     </LinearLayout>
 
     <!-- Stepper Indicator -->
@@ -62,8 +64,8 @@
 
             <View
                 android:id="@+id/step1Indicator"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="@drawable/stepper_indicator"
                 android:elevation="2dp" />
 
@@ -71,10 +73,10 @@
                 android:id="@+id/step1Label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
+                android:layout_marginTop="@dimen/spacing_sm"
                 android:text="Recipient"
                 android:textColor="@color/text_hint"
-                android:textSize="16sp" />
+                android:textSize="18sp" />
         </LinearLayout>
 
         <!-- Line 1 -->
@@ -97,8 +99,8 @@
 
             <View
                 android:id="@+id/step2Indicator"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="@drawable/stepper_indicator"
                 android:elevation="2dp" />
 
@@ -106,10 +108,10 @@
                 android:id="@+id/step2Label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
+                android:layout_marginTop="@dimen/spacing_sm"
                 android:text="Package"
                 android:textColor="@color/text_hint"
-                android:textSize="16sp" />
+                android:textSize="18sp" />
         </LinearLayout>
 
         <!-- Line 2 -->
@@ -132,8 +134,8 @@
 
             <View
                 android:id="@+id/step3Indicator"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="@drawable/stepper_indicator"
                 android:elevation="2dp" />
 
@@ -141,10 +143,10 @@
                 android:id="@+id/step3Label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
+                android:layout_marginTop="@dimen/spacing_sm"
                 android:text="Payment"
                 android:textColor="@color/text_hint"
-                android:textSize="16sp" />
+                android:textSize="18sp" />
         </LinearLayout>
     </LinearLayout>
 

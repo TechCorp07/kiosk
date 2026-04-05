@@ -32,6 +32,8 @@ class SendPackageActivity : BaseKioskActivity() {
 
     // Shared data across fragments
     val sendPackageData = SendPackageData()
+    
+    private lateinit var prefs: com.blitztech.pudokiosk.prefs.Prefs
 
     // Location manager for getting sender location
     private val locationManager: LocationManager by lazy {
@@ -58,6 +60,9 @@ class SendPackageActivity : BaseKioskActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        prefs = com.blitztech.pudokiosk.prefs.Prefs(this)
+        
         binding = ActivitySendPackageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -129,7 +134,7 @@ class SendPackageActivity : BaseKioskActivity() {
      */
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
+            goToPreviousPage()
         }
     }
 
@@ -162,7 +167,7 @@ class SendPackageActivity : BaseKioskActivity() {
             .setTitle("Cancel Package Sending")
             .setMessage("Are you sure you want to cancel? All entered data will be lost.")
             .setPositiveButton("Yes, Cancel") { _, _ ->
-                finish()
+                finishSafely()
             }
             .setNegativeButton("No, Continue", null)
             .show()
@@ -209,21 +214,31 @@ class SendPackageActivity : BaseKioskActivity() {
                     sendPackageData.senderLatitude = it.latitude
                     sendPackageData.senderLongitude = it.longitude
                 } ?: run {
-                    // Use default location if unable to get current location
-                    sendPackageData.senderLatitude = -17.8252 // Harare default
-                    sendPackageData.senderLongitude = 31.0335
+                    val mockLocation = prefs.getBoolean("dev_mock_location", false)
+                    if (mockLocation) {
+                        sendPackageData.senderLatitude = -17.8252
+                        sendPackageData.senderLongitude = 31.0335
+                    } else {
+                        sendPackageData.senderLatitude = prefs.getKioskLatitude()
+                        sendPackageData.senderLongitude = prefs.getKioskLongitude()
+                    }
                     Toast.makeText(
                         this,
-                        "Using default location. GPS signal not available.",
+                        if (mockLocation) "Using Dev Mock Location." else "Using Provisioned Kiosk Location.",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         } catch (e: Exception) {
-            // Use default location on error
-            sendPackageData.senderLatitude = -17.8252
-            sendPackageData.senderLongitude = 31.0335
-            Toast.makeText(this, "Location error. Using default location.", Toast.LENGTH_SHORT).show()
+            val mockLocation = prefs.getBoolean("dev_mock_location", false)
+            if (mockLocation) {
+                sendPackageData.senderLatitude = -17.8252
+                sendPackageData.senderLongitude = 31.0335
+            } else {
+                sendPackageData.senderLatitude = prefs.getKioskLatitude()
+                sendPackageData.senderLongitude = prefs.getKioskLongitude()
+            }
+            Toast.makeText(this, "Location error. Using fallback location.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -243,5 +258,9 @@ class SendPackageActivity : BaseKioskActivity() {
                 else -> throw IllegalArgumentException("Invalid page position: $position")
             }
         }
+    }
+
+    override fun onBackPressed() {
+        goToPreviousPage()
     }
 }

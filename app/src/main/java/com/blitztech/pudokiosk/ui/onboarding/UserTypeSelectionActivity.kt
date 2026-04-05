@@ -44,6 +44,8 @@ class UserTypeSelectionActivity : BaseKioskActivity() {
     }
 
     private fun setupClickListeners() {
+        binding.btnBack.setOnClickListener { finishSafely() }
+
         // Customer Receive → go directly to collection flow (no login required)
         binding.cardCustomerReceive.setOnClickListener {
             startActivity(Intent(this, CollectionCodeActivity::class.java))

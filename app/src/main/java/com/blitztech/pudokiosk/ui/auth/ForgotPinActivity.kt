@@ -60,14 +60,15 @@ class ForgotPinActivity : BaseKioskActivity() {
     }
 
     private fun sendForgotPinRequest() {
-        val mobileNumber = binding.etMobileNumber.text.toString().trim()
+        val rawMobile = binding.etMobileNumber.text.toString().trim()
 
         // Validate mobile number
-        if (mobileNumber.isEmpty()) {
+        if (rawMobile.isEmpty()) {
             getString(R.string.error_required_field)
             return
         }
 
+        val mobileNumber = ValidationUtils.formatPhoneNumber(rawMobile)
         if (!ValidationUtils.isValidPhoneNumber(mobileNumber)) {
             getString(R.string.error_invalid_phone)
             return

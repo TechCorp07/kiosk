@@ -369,9 +369,7 @@ Additional Context:
             supportSessionActive = false
         }
 
-        val intent = Intent(this, TechnicianMenuActivity::class.java)
-        startActivity(intent)
-        finish()
+        finishSafely()
     }
 
     private fun showToast(message: String) {

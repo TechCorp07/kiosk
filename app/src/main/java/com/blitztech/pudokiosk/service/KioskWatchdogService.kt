@@ -63,6 +63,19 @@ class KioskWatchdogService : Service() {
         handler.post(watchdogRunnable)
     }
 
+    /**
+     * System packages that may briefly appear as the top activity during
+     * normal operation (e.g. APK install confirmation, permission dialogs).
+     * The watchdog should NOT kill the user's session for these.
+     */
+    private val allowedSystemPackages = setOf(
+        "com.google.android.packageinstaller",
+        "com.android.packageinstaller",
+        "com.google.android.permissioncontroller",
+        "com.android.permissioncontroller",
+        "com.android.systemui"
+    )
+
     private fun checkKioskApp() {
         try {
             // Get list of running tasks
@@ -70,17 +83,23 @@ class KioskWatchdogService : Service() {
 
             if (runningTasks.isNotEmpty()) {
                 val topActivity = runningTasks[0].topActivity
-                val packageName = packageName
-
-                //Log.v(TAG, "Top activity: ${topActivity?.className}, Our package: $packageName")
+                val ourPackageName = packageName
 
                 // Check if our kiosk app is the top activity
-                if (topActivity?.packageName != packageName) {
+                if (topActivity?.packageName != ourPackageName) {
                     // Skip enforcement during maintenance mode
                     if (KioskLockManager.isMaintenanceMode()) {
                         return
                     }
-                    Log.w(TAG, "Kiosk app not in foreground! Top app: ${topActivity?.packageName}")
+
+                    // Allow benign system packages to appear briefly
+                    val topPkg = topActivity?.packageName ?: ""
+                    if (topPkg in allowedSystemPackages) {
+                        Log.d(TAG, "Allowing system package on top: $topPkg")
+                        return
+                    }
+
+                    Log.w(TAG, "Kiosk app not in foreground! Top app: $topPkg")
                     bringKioskToForeground()
                 } else if (topActivity.className != MainActivity::class.java.name) {
                     // Our app is running but not on MainActivity (could be normal)
@@ -103,13 +122,23 @@ class KioskWatchdogService : Service() {
         try {
             Log.d(TAG, "Bringing kiosk app to foreground")
 
-            val intent = Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+            // Use moveTaskToFront to preserve the existing activity stack.
+            // DO NOT use FLAG_ACTIVITY_CLEAR_TOP — it destroys the user's
+            // current activity (e.g. SendPackageActivity).
+            val tasks = activityManager.getRunningTasks(10)
+            val ourTask = tasks.firstOrNull { it.topActivity?.packageName == packageName }
+            if (ourTask != null) {
+                activityManager.moveTaskToFront(ourTask.id, ActivityManager.MOVE_TASK_WITH_HOME)
+                Log.d(TAG, "Moved existing task to front (taskId=${ourTask.id})")
+            } else {
+                // Fallback: launch MainActivity without clearing the stack
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+                Log.d(TAG, "Launched fresh MainActivity (no existing task found)")
             }
-
-            startActivity(intent)
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to bring kiosk app to foreground", e)

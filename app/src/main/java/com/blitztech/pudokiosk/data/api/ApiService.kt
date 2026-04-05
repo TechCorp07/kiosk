@@ -69,6 +69,17 @@ interface ApiService {
         @Part file: MultipartBody.Part
     ): Response<KycResponse>
 
+    @GET(ApiEndpoints.USER_PROFILE)
+    suspend fun getUserProfile(
+        @Header("Authorization") token: String
+    ): Response<UserProfileDto>
+
+    @PUT(ApiEndpoints.USER_PROFILE)
+    suspend fun updateUserProfile(
+        @Body request: UserProfileUpdateRequest,
+        @Header("Authorization") token: String
+    ): Response<com.blitztech.pudokiosk.data.api.dto.common.ApiResponse>
+
     // ─────────────────────────────────────────────────────────────
     //  Order Service – Orders & payments
     // ─────────────────────────────────────────────────────────────
@@ -96,8 +107,10 @@ interface ApiService {
 
     @GET(ApiEndpoints.TRACK_ORDER)
     suspend fun trackOrder(
-        @Path("trackingNumber") trackingNumber: String
-    ): Response<OrderDto>
+        @Path("trackingNumber") trackingNumber: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 50
+    ): Response<com.blitztech.pudokiosk.data.api.dto.order.PageOrderTrackerDto>
 
     // ─────────────────────────────────────────────────────────────
     //  Order Service – Locations

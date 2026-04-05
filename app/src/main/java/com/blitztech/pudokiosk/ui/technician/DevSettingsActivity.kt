@@ -24,6 +24,7 @@ class DevSettingsActivity : BaseKioskActivity() {
         prefs = ZimpudoApp.prefs
         chkSimHw = findViewById(R.id.chkSimHw)
         chkIm30 = findViewById(R.id.chkIm30)
+        findViewById<android.widget.ImageButton>(R.id.btnBack)?.setOnClickListener { finishSafely() }
         etScannerBaud = findViewById(R.id.etScannerBaud)
         btnSave = findViewById(R.id.btnSave)
 

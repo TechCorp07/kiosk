@@ -237,17 +237,17 @@ class RecipientDetailsFragment : Fragment() {
             isValid = false
         }
 
-        // Mobile
-        val mobile = binding.etRecipientMobile.text.toString().trim()
+        // Mobile — normalize first, then validate
+        val mobile = ValidationUtils.formatPhoneNumber(binding.etRecipientMobile.text.toString().trim())
         if (!ValidationUtils.isValidPhoneNumber(mobile)) {
-            binding.tilRecipientMobile.error = "Invalid mobile number"
+            binding.tilRecipientMobile.error = ValidationUtils.getPhoneErrorMessage()
             isValid = false
         }
 
-        // National ID
-        val nationalId = binding.etRecipientNationalId.text.toString().trim()
+        // National ID — normalize first, then validate
+        val nationalId = ValidationUtils.formatNationalId(binding.etRecipientNationalId.text.toString().trim())
         if (!ValidationUtils.isValidNationalId(nationalId)) {
-            binding.tilRecipientNationalId.error = "Invalid national ID"
+            binding.tilRecipientNationalId.error = ValidationUtils.getNationalIdErrorMessage()
             isValid = false
         }
 
@@ -288,8 +288,9 @@ class RecipientDetailsFragment : Fragment() {
 
         data.recipientName = binding.etRecipientName.text.toString().trim()
         data.recipientSurname = binding.etRecipientSurname.text.toString().trim()
-        data.recipientMobile = binding.etRecipientMobile.text.toString().trim()
-        data.recipientNationalId = binding.etRecipientNationalId.text.toString().trim()
+        // Save in normalized format (+263... and XX-XXXXXX-X-XX)
+        data.recipientMobile = ValidationUtils.formatPhoneNumber(binding.etRecipientMobile.text.toString().trim())
+        data.recipientNationalId = ValidationUtils.formatNationalId(binding.etRecipientNationalId.text.toString().trim())
         data.recipientHouseNumber = binding.etHouseNumber.text.toString().trim()
         data.recipientStreet = binding.etStreet.text.toString().trim()
 

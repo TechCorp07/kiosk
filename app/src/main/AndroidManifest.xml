@@ -27,6 +27,8 @@
 
     <!-- OTA UPDATE PERMISSIONS -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <!-- USB host feature (for printer/serial dongles) -->
     <uses-feature android:name="android.hardware.usb.host"

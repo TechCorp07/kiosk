@@ -21,8 +21,8 @@
             <!-- Back Button -->
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/content_description_back_button"

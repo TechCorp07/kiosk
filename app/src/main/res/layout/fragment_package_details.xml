@@ -36,7 +36,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="Enter Package Details"
                 android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_size_headline"
+                android:textSize="36sp"
                 android:textStyle="bold" />
 
             <!-- Dimensions Section -->
@@ -44,9 +44,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Package Dimensions (in meters)"
+                android:text="Package Dimensions (in mm)"
                 android:textColor="@color/text_primary"
-                android:textSize="@dimen/text_size_title"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <!-- Length -->
@@ -61,9 +61,10 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etLength"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Length (m)"
-                    android:inputType="numberDecimal"
+                    android:layout_height="90dp"
+                    android:hint="Length (mm)"
+                    android:inputType="number"
+                    android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -79,9 +80,10 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etWidth"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Width (m)"
-                    android:inputType="numberDecimal"
+                    android:layout_height="90dp"
+                    android:hint="Width (mm)"
+                    android:inputType="number"
+                    android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -97,9 +99,10 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etHeight"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Height (m)"
-                    android:inputType="numberDecimal"
+                    android:layout_height="90dp"
+                    android:hint="Height (mm)"
+                    android:inputType="number"
+                    android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -113,7 +116,7 @@
                 android:padding="@dimen/spacing_md"
                 android:text="Calculated Size: Medium"
                 android:textColor="@color/success"
-                android:textSize="@dimen/text_size_body"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
 
@@ -129,9 +132,10 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etContents"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="90dp"
                     android:hint="Package Contents"
                     android:inputType="textCapSentences"
+                    android:textSize="22sp"
                     android:maxLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -141,12 +145,12 @@
                 android:layout_height="wrap_content"
                 android:text="Currency"
                 android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_body" />
+                android:textSize="20sp" />
 
             <Spinner
                 android:id="@+id/spinnerCurrency"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
+                android:layout_height="60dp"
                 android:layout_marginTop="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:background="@drawable/bg_input_field" />
@@ -157,12 +161,12 @@
                 android:layout_height="wrap_content"
                 android:text="Package Class"
                 android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_body" />
+                android:textSize="20sp" />
 
             <Spinner
                 android:id="@+id/spinnerPackageClass"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/input_height"
+                android:layout_height="60dp"
                 android:layout_marginTop="@dimen/spacing_sm"
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:background="@drawable/bg_input_field" />
@@ -182,21 +186,23 @@
             android:id="@+id/btnBack"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="@dimen/button_height"
+            android:layout_height="80dp"
             android:layout_marginEnd="@dimen/spacing_sm"
             android:layout_weight="1"
             android:text="Back"
+            android:textSize="24sp"
             android:textColor="@color/zimpudo_primary"
             app:strokeColor="@color/zimpudo_primary" />
 
         <Button
             android:id="@+id/btnNext"
             android:layout_width="0dp"
-            android:layout_height="@dimen/button_height"
+            android:layout_height="80dp"
             android:layout_marginStart="@dimen/spacing_sm"
             android:layout_weight="1"
             android:backgroundTint="@color/zimpudo_primary"
             android:text="Create Order"
+            android:textSize="24sp"
             android:textColor="@color/white" />
     </LinearLayout>
 

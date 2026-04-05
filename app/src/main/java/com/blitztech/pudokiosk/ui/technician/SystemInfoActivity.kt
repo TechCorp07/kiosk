@@ -279,7 +279,7 @@ Cache Directory: ${cacheDir.absolutePath}
     }
 
     private fun returnToTechMenu() {
-        finish()
+        finishSafely()
     }
 
     private fun setLoading(loading: Boolean) {

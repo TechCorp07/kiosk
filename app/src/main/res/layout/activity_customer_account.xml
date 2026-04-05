@@ -6,187 +6,356 @@
     android:background="@drawable/bg_gradient_primary"
     android:orientation="vertical">
 
-    <!-- Header -->
+    <!-- Green header — 2/7 of screen -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="@dimen/spacing_xl">
 
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white"
-            android:contentDescription="Back" />
+        <!-- Back button -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="My Account"
-            android:textColor="@color/white"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back"
+                android:contentDescription="@string/back"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- Logo -->
+        <ImageView
+            android:layout_width="500dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center_horizontal"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/zimpudo_logo"
+            android:contentDescription="@string/app_name" />
 
     </LinearLayout>
 
+    <!-- White panel — 5/7 of screen -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="5"
+        android:background="@drawable/bg_white_rounded_top"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_xl"
+            android:gravity="center_horizontal">
 
-            <!-- Profile Card -->
-            <androidx.cardview.widget.CardView
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                android:layout_marginBottom="@dimen/spacing_xl"
+                android:gravity="center"
+                android:text="My Account"
+                android:textColor="@color/text_primary"
+                android:textSize="36sp"
+                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Profile Information"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Name"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:id="@+id/tvName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="22sp"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Mobile Number"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:id="@+id/tvMobile"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="22sp"
-                        android:textColor="@color/text_primary" />
-
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Change PIN Card -->
-            <androidx.cardview.widget.CardView
+            <!-- Profile Form -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etName"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:layout_height="90dp"
+                    android:hint="First Name"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Change PIN"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="12dp" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSurname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSurname"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="Surname"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilOldPin"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:hint="Current PIN">
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="Email (Optional)"
+                    android:inputType="textEmailAddress"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etOldPin"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberPassword"
-                            android:maxLength="4" />
-                    </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilMobileNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etMobileNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="Mobile Number (e.g. +263...)"
+                    android:inputType="phone"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilNewPin"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:hint="New PIN">
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilNationalId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etNationalId"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="National ID (e.g. 29-279774-Q-13)"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etNewPin"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberPassword"
-                            android:maxLength="4" />
-                    </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilHouseNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etHouseNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="House/Street Number"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilConfirmPin"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:hint="Confirm New PIN">
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilStreet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etStreet"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="Street Name"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etConfirmPin"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberPassword"
-                            android:maxLength="4" />
-                    </com.google.android.material.textfield.TextInputLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSuburb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSuburb"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="Suburb"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+            
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_xl"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etCity"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="City"
+                    android:textSize="22sp"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                    <ProgressBar
-                        android:id="@+id/progressBar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:visibility="gone" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_xl">
+                <Button
+                    android:id="@+id/btnSaveProfile"
+                    style="@style/Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginEnd="100dp"
+                    android:text="Save Profile"
+                    android:textSize="24sp" />
+                <ProgressBar
+                    android:id="@+id/progressBarProfile"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:indeterminateTint="@color/white" />
+            </FrameLayout>
 
-                    <Button
-                        android:id="@+id/btnChangePin"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="Change PIN"
-                        android:textSize="22sp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_xl"
+                android:background="@color/divider" />
 
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_xl"
+                android:gravity="center"
+                android:text="Change PIN"
+                android:textColor="@color/text_primary"
+                android:textSize="36sp"
+                android:textStyle="bold" />
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilOldPin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:endIconMode="password_toggle"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etOldPin"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="Current PIN"
+                    android:inputType="numberPassword"
+                    android:maxLength="4"
+                    android:textSize="22sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilNewPin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                app:endIconMode="password_toggle"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etNewPin"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="New PIN (4 digits)"
+                    android:inputType="numberPassword"
+                    android:maxLength="4"
+                    android:textSize="22sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilConfirmPin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="@dimen/spacing_xl"
+                app:endIconMode="password_toggle"
+                app:hintTextColor="@color/zimpudo_primary"
+                app:boxStrokeColor="@color/zimpudo_primary">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etConfirmPin"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:hint="Confirm New PIN"
+                    android:inputType="numberPassword"
+                    android:maxLength="4"
+                    android:textSize="22sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_xl">
+                <Button
+                    android:id="@+id/btnChangePin"
+                    style="@style/Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="100dp"
+                    android:layout_marginEnd="100dp"
+                    android:text="Change PIN"
+                    android:textSize="24sp" />
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:indeterminateTint="@color/zimpudo_primary" />
+            </FrameLayout>
+            
         </LinearLayout>
     </ScrollView>
 

@@ -426,9 +426,7 @@ Note: For full export functionality, implement file saving to external storage.
     }
 
     private fun returnToTechMenu() {
-        val intent = Intent(this, TechnicianMenuActivity::class.java)
-        startActivity(intent)
-        finish()
+        finishSafely()
     }
 
     private fun showToast(message: String) {

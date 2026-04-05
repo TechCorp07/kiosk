@@ -286,4 +286,15 @@ class Prefs(context: Context) {
      */
     fun getApiBaseUrlOverride(): String = getString(KEY_API_BASE_URL_OVERRIDE, "")
     fun setApiBaseUrlOverride(url: String) = putString(KEY_API_BASE_URL_OVERRIDE, url)
+
+    // Kiosk Location (Provisioned)
+    fun getKioskLatitude(): Double = java.lang.Double.longBitsToDouble(
+        prefs.getLong("kiosk_latitude", java.lang.Double.doubleToRawLongBits(-17.8252))
+    )
+    fun setKioskLatitude(lat: Double) = putLong("kiosk_latitude", java.lang.Double.doubleToRawLongBits(lat))
+
+    fun getKioskLongitude(): Double = java.lang.Double.longBitsToDouble(
+        prefs.getLong("kiosk_longitude", java.lang.Double.doubleToRawLongBits(31.0335))
+    )
+    fun setKioskLongitude(lng: Double) = putLong("kiosk_longitude", java.lang.Double.doubleToRawLongBits(lng))
 }

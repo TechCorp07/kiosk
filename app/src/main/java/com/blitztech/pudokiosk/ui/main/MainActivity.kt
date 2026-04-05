@@ -1,6 +1,8 @@
 package com.blitztech.pudokiosk.ui.main
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -9,10 +11,14 @@ import android.util.Log
 import android.view.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.GestureDetectorCompat
+import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.databinding.ActivityMainBinding
 import com.blitztech.pudokiosk.service.KioskLockManager
 import com.blitztech.pudokiosk.service.KioskModeService
+import com.blitztech.pudokiosk.ui.technician.KioskProvisioningActivity
 import com.blitztech.pudokiosk.ui.technician.TechnicianAccessActivity
 import com.blitztech.pudokiosk.ui.onboarding.LanguageSelectionActivity
 
@@ -22,6 +28,23 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val SPLASH_DELAY_MS = 3000L
+        private const val REQ_CODE_PERMISSIONS = 1001
+
+        /**
+         * All dangerous permissions the kiosk needs.
+         * Requested once during first boot / provisioning.
+         */
+        private val REQUIRED_PERMISSIONS = mutableListOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ).apply {
+            // Storage permissions only needed on pre-Q (API < 29)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }.toTypedArray()
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -58,6 +81,10 @@ class MainActivity : AppCompatActivity() {
 
             KioskModeService.start(this)
             KioskLockManager.ensureLockTaskOnStartup(this)
+
+            // Request all dangerous permissions upfront (first boot only)
+            ensurePermissions()
+
             scheduleNavigation()
 
             // Start monitoring for system UI visibility changes
@@ -267,8 +294,8 @@ class MainActivity : AppCompatActivity() {
         if (!splashNavigationPending) {
             Log.d(TAG, "MainActivity resumed - starting return timer (5 seconds)")
             handler.postDelayed({
-                Log.d(TAG, "Auto-return timer triggered - going to language selection")
-                navigateToLanguageSelection()
+                Log.d(TAG, "Auto-return timer triggered")
+                navigateToNextScreen()
             }, 5000L)
         }
     }
@@ -339,14 +366,14 @@ class MainActivity : AppCompatActivity() {
             if (splashNavigationPending) {
                 Log.d(TAG, "Skipping splash screen")
                 cancelScheduledNavigation()
-                navigateToLanguageSelection()
+                navigateToNextScreen()
             }
         }
 
         handler.postDelayed({
             if (splashNavigationPending) {
                 Log.d(TAG, "Auto-navigation timer triggered")
-                navigateToLanguageSelection()
+                navigateToNextScreen()
             }
         }, SPLASH_DELAY_MS)
     }
@@ -354,6 +381,18 @@ class MainActivity : AppCompatActivity() {
     private fun cancelScheduledNavigation() {
         splashNavigationPending = false
         handler.removeCallbacksAndMessages(null)
+    }
+
+    /**
+     * Gate: if not provisioned → provisioning wizard, else → customer UI.
+     */
+    private fun navigateToNextScreen() {
+        if (!ZimpudoApp.prefs.isProvisioned()) {
+            Log.d(TAG, "Kiosk NOT provisioned — routing to provisioning wizard")
+            navigateToProvisioning()
+        } else {
+            navigateToLanguageSelection()
+        }
     }
 
     private fun navigateToLanguageSelection() {
@@ -371,6 +410,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun navigateToProvisioning() {
+        try {
+            splashNavigationPending = false
+            Log.d(TAG, "Navigating to KioskProvisioningActivity...")
+
+            val intent = Intent(this, KioskProvisioningActivity::class.java)
+            startActivity(intent)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to navigate to KioskProvisioningActivity", e)
+            handler.postDelayed({ navigateToProvisioning() }, 1000)
+        }
+    }
+
     private fun navigateToTechnicianAccess() {
         try {
             cancelScheduledNavigation()
@@ -383,6 +436,43 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "Failed to navigate to TechnicianAccessActivity", e)
             // Re-enable kiosk mode if navigation fails
             enableKioskMode()
+        }
+    }
+
+    // ── Permission Handling ─────────────────────────────────────
+
+    /**
+     * Request all dangerous permissions upfront on first boot.
+     * On a kiosk, the technician grants these once during setup;
+     * they should NEVER pop up during customer/courier flows.
+     */
+    private fun ensurePermissions() {
+        val missing = REQUIRED_PERMISSIONS.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isNotEmpty()) {
+            Log.d(TAG, "Requesting ${missing.size} missing permissions: $missing")
+            ActivityCompat.requestPermissions(this, missing.toTypedArray(), REQ_CODE_PERMISSIONS)
+        } else {
+            Log.d(TAG, "All required permissions already granted")
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_CODE_PERMISSIONS) {
+            val denied = permissions.zip(grantResults.toList())
+                .filter { it.second != PackageManager.PERMISSION_GRANTED }
+                .map { it.first }
+            if (denied.isEmpty()) {
+                Log.d(TAG, "All permissions granted ✅")
+            } else {
+                Log.w(TAG, "Some permissions denied (can be granted later in provisioning): $denied")
+            }
         }
     }
 }

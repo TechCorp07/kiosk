@@ -7,8 +7,7 @@ package com.blitztech.pudokiosk.data.api.config
  *   Auth    (8085), Core (4000), Locker (8084), Order (8081), Payment (8082)
  */
 object ApiConfig {
-    // Gateway base URL – all services behind the same gateway
-    // TODO [DEPLOY]: Change back to http://localhost:8222/ for dev local testing
+    // Gateway base URL - Dynamically overridden by NetworkModule based on DeveloperMode settings
     const val BASE_URL = "https://api.zimpudo.com/"
 
     // Request timeout configurations (seconds)
