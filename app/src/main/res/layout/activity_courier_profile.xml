@@ -11,13 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="24dp"
         android:gravity="center_vertical">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:tint="@color/white"
@@ -72,7 +72,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Mobile Number"
-                        android:textSize="16sp"
+                        android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -87,7 +87,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="User Type"
-                        android:textSize="16sp"
+                        android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -102,7 +102,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Assigned Kiosk"
-                        android:textSize="16sp"
+                        android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -148,8 +148,9 @@
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etOldPin"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="100dp"
                             android:inputType="numberPassword"
+                            android:textSize="28sp"
                             android:maxLength="4" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -164,8 +165,9 @@
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etNewPin"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="100dp"
                             android:inputType="numberPassword"
+                            android:textSize="28sp"
                             android:maxLength="4" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -180,8 +182,9 @@
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etConfirmPin"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_height="100dp"
                             android:inputType="numberPassword"
+                            android:textSize="28sp"
                             android:maxLength="4" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -195,9 +198,9 @@
                     <Button
                         android:id="@+id/btnChangePin"
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
+                        android:layout_height="120dp"
                         android:text="Change PIN"
-                        android:textSize="22sp" />
+                        android:textSize="28sp" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

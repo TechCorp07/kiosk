@@ -15,8 +15,8 @@
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:src="@drawable/ic_arrow_back"
@@ -81,11 +81,11 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnStartCollection"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="120dp"
             android:layout_marginTop="16dp"
             android:enabled="false"
             android:text="Start Collection"
-            android:textSize="22sp" />
+            android:textSize="28sp" />
     </LinearLayout>
 
     <!-- Scan group (shown during scan phase) -->
@@ -117,9 +117,10 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnFinish"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="120dp"
         android:layout_marginTop="16dp"
         android:text="Finish &amp; Return"
+        android:textSize="28sp"
         android:visibility="gone" />
 
 </LinearLayout>
