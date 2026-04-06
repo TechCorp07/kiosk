@@ -38,9 +38,11 @@ data class SendPackageData(
 
     // Order response
     var orderId: String = "",
+    var trackingNumber: String = "",   // e.g. CG0925467647ZW — used for barcode label
     var orderPrice: Double = 0.0,
     var orderDistance: String = "",
-    var lockerId: String = "",
+    var lockerId: String = "",         // Locker UUID (source locker selected by user)
+    var cellId: String = "",           // Cell UUID (assigned by verify-reservation)
 
     // Payment details
     var paymentMethod: PaymentMethod? = null,

@@ -70,6 +70,42 @@ class SendPackageActivity : BaseKioskActivity() {
         setupStepper()
         setupClickListeners()
         requestLocationPermission()
+
+        // Check if resuming an existing unpaid order
+        handleResumeOrder()
+    }
+
+    /**
+     * If launched with RESUME_ORDER_ID, pre-populate shared data
+     * and skip directly to the Payment page (page 2).
+     */
+    private fun handleResumeOrder() {
+        val resumeOrderId = intent.getStringExtra("RESUME_ORDER_ID") ?: return
+
+        // Pre-populate the shared data from the intent extras
+        sendPackageData.orderId = resumeOrderId
+        sendPackageData.trackingNumber = intent.getStringExtra("RESUME_TRACKING") ?: ""
+        sendPackageData.orderPrice = intent.getDoubleExtra("RESUME_AMOUNT", 0.0)
+        sendPackageData.orderDistance = intent.getStringExtra("RESUME_DISTANCE") ?: ""
+        sendPackageData.lockerId = intent.getStringExtra("RESUME_LOCKER_ID") ?: ""
+
+        // Map currency string back to enum
+        val currencyCode = intent.getStringExtra("RESUME_CURRENCY") ?: "USD"
+        sendPackageData.currency = com.blitztech.pudokiosk.data.api.dto.order.Currency.fromCode(currencyCode)
+            ?: com.blitztech.pudokiosk.data.api.dto.order.Currency.USD
+
+        // Map package size string back to enum
+        val packageSizeStr = intent.getStringExtra("RESUME_PACKAGE_SIZE") ?: ""
+        if (packageSizeStr.isNotBlank()) {
+            try {
+                sendPackageData.packageSize = com.blitztech.pudokiosk.data.api.dto.order.PackageSize.valueOf(packageSizeStr)
+            } catch (_: IllegalArgumentException) {
+                // Unknown size — leave null, payment screen will handle gracefully
+            }
+        }
+
+        // Jump directly to the Payment page (index 2)
+        viewPager.setCurrentItem(2, false)
     }
 
     /**

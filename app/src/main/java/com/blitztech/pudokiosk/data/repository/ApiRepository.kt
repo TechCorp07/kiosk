@@ -342,6 +342,22 @@ class ApiRepository(
     }
 
     /**
+     * Search order by orderId (UUID).
+     * Used by payment polling to check order status after payment initiation.
+     */
+    suspend fun searchOrderById(
+        orderId: String,
+        token: String
+    ): NetworkResult<OrderSearchPage> {
+        return safeApiCall {
+            apiService.searchOrder(
+                request = mapOf("orderId" to orderId),
+                token = "Bearer $token"
+            )
+        }
+    }
+
+    /**
      * Search orders by sender mobile number.
      * Uses POST /orders/and-search with senderMobileNumber.
      * Used by CustomerMainActivity to check for pending drop-off reservations.
@@ -497,6 +513,41 @@ class ApiRepository(
     ): NetworkResult<ApiResponse> {
         val url = ApiEndpoints.getLockerStatusUrl(lockerId)
         return safeApiCall { apiService.patchLockerStatus(url, status, "Bearer $token") }
+    }
+
+    /**
+     * Reports a cell as MAINTENANCE after a failed RS485 unlock (status 0x00).
+     * PATCH /api/v1/cells/{cellId}/status  { "status": "MAINTENANCE" }
+     */
+    suspend fun reportCellMaintenance(
+        cellId: String,
+        token: String
+    ): NetworkResult<ApiResponse> {
+        val url = ApiEndpoints.getCellStatusUrl(cellId)
+        return safeApiCall {
+            apiService.patchCellStatus(url, mapOf("status" to "MAINTENANCE"), "Bearer $token")
+        }
+    }
+
+    /**
+     * Fetches the N nearest lockers to the given coordinates.
+     * GET /api/v1/lockers/nearest/multiple?latitude=...&longitude=...&limit=...
+     */
+    suspend fun getNearestLockers(
+        latitude: Double,
+        longitude: Double,
+        token: String,
+        limit: Int = 5
+    ): NetworkResult<List<com.blitztech.pudokiosk.data.api.dto.locker.NearestLockerResult>> {
+        return when (val result = safeApiCall {
+            apiService.getNearestLockers(latitude, longitude, limit, "Bearer $token")
+        }) {
+            is NetworkResult.Success -> {
+                NetworkResult.Success(result.data.body ?: emptyList())
+            }
+            is NetworkResult.Error -> NetworkResult.Error(result.message, result.code)
+            is NetworkResult.Loading -> NetworkResult.Loading()
+        }
     }
 
     // ─────────────────────────────────────────────────────────────

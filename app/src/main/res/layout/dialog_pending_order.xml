@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tvDialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📦 Pending Order Found"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Body -->
+    <TextView
+        android:id="@+id/tvDialogMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        android:textColor="@color/text_secondary"
+        android:lineSpacingMultiplier="1.4"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/btnLater"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:text="Later"
+            android:textSize="22sp"
+            android:textColor="@color/text_hint"
+            android:layout_marginEnd="12dp" />
+
+        <Button
+            android:id="@+id/btnCancelOrder"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:text="Cancel Order"
+            android:textSize="22sp"
+            android:textColor="@color/error"
+            android:layout_marginEnd="12dp" />
+
+        <Button
+            android:id="@+id/btnResumePayment"
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:text="Resume Payment"
+            android:textSize="22sp"
+            android:backgroundTint="@color/zimpudo_primary"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+</LinearLayout>

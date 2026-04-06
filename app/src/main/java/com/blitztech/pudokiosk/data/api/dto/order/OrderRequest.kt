@@ -47,7 +47,7 @@ data class CreateOrderRequest(
     @Json(name = "packageDetails") val packageDetails: PackageDetails,
     @Json(name = "recipient") val recipient: Recipient,
     @Json(name = "senderLocation") val senderLocation: SenderLocation,
-    @Json(name = "currency") val currency: String, // "USD" or "ZWL"
+    @Json(name = "currency") val currency: String, // "USD" or "ZWG"
     @Json(name = "senderMode") val senderMode: String = "LOCKER_DROP",
     @Json(name = "receiverMode") val receiverMode: String = "LOCKER_PICKUP"
 )
@@ -71,9 +71,10 @@ data class CreateOrderResponse(
     @Json(name = "success") val success: Boolean,
     @Json(name = "message") val message: String,
     @Json(name = "distance") val distance: String,
-    @Json(name = "currency") val currency: String, // "USD" or "ZWL"
+    @Json(name = "currency") val currency: String, // "USD" or "ZWG"
     @Json(name = "price") val price: Double,
     @Json(name = "orderId") val orderId: String,
+    @Json(name = "trackingNumber") val trackingNumber: String? = null,
     @Json(name = "nearestLockers") val nearestLockers: List<NearestLocker>
 )
 
@@ -83,7 +84,7 @@ data class PaymentRequest(
     @Json(name = "lockerId") val lockerId: String,
     @Json(name = "paymentMethod") val paymentMethod: String, // "ECOCASH", "TELECASH", "ONEMONEY"
     @Json(name = "mobileNumber") val mobileNumber: String,
-    @Json(name = "currency") val currency: String // "ZWL" or "USD"
+    @Json(name = "currency") val currency: String // "ZWG" or "USD"
 )
 
 /**
@@ -128,10 +129,12 @@ enum class PackageSize(
     }
 }
 
-// Payment methods matching backend's MobileMoneyMethod enum (Paynow SDK).
+// Payment methods matching Paynow SDK's MobileMoneyMethod enum (v1.1.1).
+// SDK supports: ECOCASH, TELECASH, ONEMONEY, INNBUCKS
 // The kiosk sends the method name; Paynow gateway routes to the correct provider.
 enum class PaymentMethod(val displayName: String, val apiValue: String) {
     ECOCASH("EcoCash", "ECOCASH"),
+    INNBUCKS("InnBucks", "INNBUCKS"),
     ONEMONEY("OneMoney", "ONEMONEY"),
     TELECASH("TeleCash", "TELECASH");
 

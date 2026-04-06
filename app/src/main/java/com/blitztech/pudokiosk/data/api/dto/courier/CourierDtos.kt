@@ -72,10 +72,22 @@ data class OrderLookupResult(
     @Json(name = "cellId") val cellId: String? = null,
     @Json(name = "cellNumber") val cellNumber: Int? = null,
     // Additional fields for pending order management
-    @Json(name = "recipientName") val recipientName: String? = null,
+    @Json(name = "recipientId") val recipientId: String? = null,   // phone number
     @Json(name = "currency") val currency: String? = null,
     @Json(name = "price") val price: Double? = null,
-    @Json(name = "lockerId") val lockerId: String? = null
+    @Json(name = "lockerId") val lockerId: String? = null,
+    @Json(name = "distance") val distance: String? = null,
+    @Json(name = "packageDetails") val packageDetails: OrderPackageInfo? = null
+)
+
+/**
+ * Nested package info from the backend Order's embedded PackageDetails.
+ */
+@JsonClass(generateAdapter = true)
+data class OrderPackageInfo(
+    @Json(name = "packageSize") val packageSize: String? = null,
+    @Json(name = "contents") val contents: String? = null,
+    @Json(name = "packageClass") val packageClass: String? = null
 )
 
 /**

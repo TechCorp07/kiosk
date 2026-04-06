@@ -240,6 +240,23 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<ApiResponse>
 
+    /** PATCH /api/v1/cells/{cellId}/status — report cell jam / maintenance */
+    @PATCH
+    suspend fun patchCellStatus(
+        @Url url: String,
+        @Body request: Map<String, String>,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse>
+
+    /** GET /api/v1/lockers/nearest/multiple — browse destination lockers */
+    @GET(ApiEndpoints.NEAREST_LOCKERS)
+    suspend fun getNearestLockers(
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double,
+        @Query("limit") limit: Int = 5,
+        @Header("Authorization") token: String
+    ): Response<NearestLockersApiResponse>
+
     // ─────────────────────────────────────────────────────────────
     //  Security photo upload
     // ─────────────────────────────────────────────────────────────

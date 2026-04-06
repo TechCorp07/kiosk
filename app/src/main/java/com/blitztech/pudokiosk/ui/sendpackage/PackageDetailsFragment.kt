@@ -336,6 +336,7 @@ class PackageDetailsFragment : Fragment() {
 
                         // Save order details from response
                         data.orderId = response.orderId
+                        data.trackingNumber = response.trackingNumber ?: ""
                         data.orderPrice = response.price
                         data.orderDistance = response.distance
 

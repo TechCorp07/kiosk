@@ -236,11 +236,17 @@ class PaymentFragment : Fragment() {
             while (System.currentTimeMillis() - startTime < 120_000) {
                 delay(5000)
                 try {
-                    val searchResult = apiRepository.searchOrder(orderId, token)
+                    val searchResult = apiRepository.searchOrderById(orderId, token)
                     if (searchResult is NetworkResult.Success) {
                         val page = searchResult.data
                         val order = page.content.firstOrNull()
                         if (order != null && order.status == "AWAITING_COURIER") {
+                            // Extract cell assignment from the order
+                            val data = sendPackageActivity.sendPackageData
+                            data.cellId = order.cellId ?: ""
+                            if (order.cellNumber != null && order.cellNumber > 0) {
+                                data.assignedLockNumber = order.cellNumber
+                            }
                             isApproved = true
                             break
                         }
@@ -327,7 +333,7 @@ class PaymentFragment : Fragment() {
             printerDriver.printText("CUSTOMER RECEIPT\n", fontSize = 2, bold = true, centered = true)
             printerDriver.printText("--------------------------------\n")
             printerDriver.printText("Date: $timestamp\n")
-            printerDriver.printText("Order ID: ${data.orderId}\n")
+            printerDriver.printText("Tracking: ${data.trackingNumber}\n")
             printerDriver.printText("Recipient: ${data.recipientName} ${data.recipientSurname}\n")
             printerDriver.printText("Mobile: ${data.recipientMobile}\n")
             printerDriver.printText("Size: ${data.packageSize?.displayName}\n")
@@ -344,19 +350,19 @@ class PaymentFragment : Fragment() {
 
     /**
      * Print waybill label with Code128 barcode (per spec Section 11.1)
-     * Uses tracking number / orderId as the barcode data
+     * Uses tracking number as the barcode data — couriers scan this at pickup.
      */
     private suspend fun printBarcodeLabel() {
         try {
             val data = sendPackageActivity.sendPackageData
             
             printerDriver.printText("ZimPudo Waybill Label\n", fontSize = 2, bold = true, centered = true)
-            printerDriver.printText("Order ID: ${data.orderId}\n")
+            printerDriver.printText("Tracking: ${data.trackingNumber}\n")
             printerDriver.printText("To: ${data.recipientName} ${data.recipientSurname}\n")
             printerDriver.printText("Size: ${data.packageSize?.displayName ?: "-"}\n")
             printerDriver.printText("From: ${data.recipientCityName}\n")
             // Use Code128 barcode instead of QR (per spec: tracking number as Code128)
-            printerDriver.printCode128(data.orderId)
+            printerDriver.printCode128(data.trackingNumber)
             printerDriver.printText("\n\n")
             printerDriver.feedAndCut()
         } catch (e: Exception) {
@@ -466,7 +472,10 @@ class PaymentFragment : Fragment() {
                 if (token.isBlank() || data.orderId.isBlank()) return@launch
 
                 // Get cellId — from verify-reservation response or track from assign
-                val cellId = data.lockerId.ifBlank { prefs.getPrimaryLockerUuid() }
+                val cellId = data.cellId.ifBlank {
+                    Log.w("PaymentFragment", "cellId is blank — falling back to lockerId (may be incorrect)")
+                    data.lockerId
+                }
 
                 val result = apiRepository.senderDropoff(
                     orderId = data.orderId,

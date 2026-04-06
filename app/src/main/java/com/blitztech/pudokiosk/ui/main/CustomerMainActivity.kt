@@ -3,6 +3,8 @@ package com.blitztech.pudokiosk.ui.main
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
@@ -92,10 +94,10 @@ class CustomerMainActivity : BaseKioskActivity() {
     }
 
     /**
-     * Show dialog for unpaid orders: Resume Payment or Cancel Order.
+     * Show a kiosk-sized dialog for unpaid orders with Resume / Cancel / Later options.
      */
     private fun showPendingPaymentDialog(order: OrderLookupResult) {
-        val currencySymbol = when (order.currency) {
+        val currencySymbol = when (order.currency ?: "USD") {
             "USD" -> "$"
             "ZWG" -> "ZWG "
             else -> ""
@@ -105,32 +107,45 @@ class CustomerMainActivity : BaseKioskActivity() {
         } else {
             "amount pending"
         }
-        val recipientText = order.recipientName ?: "Unknown"
+        val recipientText = order.recipientId ?: "N/A"
 
-        MaterialAlertDialogBuilder(this)
-            .setTitle("📦 Pending Order Found")
-            .setMessage(
-                "You have an unpaid order that needs attention:\n\n" +
+        // Use custom kiosk layout for larger text
+        val dialogView = layoutInflater.inflate(R.layout.dialog_pending_order, null)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tvDialogTitle)
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tvDialogMessage)
+        val btnLater = dialogView.findViewById<Button>(R.id.btnLater)
+        val btnCancelOrder = dialogView.findViewById<Button>(R.id.btnCancelOrder)
+        val btnResumePayment = dialogView.findViewById<Button>(R.id.btnResumePayment)
+
+        tvTitle.text = "📦 Pending Order Found"
+        tvMessage.text = "You have an unpaid order that needs attention:\n\n" +
                 "Tracking: ${order.trackingNumber ?: "N/A"}\n" +
                 "Recipient: $recipientText\n" +
                 "Amount: $amountText\n" +
                 "Status: Awaiting Payment\n\n" +
                 "Would you like to resume payment or cancel this order?"
-            )
-            .setPositiveButton("Resume Payment") { _, _ ->
-                resumeOrderPayment(order)
-            }
-            .setNegativeButton("Cancel Order") { _, _ ->
-                confirmCancelOrder(order)
-            }
-            .setNeutralButton("Later", null)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
             .setCancelable(true)
-            .show()
+            .create()
+
+        btnLater.setOnClickListener { dialog.dismiss() }
+        btnCancelOrder.setOnClickListener {
+            dialog.dismiss()
+            confirmCancelOrder(order)
+        }
+        btnResumePayment.setOnClickListener {
+            dialog.dismiss()
+            resumeOrderPayment(order)
+        }
+
+        dialog.show()
     }
 
     /**
-     * Navigate to SendPackageActivity pre-loaded with the pending order data
-     * so the user can proceed directly to payment.
+     * Navigate to SendPackageActivity with RESUME extras.
+     * The activity will detect these and skip directly to the Payment page.
      */
     private fun resumeOrderPayment(order: OrderLookupResult) {
         val intent = Intent(this, SendPackageActivity::class.java).apply {
@@ -138,8 +153,10 @@ class CustomerMainActivity : BaseKioskActivity() {
             putExtra("RESUME_TRACKING", order.trackingNumber)
             putExtra("RESUME_AMOUNT", order.price ?: 0.0)
             putExtra("RESUME_CURRENCY", order.currency ?: "USD")
-            putExtra("RESUME_RECIPIENT", order.recipientName ?: "")
+            putExtra("RESUME_RECIPIENT", order.recipientId ?: "")
             putExtra("RESUME_LOCKER_ID", order.lockerId ?: "")
+            putExtra("RESUME_DISTANCE", order.distance ?: "")
+            putExtra("RESUME_PACKAGE_SIZE", order.packageDetails?.packageSize ?: "")
         }
         startActivity(intent)
     }
@@ -148,18 +165,35 @@ class CustomerMainActivity : BaseKioskActivity() {
      * Confirm before cancelling — this is destructive.
      */
     private fun confirmCancelOrder(order: OrderLookupResult) {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("⚠️ Confirm Cancellation")
-            .setMessage(
-                "Are you sure you want to cancel this order?\n\n" +
+        // Use custom dialog for kiosk sizing
+        val dialogView = layoutInflater.inflate(R.layout.dialog_pending_order, null)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tvDialogTitle)
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tvDialogMessage)
+        val btnLater = dialogView.findViewById<Button>(R.id.btnLater)
+        val btnCancelOrder = dialogView.findViewById<Button>(R.id.btnCancelOrder)
+        val btnResumePayment = dialogView.findViewById<Button>(R.id.btnResumePayment)
+
+        tvTitle.text = "⚠️ Confirm Cancellation"
+        tvMessage.text = "Are you sure you want to cancel this order?\n\n" +
                 "Tracking: ${order.trackingNumber ?: "N/A"}\n\n" +
                 "This action cannot be undone."
-            )
-            .setPositiveButton("Yes, Cancel Order") { _, _ ->
-                executeCancelOrder(order)
-            }
-            .setNegativeButton("No, Keep Order", null)
-            .show()
+
+        btnLater.text = "No, Keep Order"
+        btnCancelOrder.text = "Yes, Cancel Order"
+        btnResumePayment.visibility = android.view.View.GONE
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        btnLater.setOnClickListener { dialog.dismiss() }
+        btnCancelOrder.setOnClickListener {
+            dialog.dismiss()
+            executeCancelOrder(order)
+        }
+
+        dialog.show()
     }
 
     /**
@@ -179,7 +213,6 @@ class CustomerMainActivity : BaseKioskActivity() {
                             "Order cancelled successfully.",
                             Toast.LENGTH_SHORT
                         ).show()
-                        // Refresh the pending orders check
                         checkPendingOrders()
                     }
                     is NetworkResult.Error -> {
@@ -205,7 +238,6 @@ class CustomerMainActivity : BaseKioskActivity() {
         binding.tvWelcome.text = getString(R.string.welcome_customer)
         binding.tvSubtitle.text = getString(R.string.customer_subtitle)
 
-        // Main action cards
         binding.tvSendPackage.text = getString(R.string.send_package)
         binding.tvSendDescription.text = getString(R.string.send_description)
 
@@ -247,10 +279,7 @@ class CustomerMainActivity : BaseKioskActivity() {
     }
 
     private fun logout() {
-        // Clear any stored session data
         prefs.clearAuthData()
-
-        // Return to sign-in page for customers
         val intent = Intent(this, com.blitztech.pudokiosk.ui.auth.SignInActivity::class.java).apply {
             putExtra(com.blitztech.pudokiosk.ui.auth.SignInActivity.EXTRA_USER_TYPE, "CUSTOMER")
         }

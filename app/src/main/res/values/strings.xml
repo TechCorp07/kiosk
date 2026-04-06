@@ -122,7 +122,7 @@
 
     <!-- Main Menu - Customer -->
     <string name="welcome_customer">Welcome, Customer!</string>
-    <string name="customer_subtitle">What would you like to do today?</string>
+    <string name="customer_subtitle">Select an option to proceed</string>
     <string name="send_package">Send Package</string>
     <string name="send_description">Send packages nationwide with secure delivery</string>
     <string name="collect_package">Collect Package</string>
