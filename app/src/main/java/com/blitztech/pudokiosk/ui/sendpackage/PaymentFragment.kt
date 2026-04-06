@@ -65,6 +65,12 @@ class PaymentFragment : Fragment() {
         initializeHardware()
         setupViews()
         setupClickListeners()
+        // NOTE: displayOrderSummary() is called in onResume() to ensure
+        // order data is available (ViewPager2 pre-creates adjacent fragments)
+    }
+
+    override fun onResume() {
+        super.onResume()
         displayOrderSummary()
     }
 

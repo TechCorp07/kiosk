@@ -70,7 +70,12 @@ data class OrderLookupResult(
     @Json(name = "status") val status: String? = null,
     @Json(name = "cabinetId") val cabinetId: String? = null,
     @Json(name = "cellId") val cellId: String? = null,
-    @Json(name = "cellNumber") val cellNumber: Int? = null  // Physical door number (Option A)
+    @Json(name = "cellNumber") val cellNumber: Int? = null,
+    // Additional fields for pending order management
+    @Json(name = "recipientName") val recipientName: String? = null,
+    @Json(name = "currency") val currency: String? = null,
+    @Json(name = "price") val price: Double? = null,
+    @Json(name = "lockerId") val lockerId: String? = null
 )
 
 /**

@@ -234,14 +234,16 @@ class ApiRepository(
         recipient: Recipient,
         senderLocation: SenderLocation,
         currency: String,
-        token: String?
+        token: String?,
+        receiverMode: String = "LOCKER_PICKUP"
     ): NetworkResult<CreateOrderResponse> {
         return safeApiCall {
             val request = CreateOrderRequest(
                 packageDetails = packageDetails,
                 recipient = recipient,
                 senderLocation = senderLocation,
-                currency = currency
+                currency = currency,
+                receiverMode = receiverMode
             )
             apiService.createOrder(request, "Bearer $token")
         }
@@ -264,6 +266,15 @@ class ApiRepository(
                 currency = currency
             )
             apiService.createPayment(request, "Bearer $token")
+        }
+    }
+
+    /**
+     * Cancel an unpaid order. Backend sets status to CANCELLED.
+     */
+    suspend fun cancelOrder(orderId: String, token: String?): NetworkResult<PaymentResponse> {
+        return safeApiCall {
+            apiService.cancelOrder(orderId, "Bearer $token")
         }
     }
 

@@ -29,6 +29,7 @@ object ApiEndpoints {
     // ── Order Service ───────────────────────────────────────────
     const val CREATE_ORDER = "api/v1/orders"
     const val ORDERS_LOGGED_IN = "api/v1/orders/logged-in"
+    const val CANCEL_ORDER = "api/v1/orders/{orderId}/cancel"
     const val PACKAGE_CONTENT_TYPES = "api/v1/orders/packages"
     const val TRACK_ORDER = "api/v1/orders/track/{trackingNumber}"
 
@@ -101,6 +102,9 @@ object ApiEndpoints {
 
     fun getSuburbsUrl(cityId: String): String =
         GET_SUBURBS.replace("{cityId}", cityId)
+
+    fun getCancelOrderUrl(orderId: String): String =
+        CANCEL_ORDER.replace("{orderId}", orderId)
 
     // ── Kiosk provisioning ─────────────────────────────────────────
     const val KIOSK_PROVISION = "api/v1/kiosks/provision"

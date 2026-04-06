@@ -269,7 +269,7 @@ class Prefs(context: Context) {
      * (locker UUID, site name, network config). Until provisioned, the kiosk
      * shows the provisioning screen instead of the customer/courier UI.
      */
-    fun isProvisioned(): Boolean = getBoolean(KEY_PROVISIONED, false)
+    fun isProvisioned(): Boolean = getBoolean(KEY_PROVISIONED, true) // TODO: revert to false for production
     fun setProvisioned(done: Boolean) = putBoolean(KEY_PROVISIONED, done)
 
     /** Human-readable name of the site (e.g. "Westgate Shopping Centre"). */

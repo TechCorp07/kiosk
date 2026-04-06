@@ -36,7 +36,6 @@ class PackageDetailsFragment : Fragment() {
 
     /**
      * Static list of package class enum values matching the backend's PackageClass enum.
-     * These are sent as part of the POST /api/v1/orders payload, not fetched from a separate endpoint.
      */
     private data class PackageClassOption(val enumValue: String, val displayName: String)
     private val packageClassOptions = listOf(
@@ -44,6 +43,16 @@ class PackageDetailsFragment : Fragment() {
         PackageClassOption("FRAGILE", "Fragile ⚠️"),
         PackageClassOption("EXPRESS", "Express ⚡"),
         PackageClassOption("PERISHABLE", "Perishable 🧊")
+    )
+
+    /**
+     * Receiver mode options — the sender is always LOCKER_DROP (at the PUDO),
+     * but the recipient can choose their preferred delivery mode.
+     */
+    private data class ReceiverModeOption(val enumValue: String, val displayName: String)
+    private val receiverModeOptions = listOf(
+        ReceiverModeOption("LOCKER_PICKUP", "Locker Pickup — Recipient collects from PUDO"),
+        ReceiverModeOption("HOME_DELIVERY", "Home Delivery — Courier delivers to door")
     )
 
     override fun onCreateView(
@@ -66,6 +75,7 @@ class PackageDetailsFragment : Fragment() {
         loadPackageContentTypes()
         restoreData()
         setupPackageClassSpinner()
+        setupReceiverModeSpinner()
     }
 
     private fun setupDependencies() {
@@ -101,7 +111,6 @@ class PackageDetailsFragment : Fragment() {
         lifecycleScope.launch {
             when (val result = apiRepository.getPackageContentTypes()) {
                 is NetworkResult.Success -> {
-                    // Filter to only show PERMITTED types (backend returns all)
                     contentTypes = result.data
                     setupContentsSpinner(contentTypes)
                 }
@@ -130,11 +139,10 @@ class PackageDetailsFragment : Fragment() {
         // Restore selection if data exists
         val data = sendPackageActivity.sendPackageData
         if (data.packageContents.isNotBlank()) {
-            // Try to find the content in the dropdown, strip any additional details
             val contentCategory = data.packageContents.split(" - ").firstOrNull() ?: data.packageContents
             val index = items.indexOf(contentCategory)
             if (index >= 0) {
-                binding.spinnerContents.setSelection(index + 1) // +1 for "Select" header
+                binding.spinnerContents.setSelection(index + 1)
             }
         }
     }
@@ -145,13 +153,27 @@ class PackageDetailsFragment : Fragment() {
         classAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerPackageClass.adapter = classAdapter
 
-        // Restore previous selection if any
+        // Restore previous selection
         val data = sendPackageActivity.sendPackageData
         if (data.packageClass.isNotBlank()) {
             val selectedIndex = packageClassOptions.indexOfFirst { it.enumValue == data.packageClass }
             if (selectedIndex >= 0) {
                 binding.spinnerPackageClass.setSelection(selectedIndex)
             }
+        }
+    }
+
+    private fun setupReceiverModeSpinner() {
+        val modeNames = receiverModeOptions.map { it.displayName }
+        val modeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, modeNames)
+        modeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerReceiverMode.adapter = modeAdapter
+
+        // Restore previous selection
+        val data = sendPackageActivity.sendPackageData
+        val selectedIndex = receiverModeOptions.indexOfFirst { it.enumValue == data.receiverMode }
+        if (selectedIndex >= 0) {
+            binding.spinnerReceiverMode.setSelection(selectedIndex)
         }
     }
 
@@ -169,7 +191,7 @@ class PackageDetailsFragment : Fragment() {
     }
 
     /**
-     * Calculate package size based on dimensions
+     * Calculate package size based on dimensions (user enters mm, we convert to meters)
      */
     private fun calculatePackageSize() {
         try {
@@ -195,7 +217,6 @@ class PackageDetailsFragment : Fragment() {
     private fun validateInputs(): Boolean {
         var isValid = true
 
-        // Length
         val length = binding.etLength.text.toString().toDoubleOrNull()
         if (length == null || length <= 0) {
             binding.tilLength.error = "Enter valid length in mm"
@@ -204,7 +225,6 @@ class PackageDetailsFragment : Fragment() {
             binding.tilLength.error = null
         }
 
-        // Width
         val width = binding.etWidth.text.toString().toDoubleOrNull()
         if (width == null || width <= 0) {
             binding.tilWidth.error = "Enter valid width in mm"
@@ -213,7 +233,6 @@ class PackageDetailsFragment : Fragment() {
             binding.tilWidth.error = null
         }
 
-        // Height
         val height = binding.etHeight.text.toString().toDoubleOrNull()
         if (height == null || height <= 0) {
             binding.tilHeight.error = "Enter valid height in mm"
@@ -222,7 +241,6 @@ class PackageDetailsFragment : Fragment() {
             binding.tilHeight.error = null
         }
 
-        // Contents - spinner selection required
         if (binding.spinnerContents.selectedItemPosition == 0) {
             Toast.makeText(requireContext(), "Please select package contents", Toast.LENGTH_SHORT).show()
             isValid = false
@@ -237,11 +255,12 @@ class PackageDetailsFragment : Fragment() {
     private fun saveData() {
         val data = sendPackageActivity.sendPackageData
 
+        // Dimensions (user enters mm, store as meters for API)
         data.packageLength = (binding.etLength.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
         data.packageWidth = (binding.etWidth.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
         data.packageHeight = (binding.etHeight.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
 
-        // Build contents string: category + optional details
+        // Contents: category + optional details
         val selectedContentPosition = binding.spinnerContents.selectedItemPosition
         val contentCategory = if (selectedContentPosition > 0 && contentTypes.isNotEmpty()) {
             contentTypes[selectedContentPosition - 1]
@@ -255,18 +274,28 @@ class PackageDetailsFragment : Fragment() {
             contentCategory
         }
 
+        // Package size (derived from dimensions)
         data.packageSize = PackageSize.fromDimensions(
             data.packageLength,
             data.packageWidth,
             data.packageHeight
         )
+
+        // Currency
         data.currency = Currency.values()[binding.spinnerCurrency.selectedItemPosition]
-        
+
+        // Package class
         val selectedPos = binding.spinnerPackageClass.selectedItemPosition
         if (selectedPos >= 0 && selectedPos < packageClassOptions.size) {
             val selectedClass = packageClassOptions[selectedPos]
             data.packageClass = selectedClass.enumValue
             data.packageClassName = selectedClass.displayName
+        }
+
+        // Receiver mode
+        val receiverPos = binding.spinnerReceiverMode.selectedItemPosition
+        if (receiverPos >= 0 && receiverPos < receiverModeOptions.size) {
+            data.receiverMode = receiverModeOptions[receiverPos].enumValue
         }
     }
 
@@ -294,7 +323,8 @@ class PackageDetailsFragment : Fragment() {
                     recipient = data.buildRecipient(),
                     senderLocation = data.buildSenderLocation(),
                     currency = data.currency!!.code,
-                    token = accessToken
+                    token = accessToken,
+                    receiverMode = data.receiverMode
                 )
 
                 binding.progressBar.visibility = View.GONE
@@ -304,12 +334,12 @@ class PackageDetailsFragment : Fragment() {
                     is NetworkResult.Success -> {
                         val response = result.data
 
-                        // Save order details
+                        // Save order details from response
                         data.orderId = response.orderId
                         data.orderPrice = response.price
                         data.orderDistance = response.distance
 
-                        // Since we're on the locker, use current locker's ID
+                        // Use nearest locker from response
                         data.lockerId = response.nearestLockers.firstOrNull()?.lockerResponse?.id
                             ?: "current-locker-id"
 
@@ -329,7 +359,7 @@ class PackageDetailsFragment : Fragment() {
                         ).show()
                     }
 
-                    is NetworkResult.Loading<*> -> { /* loading state handled by setLoading() */ }
+                    is NetworkResult.Loading<*> -> { /* loading state handled by progressBar */ }
                 }
             } catch (e: Exception) {
                 binding.progressBar.visibility = View.GONE
@@ -364,7 +394,6 @@ class PackageDetailsFragment : Fragment() {
             binding.etHeight.setText(formatMm(data.packageHeight))
         }
         if (data.packageContents.isNotEmpty()) {
-            // Restore additional details part only
             val parts = data.packageContents.split(" - ", limit = 2)
             if (parts.size > 1) {
                 binding.etContents.setText(parts[1])

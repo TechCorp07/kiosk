@@ -30,6 +30,7 @@ data class SendPackageData(
     var currency: Currency? = null,
     var packageClass: String = "",       // "STANDARD", "FRAGILE", "EXPRESS", "PERISHABLE"
     var packageClassName: String = "",
+    var receiverMode: String = "LOCKER_PICKUP", // "LOCKER_PICKUP" or "HOME_DELIVERY"
 
     // Sender location
     var senderLatitude: Double = 0.0,

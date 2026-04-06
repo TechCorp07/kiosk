@@ -95,6 +95,12 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<PaymentResponse>
 
+    @PATCH("api/v1/orders/{orderId}/cancel")
+    suspend fun cancelOrder(
+        @Path("orderId") orderId: String,
+        @Header("Authorization") token: String
+    ): Response<PaymentResponse>  // Backend returns GenericResponse { success, message }
+
     // ─────────────────────────────────────────────────────────────
     //  Order Service – Customer order tracking
     // ─────────────────────────────────────────────────────────────
