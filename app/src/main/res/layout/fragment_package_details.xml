@@ -120,7 +120,23 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <!-- Contents -->
+            <!-- Package Contents Selection -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Package Contents"
+                android:textColor="@color/text_secondary"
+                android:textSize="20sp" />
+
+            <Spinner
+                android:id="@+id/spinnerContents"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:layout_marginBottom="@dimen/spacing_md"
+                android:background="@drawable/bg_input_field" />
+
+            <!-- Optional finer details -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilContents"
                 android:layout_width="match_parent"
@@ -132,11 +148,11 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etContents"
                     android:layout_width="match_parent"
-                    android:layout_height="90dp"
-                    android:hint="Package Contents"
+                    android:layout_height="70dp"
+                    android:hint="Additional Details (optional)"
                     android:inputType="textCapSentences"
-                    android:textSize="22sp"
-                    android:maxLines="3" />
+                    android:textSize="20sp"
+                    android:maxLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Currency Selection -->

@@ -31,6 +31,9 @@ class PackageDetailsFragment : Fragment() {
     private lateinit var sendPackageActivity: SendPackageActivity
     private lateinit var prefs: Prefs
 
+    /** Content types fetched from backend GET /api/v1/orders/packages */
+    private var contentTypes: List<String> = emptyList()
+
     /**
      * Static list of package class enum values matching the backend's PackageClass enum.
      * These are sent as part of the POST /api/v1/orders payload, not fetched from a separate endpoint.
@@ -60,6 +63,7 @@ class PackageDetailsFragment : Fragment() {
         setupDependencies()
         setupViews()
         setupClickListeners()
+        loadPackageContentTypes()
         restoreData()
         setupPackageClassSpinner()
     }
@@ -87,14 +91,52 @@ class PackageDetailsFragment : Fragment() {
         binding.etLength.addTextChangedListener(dimensionWatcher)
         binding.etWidth.addTextChangedListener(dimensionWatcher)
         binding.etHeight.addTextChangedListener(dimensionWatcher)
+    }
 
-        binding.etContents.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                binding.tilContents.error = null
+    /**
+     * Load package content types from backend API.
+     * Falls back to a hardcoded list if the API call fails.
+     */
+    private fun loadPackageContentTypes() {
+        lifecycleScope.launch {
+            when (val result = apiRepository.getPackageContentTypes()) {
+                is NetworkResult.Success -> {
+                    // Filter to only show PERMITTED types (backend returns all)
+                    contentTypes = result.data
+                    setupContentsSpinner(contentTypes)
+                }
+                is NetworkResult.Error -> {
+                    // Fallback to static list if API fails
+                    contentTypes = listOf(
+                        "Documents", "Clothing", "Electronics", "Books",
+                        "Food (Non-Perishable)", "Cosmetics", "Medicine (OTC)",
+                        "Household Items", "Tools & Hardware", "Toys & Games",
+                        "Gifts & Accessories", "Stationery", "Footwear",
+                        "Phone Accessories", "Computer Accessories"
+                    )
+                    setupContentsSpinner(contentTypes)
+                }
+                is NetworkResult.Loading -> { /* handled by spinner state */ }
             }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        }
+    }
+
+    private fun setupContentsSpinner(items: List<String>) {
+        val displayItems = listOf("Select Package Contents") + items
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, displayItems)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerContents.adapter = adapter
+
+        // Restore selection if data exists
+        val data = sendPackageActivity.sendPackageData
+        if (data.packageContents.isNotBlank()) {
+            // Try to find the content in the dropdown, strip any additional details
+            val contentCategory = data.packageContents.split(" - ").firstOrNull() ?: data.packageContents
+            val index = items.indexOf(contentCategory)
+            if (index >= 0) {
+                binding.spinnerContents.setSelection(index + 1) // +1 for "Select" header
+            }
+        }
     }
 
     private fun setupPackageClassSpinner() {
@@ -180,13 +222,10 @@ class PackageDetailsFragment : Fragment() {
             binding.tilHeight.error = null
         }
 
-        // Contents
-        val contents = binding.etContents.text.toString().trim()
-        if (contents.isEmpty()) {
-            binding.tilContents.error = "Package contents are required"
+        // Contents - spinner selection required
+        if (binding.spinnerContents.selectedItemPosition == 0) {
+            Toast.makeText(requireContext(), "Please select package contents", Toast.LENGTH_SHORT).show()
             isValid = false
-        } else {
-            binding.tilContents.error = null
         }
 
         return isValid
@@ -201,7 +240,21 @@ class PackageDetailsFragment : Fragment() {
         data.packageLength = (binding.etLength.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
         data.packageWidth = (binding.etWidth.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
         data.packageHeight = (binding.etHeight.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
-        data.packageContents = binding.etContents.text.toString().trim()
+
+        // Build contents string: category + optional details
+        val selectedContentPosition = binding.spinnerContents.selectedItemPosition
+        val contentCategory = if (selectedContentPosition > 0 && contentTypes.isNotEmpty()) {
+            contentTypes[selectedContentPosition - 1]
+        } else {
+            "Other"
+        }
+        val additionalDetails = binding.etContents.text.toString().trim()
+        data.packageContents = if (additionalDetails.isNotBlank()) {
+            "$contentCategory - $additionalDetails"
+        } else {
+            contentCategory
+        }
+
         data.packageSize = PackageSize.fromDimensions(
             data.packageLength,
             data.packageWidth,
@@ -257,7 +310,6 @@ class PackageDetailsFragment : Fragment() {
                         data.orderDistance = response.distance
 
                         // Since we're on the locker, use current locker's ID
-                        // In a real scenario, you'd get this from device/kiosk config
                         data.lockerId = response.nearestLockers.firstOrNull()?.lockerResponse?.id
                             ?: "current-locker-id"
 
@@ -312,7 +364,11 @@ class PackageDetailsFragment : Fragment() {
             binding.etHeight.setText(formatMm(data.packageHeight))
         }
         if (data.packageContents.isNotEmpty()) {
-            binding.etContents.setText(data.packageContents)
+            // Restore additional details part only
+            val parts = data.packageContents.split(" - ", limit = 2)
+            if (parts.size > 1) {
+                binding.etContents.setText(parts[1])
+            }
         }
         if (data.currency != null) {
             binding.spinnerCurrency.setSelection(data.currency!!.ordinal)

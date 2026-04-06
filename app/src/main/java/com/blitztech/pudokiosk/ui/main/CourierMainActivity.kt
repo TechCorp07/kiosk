@@ -95,8 +95,10 @@ class CourierMainActivity : BaseKioskActivity() {
         // Clear any stored session data
         prefs.clearAuthData()
 
-        // Return to main app flow
-        val intent = Intent(this, MainActivity::class.java)
+        // Return to sign-in page for couriers
+        val intent = Intent(this, com.blitztech.pudokiosk.ui.auth.SignInActivity::class.java).apply {
+            putExtra(com.blitztech.pudokiosk.ui.auth.SignInActivity.EXTRA_USER_TYPE, "COURIER")
+        }
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

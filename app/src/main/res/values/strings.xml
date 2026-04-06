@@ -162,14 +162,14 @@
 
     <!-- Package Details -->
     <string name="package_dimensions">Package Dimensions</string>
-    <string name="length_meters">Length (m)</string>
-    <string name="width_meters">Width (m)</string>
-    <string name="height_meters">Height (m)</string>
+    <string name="length_meters">Length (mm)</string>
+    <string name="width_meters">Width (mm)</string>
+    <string name="height_meters">Height (mm)</string>
     <string name="package_contents">Package Contents</string>
     <string name="package_contents_hint">e.g., Books, Clothes, Electronics</string>
     <string name="payment_currency">Payment Currency</string>
     <string name="calculated_size">Calculated Size: %s</string>
-    <string name="dimensions_in_meters">All dimensions should be in meters</string>
+    <string name="dimensions_in_meters">All dimensions should be in millimeters (mm)</string>
     <string name="create_order">Create Order</string>
 
     <!-- Payment -->
