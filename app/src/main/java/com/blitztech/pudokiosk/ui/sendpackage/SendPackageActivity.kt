@@ -348,6 +348,7 @@ class SendPackageActivity : BaseKioskActivity() {
                 0 -> RecipientDetailsFragment()
                 1 -> PackageDetailsFragment()
                 2 -> PaymentFragment()
+                3 -> ProcessingFragment()
                 else -> throw IllegalArgumentException("Invalid page position: $position")
             }
         }

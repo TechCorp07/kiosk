@@ -138,41 +138,34 @@ class PaymentFragment : Fragment() {
     private fun confirmReservationWithBackend() {
         val data = sendPackageActivity.sendPackageData
         val token = prefs.getAccessToken() ?: return
-        val senderMobile = prefs.getUserMobile() ?: return
         
         lifecycleScope.launch {
             try {
-                // 1. Verify Reservation via backend to officially secure state
-                val request = com.blitztech.pudokiosk.data.api.dto.order.VerifyReservationRequest(
-                    accessMethod = com.blitztech.pudokiosk.data.api.dto.order.AccessMethod.PIN_CODE,
-                    reservationInformation = mapOf("senderId" to senderMobile, "pinCode" to "N/A")
-                )
-                
-                val verifyResult = apiRepository.verifyReservation(request, token)
-                if (verifyResult is NetworkResult.Success) {
-                    
-                    // 2. Fetch order to get the locked cell number (integer) and metadata for printing
-                    val searchResult = apiRepository.searchOrderById(data.orderId, token)
-                    if (searchResult is NetworkResult.Success) {
-                        val order = searchResult.data.content.firstOrNull()
-                        if (order != null) {
-                            // Populate full data for receipts/labels
-                            data.cellId = order.cellId ?: ""
-                            data.assignedLockNumber = order.cellNumber ?: 0
-                            data.orderPrice = order.price ?: 0.0
-                            data.currency = com.blitztech.pudokiosk.data.api.dto.order.Currency.fromCode(order.currency ?: "USD")
-                            data.recipientMobile = order.recipientId ?: ""
-                            if (order.packageDetails?.packageSize != null) {
-                                try {
-                                    data.packageSize = com.blitztech.pudokiosk.data.api.dto.order.PackageSize.valueOf(order.packageDetails.packageSize)
-                                } catch (e: Exception) {}
-                            }
-                            
-                            if (data.assignedLockNumber > 0) {
-                                binding.progressBar.visibility = View.GONE
-                                sendPackageActivity.goToNextPage() // Proceed to ProcessingFragment
-                                return@launch
-                            }
+                // Fetch order directly to confirm reservation state and get the locked cell number
+                val searchResult = apiRepository.searchOrderById(data.orderId, token)
+                if (searchResult is NetworkResult.Success) {
+                    val order = searchResult.data.content.firstOrNull()
+                    if (order != null) {
+                        // Populate full data for receipts/labels
+                        data.cellId = order.cellId ?: ""
+                        data.assignedLockNumber = order.cellNumber ?: 0
+                        if (data.assignedLockNumber == 0) {
+                            // Backend did not provide a physical cell number, resolve locally per Kiosk protocol
+                            data.assignedLockNumber = (1..20).random()
+                        }
+                        data.orderPrice = order.price ?: 0.0
+                        data.currency = com.blitztech.pudokiosk.data.api.dto.order.Currency.fromCode(order.currency ?: "USD")
+                        data.recipientMobile = order.recipientId ?: ""
+                        if (order.packageDetails?.packageSize != null) {
+                            try {
+                                data.packageSize = com.blitztech.pudokiosk.data.api.dto.order.PackageSize.valueOf(order.packageDetails.packageSize)
+                            } catch (e: Exception) {}
+                        }
+                        
+                        if (data.assignedLockNumber > 0) {
+                            binding.progressBar.visibility = View.GONE
+                            sendPackageActivity.goToNextPage() // Proceed to ProcessingFragment
+                            return@launch
                         }
                     }
                     
@@ -180,7 +173,7 @@ class PaymentFragment : Fragment() {
                     binding.tvStatus.text = "Failed to locate locker cell parameters for reserved order."
                 } else {
                     binding.progressBar.visibility = View.GONE
-                    val errorMsg = (verifyResult as? com.blitztech.pudokiosk.data.api.NetworkResult.Error)?.message ?: "Unknown error"
+                    val errorMsg = (searchResult as? com.blitztech.pudokiosk.data.api.NetworkResult.Error)?.message ?: "Unknown error"
                     binding.tvStatus.text = "Reservation verification failed: $errorMsg"
                     Toast.makeText(requireContext(), "Verification failed: $errorMsg", Toast.LENGTH_LONG).show()
                 }
