@@ -18,6 +18,7 @@ import com.blitztech.pudokiosk.data.api.dto.order.CreateOrderResponse
 import com.blitztech.pudokiosk.data.api.dto.order.PackageDetails
 import com.blitztech.pudokiosk.data.api.dto.order.PaymentRequest
 import com.blitztech.pudokiosk.data.api.dto.order.PaymentResponse
+import com.blitztech.pudokiosk.data.api.dto.order.PaymentSearchPage
 import com.blitztech.pudokiosk.data.api.dto.order.Recipient
 import com.blitztech.pudokiosk.data.api.dto.order.SenderLocation
 import com.blitztech.pudokiosk.data.api.dto.order.OrderDto
@@ -369,6 +370,24 @@ class ApiRepository(
         return safeApiCall {
             apiService.searchOrder(
                 request = mapOf("senderMobileNumber" to senderMobileNumber),
+                token = "Bearer $token"
+            )
+        }
+    }
+
+    /**
+     * Poll payment status by orderId.
+     * Uses POST /api/v1/payments/or-search with orderId.
+     * Fallback for payment confirmation polling when the Paynow webhook
+     * hasn't yet updated the order status.
+     */
+    suspend fun searchPaymentByOrderId(
+        orderId: String,
+        token: String
+    ): NetworkResult<PaymentSearchPage> {
+        return safeApiCall {
+            apiService.searchPaymentByOrderId(
+                request = mapOf("orderId" to orderId),
                 token = "Bearer $token"
             )
         }

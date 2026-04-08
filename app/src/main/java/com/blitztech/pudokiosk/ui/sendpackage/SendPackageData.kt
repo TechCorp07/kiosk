@@ -50,7 +50,10 @@ data class SendPackageData(
 
     // Post-payment
     var transactionId: String = "",
-    var assignedLockNumber: Int = 0
+    var assignedLockNumber: Int = 0,
+    
+    // Drop Reserved Flow flag
+    var isDropReserved: Boolean = false
 ) : Parcelable {
 
     /**

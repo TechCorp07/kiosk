@@ -82,7 +82,7 @@ data class CreateOrderResponse(
 data class PaymentRequest(
     @Json(name = "orderId") val orderId: String,
     @Json(name = "lockerId") val lockerId: String,
-    @Json(name = "paymentMethod") val paymentMethod: String, // "ECOCASH", "TELECASH", "ONEMONEY"
+    @Json(name = "paymentMethod") val paymentMethod: String, // "ECOCASH", "INNBUCKS", "ONEMONEY", "TELECASH"
     @Json(name = "mobileNumber") val mobileNumber: String,
     @Json(name = "currency") val currency: String // "ZWG" or "USD"
 )
@@ -98,6 +98,23 @@ data class PaymentResponse(
     @Json(name = "success") val success: Boolean,
     @Json(name = "message") val message: String,
     @Json(name = "errors") val errors: Map<String, String>? = null
+)
+
+/**
+ * Page wrapper for payment search results from POST /api/v1/payments/or-search.
+ * Only maps the fields we actually need for status polling.
+ */
+@JsonClass(generateAdapter = true)
+data class PaymentSearchPage(
+    @Json(name = "content") val content: List<PaymentSearchResult> = emptyList()
+)
+
+@JsonClass(generateAdapter = true)
+data class PaymentSearchResult(
+    @Json(name = "paymentId") val paymentId: String? = null,
+    @Json(name = "paymentStatus") val paymentStatus: String? = null,
+    @Json(name = "orderId") val orderId: String? = null,
+    @Json(name = "paymentReference") val paymentReference: String? = null
 )
 
 // Enum for package sizes with dimension thresholds

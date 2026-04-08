@@ -79,8 +79,11 @@ class CustomerMainActivity : BaseKioskActivity() {
                     if (pendingOrder != null) {
                         binding.cardDropoffReserved.visibility = android.view.View.VISIBLE
                         binding.cardDropoffReserved.setOnClickListener {
-                            val intent = Intent(this@CustomerMainActivity, SendPackageActivity::class.java)
-                            intent.putExtra("RESERVED_TRACKING", pendingOrder.trackingNumber)
+                            val intent = Intent(this@CustomerMainActivity, SendPackageActivity::class.java).apply {
+                                putExtra("DROP_RESERVED_ORDER_ID", pendingOrder.orderId)
+                                putExtra("DROP_RESERVED_TRACKING", pendingOrder.trackingNumber)
+                                putExtra("DROP_RESERVED_LOCKER_ID", pendingOrder.cabinetId ?: "")
+                            }
                             startActivity(intent)
                         }
                     } else {
@@ -148,13 +151,18 @@ class CustomerMainActivity : BaseKioskActivity() {
      * The activity will detect these and skip directly to the Payment page.
      */
     private fun resumeOrderPayment(order: OrderLookupResult) {
+        // cabinetId is not set on AWAITING_PAYMENT orders (assigned during payment flow).
+        // Fall back to this kiosk's own locker ID — the user is physically here.
+        val lockerId = order.cabinetId?.takeIf { it.isNotBlank() }
+            ?: prefs.getPrimaryLockerUuid()
+
         val intent = Intent(this, SendPackageActivity::class.java).apply {
             putExtra("RESUME_ORDER_ID", order.orderId)
             putExtra("RESUME_TRACKING", order.trackingNumber)
             putExtra("RESUME_AMOUNT", order.price ?: 0.0)
             putExtra("RESUME_CURRENCY", order.currency ?: "USD")
             putExtra("RESUME_RECIPIENT", order.recipientId ?: "")
-            putExtra("RESUME_LOCKER_ID", order.lockerId ?: "")
+            putExtra("RESUME_LOCKER_ID", lockerId)
             putExtra("RESUME_DISTANCE", order.distance ?: "")
             putExtra("RESUME_PACKAGE_SIZE", order.packageDetails?.packageSize ?: "")
         }

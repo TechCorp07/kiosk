@@ -39,6 +39,7 @@ object ApiEndpoints {
 
     // ── Payment Service ─────────────────────────────────────────
     const val CREATE_PAYMENT = "api/v1/payments"
+    const val SEARCH_PAYMENT = "api/v1/payments/or-search"
 
     // ── Locker Service – Transactions ───────────────────────────
     const val VERIFY_RESERVATION = "api/v1/transactions/sender/verify-reservation"

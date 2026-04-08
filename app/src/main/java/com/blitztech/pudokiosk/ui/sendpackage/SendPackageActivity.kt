@@ -15,6 +15,8 @@ import com.blitztech.pudokiosk.R
 import com.blitztech.pudokiosk.databinding.ActivitySendPackageBinding
 import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 /**
  * Main activity for Send Package flow
@@ -24,7 +26,7 @@ class SendPackageActivity : BaseKioskActivity() {
 
     companion object {
         const val TAG = "SendPackageActivity"
-        private const val NUM_PAGES = 3
+        private const val NUM_PAGES = 4
     }
 
     private lateinit var binding: ActivitySendPackageBinding
@@ -71,8 +73,29 @@ class SendPackageActivity : BaseKioskActivity() {
         setupClickListeners()
         requestLocationPermission()
 
-        // Check if resuming an existing unpaid order
+        // Check if resuming an existing unpaid order or dropping a reserved package
         handleResumeOrder()
+        handleDropReservedOrder()
+    }
+
+    /**
+     * If launched with DROP_RESERVED_ORDER_ID, pre-populate shared data
+     * and skip directly to the Payment page to unlock the hardware.
+     */
+    private fun handleDropReservedOrder() {
+        val reservedOrderId = intent.getStringExtra("DROP_RESERVED_ORDER_ID") ?: return
+
+        sendPackageData.orderId = reservedOrderId
+        sendPackageData.trackingNumber = intent.getStringExtra("DROP_RESERVED_TRACKING") ?: ""
+        sendPackageData.lockerId = intent.getStringExtra("DROP_RESERVED_LOCKER_ID") ?: ""
+        sendPackageData.isDropReserved = true
+        
+        // Disable swipe/back navigation conceptually by locking to fast-forward
+        if (sendPackageData.lockerId.isBlank()) {
+            fetchNearestLockerThenNavigate()
+        } else {
+            viewPager.setCurrentItem(2, false)
+        }
     }
 
     /**
@@ -99,13 +122,47 @@ class SendPackageActivity : BaseKioskActivity() {
         if (packageSizeStr.isNotBlank()) {
             try {
                 sendPackageData.packageSize = com.blitztech.pudokiosk.data.api.dto.order.PackageSize.valueOf(packageSizeStr)
-            } catch (_: IllegalArgumentException) {
-                // Unknown size — leave null, payment screen will handle gracefully
-            }
+            } catch (_: IllegalArgumentException) { }
         }
 
-        // Jump directly to the Payment page (index 2)
-        viewPager.setCurrentItem(2, false)
+        // If lockerId is still blank, fetch the nearest locker to this kiosk
+        if (sendPackageData.lockerId.isBlank()) {
+            fetchNearestLockerThenNavigate()
+        } else {
+            viewPager.setCurrentItem(2, false)
+        }
+    }
+
+    /**
+     * Fetch the nearest locker using the kiosk's provisioned coordinates,
+     * then navigate to the Payment page.
+     */
+    private fun fetchNearestLockerThenNavigate() {
+        val token = prefs.getAccessToken() ?: ""
+        val lat = prefs.getKioskLatitude()
+        val lng = prefs.getKioskLongitude()
+
+        android.util.Log.d(TAG, "lockerId blank — fetching nearest locker at ($lat, $lng)")
+
+        lifecycleScope.launch {
+            try {
+                val api = com.blitztech.pudokiosk.ZimpudoApp.apiRepository
+                val result = api.getNearestLockers(lat, lng, token, limit = 1)
+                if (result is com.blitztech.pudokiosk.data.api.NetworkResult.Success) {
+                    val lockerId = result.data.firstOrNull()?.lockerResponse?.id
+                    if (!lockerId.isNullOrBlank()) {
+                        sendPackageData.lockerId = lockerId
+                        android.util.Log.d(TAG, "Resolved nearest lockerId: $lockerId")
+                    } else {
+                        android.util.Log.w(TAG, "No lockers found near kiosk coordinates")
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Failed to fetch nearest locker", e)
+            }
+            // Navigate to Payment page regardless
+            viewPager.setCurrentItem(2, false)
+        }
     }
 
     /**

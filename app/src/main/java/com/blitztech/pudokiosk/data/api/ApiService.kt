@@ -95,6 +95,12 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<PaymentResponse>
 
+    @POST(ApiEndpoints.SEARCH_PAYMENT)
+    suspend fun searchPaymentByOrderId(
+        @Body request: Map<String, String>,
+        @Header("Authorization") token: String
+    ): Response<PaymentSearchPage>
+
     @PATCH("api/v1/orders/{orderId}/cancel")
     suspend fun cancelOrder(
         @Path("orderId") orderId: String,

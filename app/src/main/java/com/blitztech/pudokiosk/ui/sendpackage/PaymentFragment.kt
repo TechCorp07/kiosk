@@ -13,6 +13,7 @@ import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
 import com.blitztech.pudokiosk.data.api.dto.order.PaymentMethod
+import com.blitztech.pudokiosk.data.api.dto.order.PaymentSearchPage
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.databinding.FragmentPaymentBinding
 import com.blitztech.pudokiosk.deviceio.DoorMonitor
@@ -41,9 +42,6 @@ class PaymentFragment : Fragment() {
     private lateinit var sendPackageActivity: SendPackageActivity
     private lateinit var prefs: Prefs
 
-    // Hardware drivers
-    private lateinit var printerDriver: CustomTG2480HIIIDriver
-    private lateinit var lockerController: LockerController
     private var activeDoorMonitor: DoorMonitor? = null
 
     override fun onCreateView(
@@ -67,6 +65,10 @@ class PaymentFragment : Fragment() {
         setupClickListeners()
         // NOTE: displayOrderSummary() is called in onResume() to ensure
         // order data is available (ViewPager2 pre-creates adjacent fragments)
+        
+        if (sendPackageActivity.sendPackageData.isDropReserved) {
+            handleDropReservedFlow()
+        }
     }
 
     override fun onResume() {
@@ -79,15 +81,10 @@ class PaymentFragment : Fragment() {
     }
 
     /**
-     * Initialize printer and locker hardware
+     * Initialize hardware (moved to ProcessingFragment)
      */
     private fun initializeHardware() {
-        try {
-            printerDriver = CustomTG2480HIIIDriver(requireContext())
-            lockerController = LockerController(requireContext())
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Hardware initialization error: ${e.message}", Toast.LENGTH_LONG).show()
-        }
+        // No-op here, left for backwards compatibility in case it's still called somewhere
     }
 
     private fun setupViews() {
@@ -122,6 +119,76 @@ class PaymentFragment : Fragment() {
         binding.tvDistance.text = "Distance: ${data.orderDistance}"
         binding.tvPrice.text = "${data.currency?.symbol}${String.format("%.2f", data.orderPrice)}"
         binding.tvCurrency.text = data.currency?.code ?: ""
+    }
+
+    /**
+     * Skip payment UI if this is a Drop-off Reserved parcel
+     */
+    private fun handleDropReservedFlow() {
+        binding.spinnerPaymentMethod.visibility = View.GONE
+        binding.tilPaymentMobile.visibility = View.GONE
+        binding.btnPay.visibility = View.GONE
+        binding.tvStatus.visibility = View.VISIBLE
+        binding.tvStatus.text = "Verifying reservation..."
+        binding.progressBar.visibility = View.VISIBLE
+        
+        confirmReservationWithBackend()
+    }
+    
+    private fun confirmReservationWithBackend() {
+        val data = sendPackageActivity.sendPackageData
+        val token = prefs.getAccessToken() ?: return
+        val senderMobile = prefs.getUserMobile() ?: return
+        
+        lifecycleScope.launch {
+            try {
+                // 1. Verify Reservation via backend to officially secure state
+                val request = com.blitztech.pudokiosk.data.api.dto.order.VerifyReservationRequest(
+                    accessMethod = com.blitztech.pudokiosk.data.api.dto.order.AccessMethod.PIN_CODE,
+                    reservationInformation = mapOf("senderId" to senderMobile, "pinCode" to "N/A")
+                )
+                
+                val verifyResult = apiRepository.verifyReservation(request, token)
+                if (verifyResult is NetworkResult.Success) {
+                    
+                    // 2. Fetch order to get the locked cell number (integer) and metadata for printing
+                    val searchResult = apiRepository.searchOrderById(data.orderId, token)
+                    if (searchResult is NetworkResult.Success) {
+                        val order = searchResult.data.content.firstOrNull()
+                        if (order != null) {
+                            // Populate full data for receipts/labels
+                            data.cellId = order.cellId ?: ""
+                            data.assignedLockNumber = order.cellNumber ?: 0
+                            data.orderPrice = order.price ?: 0.0
+                            data.currency = com.blitztech.pudokiosk.data.api.dto.order.Currency.fromCode(order.currency ?: "USD")
+                            data.recipientMobile = order.recipientId ?: ""
+                            if (order.packageDetails?.packageSize != null) {
+                                try {
+                                    data.packageSize = com.blitztech.pudokiosk.data.api.dto.order.PackageSize.valueOf(order.packageDetails.packageSize)
+                                } catch (e: Exception) {}
+                            }
+                            
+                            if (data.assignedLockNumber > 0) {
+                                binding.progressBar.visibility = View.GONE
+                                sendPackageActivity.goToNextPage() // Proceed to ProcessingFragment
+                                return@launch
+                            }
+                        }
+                    }
+                    
+                    binding.progressBar.visibility = View.GONE
+                    binding.tvStatus.text = "Failed to locate locker cell parameters for reserved order."
+                } else {
+                    binding.progressBar.visibility = View.GONE
+                    val errorMsg = (verifyResult as? com.blitztech.pudokiosk.data.api.NetworkResult.Error)?.message ?: "Unknown error"
+                    binding.tvStatus.text = "Reservation verification failed: $errorMsg"
+                    Toast.makeText(requireContext(), "Verification failed: $errorMsg", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                binding.progressBar.visibility = View.GONE
+                binding.tvStatus.text = "System error during verification."
+            }
+        }
     }
 
     /**
@@ -196,8 +263,8 @@ class PaymentFragment : Fragment() {
                             binding.tvStatus.text = "Waiting for payment approval..."
                             
                             // Backend uses Paynow webhook to update order status.
-                            // We poll the order to detect when it transitions to AWAITING_COURIER.
-                            pollPaymentStatus(data.orderId, accessToken)
+                            // We proceed to ProcessingFragment which will poll the status.
+                            sendPackageActivity.goToNextPage()
                         } else {
                             val errorMsg = response.errors?.values?.firstOrNull() ?: response.message
                             Toast.makeText(
@@ -228,277 +295,7 @@ class PaymentFragment : Fragment() {
         }
     }
 
-    private fun pollPaymentStatus(orderId: String, token: String) {
-        lifecycleScope.launch {
-            val startTime = System.currentTimeMillis()
-            var isApproved = false
-
-            while (System.currentTimeMillis() - startTime < 120_000) {
-                delay(5000)
-                try {
-                    val searchResult = apiRepository.searchOrderById(orderId, token)
-                    if (searchResult is NetworkResult.Success) {
-                        val page = searchResult.data
-                        val order = page.content.firstOrNull()
-                        if (order != null && order.status == "AWAITING_COURIER") {
-                            // Extract cell assignment from the order
-                            val data = sendPackageActivity.sendPackageData
-                            data.cellId = order.cellId ?: ""
-                            if (order.cellNumber != null && order.cellNumber > 0) {
-                                data.assignedLockNumber = order.cellNumber
-                            }
-                            isApproved = true
-                            break
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Ignore transient network errors during polling
-                }
-            }
-
-            if (isApproved) {
-                Toast.makeText(requireContext(), "Payment successful!", Toast.LENGTH_SHORT).show()
-                executePostPaymentWorkflow()
-            } else {
-                binding.progressBar.visibility = View.GONE
-                binding.btnPay.isEnabled = true
-                binding.tvStatus.text = "Payment confirmation timed out."
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Payment Timeout")
-                    .setMessage("Payment confirmation timed out. If you were charged and no locker opened, please contact support with your tracking number: $orderId")
-                    .setPositiveButton("OK", null)
-                    .show()
-            }
-        }
-    }
-
-    /**
-     * Execute post-payment workflow:
-     * 1. Print customer receipt
-     * 2. Print barcode label
-     * 3. Open assigned locker
-     * 4. Monitor door — show success only after door confirmed closed
-     */
-    private fun executePostPaymentWorkflow() {
-        binding.tvStatus.visibility = View.VISIBLE
-
-        lifecycleScope.launch {
-            try {
-                // Initialize printer
-                printerDriver.initialize()
-
-                // Step 1: Print customer receipt
-                binding.tvStatus.text = "🖨️ Printing Customer Receipt...\n(Please keep this for your records)"
-                printCustomerReceipt()
-                delay(3000)
-
-                // Step 2: Print waybill label with Code128 barcode (BEFORE door opens, per spec)
-                binding.tvStatus.text = "🖨️ Printing Waybill Label...\n(Please stick this label onto your package)"
-                printBarcodeLabel()
-                delay(3000)
-
-                // Step 3: Security photo (fire-and-forget)
-                SecurityCameraManager.getInstance(requireContext()).captureSecurityPhoto(
-                    reason = PhotoReason.CLIENT_DEPOSIT,
-                    referenceId = sendPackageActivity.sendPackageData.orderId,
-                    userId = prefs.getUserMobile() ?: ""
-                )
-
-                // Step 4: Open locker
-                val lockNumber = sendPackageActivity.sendPackageData.assignedLockNumber
-                binding.tvStatus.text = "Opening locker $lockNumber..."
-                openLocker()
-                delay(500)
-
-                // Step 5: Monitor door — wait for close
-                // Receipt will be printed AFTER door closes (per spec Flow 2 Step 7)
-                binding.tvStatus.text = "\uD83D\uDCE6 Locker $lockNumber is open.\nPlace your package inside, then close the door."
-                startDoorMonitoring(lockNumber)
-
-            } catch (e: Exception) {
-                binding.tvStatus.text = "Error during post-payment workflow: ${e.message}"
-                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    /**
-     * Print customer receipt
-     */
-    private suspend fun printCustomerReceipt() {
-        try {
-            val data = sendPackageActivity.sendPackageData
-            val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-
-            printerDriver.printText("CUSTOMER RECEIPT\n", fontSize = 2, bold = true, centered = true)
-            printerDriver.printText("--------------------------------\n")
-            printerDriver.printText("Date: $timestamp\n")
-            printerDriver.printText("Tracking: ${data.trackingNumber}\n")
-            printerDriver.printText("Recipient: ${data.recipientName} ${data.recipientSurname}\n")
-            printerDriver.printText("Mobile: ${data.recipientMobile}\n")
-            printerDriver.printText("Size: ${data.packageSize?.displayName}\n")
-            printerDriver.printText("Amount Paid: ${data.currency?.symbol}${String.format("%.2f", data.orderPrice)}\n")
-            printerDriver.printText("Payment: ${data.paymentMethod?.displayName}\n")
-            printerDriver.printText("--------------------------------\n")
-            printerDriver.printText("Thank you for using ZimPudo!\n", bold = true, centered = true)
-            printerDriver.printText("\n\n\n")
-            printerDriver.feedAndCut()
-        } catch (e: Exception) {
-            Log.e("PaymentFragment", "Print receipt error: ${e.message}")
-        }
-    }
-
-    /**
-     * Print waybill label with Code128 barcode (per spec Section 11.1)
-     * Uses tracking number as the barcode data — couriers scan this at pickup.
-     */
-    private suspend fun printBarcodeLabel() {
-        try {
-            val data = sendPackageActivity.sendPackageData
-            
-            printerDriver.printText("ZimPudo Waybill Label\n", fontSize = 2, bold = true, centered = true)
-            printerDriver.printText("Tracking: ${data.trackingNumber}\n")
-            printerDriver.printText("To: ${data.recipientName} ${data.recipientSurname}\n")
-            printerDriver.printText("Size: ${data.packageSize?.displayName ?: "-"}\n")
-            printerDriver.printText("From: ${data.recipientCityName}\n")
-            // Use Code128 barcode instead of QR (per spec: tracking number as Code128)
-            printerDriver.printCode128(data.trackingNumber)
-            printerDriver.printText("\n\n")
-            printerDriver.feedAndCut()
-        } catch (e: Exception) {
-            Log.e("PaymentFragment", "Print barcode error: ${e.message}")
-        }
-    }
-
-    /**
-     * Open the assigned locker
-     */
-    private suspend fun openLocker() {
-        try {
-            val lockNumber = sendPackageActivity.sendPackageData.assignedLockNumber
-            
-            // Connect to locker controller
-            val connected = lockerController.connect()
-            if (!connected) {
-                throw Exception("Failed to connect to locker controller. Please check connections.")
-            }
-
-            // Unlock the locker
-            val result = lockerController.unlockLock(lockNumber)
-
-            if (result.status == com.blitztech.pudokiosk.deviceio.rs485.WinnsenProtocol.LockStatus.COOLDOWN) {
-                throw Exception("This locker was recently used. Please wait ~15 seconds and try again.")
-            } else if (!result.success) {
-                throw Exception("Failed to unlock locker: ${result.errorMessage}")
-            }
-
-        } catch (e: Exception) {
-            Toast.makeText(
-                requireContext(),
-                "Locker error: ${e.message}. Please contact support.",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
-
-    /**
-     * Start monitoring the locker door.
-     * Includes audio reminders per spec (10s warning, 60s timeout).
-     */
-    private fun startDoorMonitoring(lockNumber: Int) {
-        val hw = com.blitztech.pudokiosk.deviceio.HardwareManager.getInstance(requireContext())
-        activeDoorMonitor = DoorMonitor(lockerController, lockNumber, lifecycleScope)
-        activeDoorMonitor?.start(
-            onDoorOpenTooLong = {
-                hw.speaker.startDoorCloseReminder()
-            },
-            onDoorTimeout = {
-                hw.speaker.stopDoorCloseReminder()
-                Toast.makeText(requireContext(), "Door timeout — please close the locker.", Toast.LENGTH_LONG).show()
-            },
-            onDoorClosed = {
-                hw.speaker.stopDoorCloseReminder()
-                lifecycleScope.launch {
-                    // Per spec: print receipt AFTER door closes (Flow 2 Step 7)
-                    printCustomerReceipt()
-                    showSuccessDialog()
-                }
-            }
-        )
-    }
-
-    /**
-     * Show success dialog — triggered by door close event.
-     * Also confirms the sender drop-off with the backend and disconnects the locker.
-     */
-    private fun showSuccessDialog() {
-        binding.tvStatus.visibility = View.GONE
-        activeDoorMonitor?.stop()
-        activeDoorMonitor = null
-
-        // Disconnect locker hardware now that the door is closed
-        lifecycleScope.launch {
-            try { lockerController.disconnect() } catch (_: Exception) {}
-        }
-
-        // Confirm sender drop-off with the backend (fire-and-forget)
-        confirmSenderDropoff()
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Package Sending Complete!")
-            .setMessage(
-                "Your package has been successfully processed.\n\n" +
-                        "Receipt and barcode label have been printed.\n" +
-                        "The locker is now secured.\n\n" +
-                        "The recipient will be notified to collect."
-            )
-            .setPositiveButton("Done") { _, _ ->
-                requireActivity().finish()
-            }
-            .setCancelable(false)
-            .show()
-    }
-
-    /**
-     * Notify the backend that the sender has placed the package in the locker.
-     * Uses multipart sender/dropoff: orderId, cellId, placeholder photo.
-     * Best-effort — does not block UI.
-     */
-    private fun confirmSenderDropoff() {
-        lifecycleScope.launch {
-            try {
-                val data = sendPackageActivity.sendPackageData
-                val token = prefs.getAccessToken().orEmpty()
-                if (token.isBlank() || data.orderId.isBlank()) return@launch
-
-                // Get cellId — from verify-reservation response or track from assign
-                val cellId = data.cellId.ifBlank {
-                    Log.w("PaymentFragment", "cellId is blank — falling back to lockerId (may be incorrect)")
-                    data.lockerId
-                }
-
-                val result = apiRepository.senderDropoff(
-                    orderId = data.orderId,
-                    cellId = cellId,
-                    token = token
-                )
-                when (result) {
-                    is NetworkResult.Success -> Log.d("PaymentFragment", "Sender dropoff confirmed")
-                    is NetworkResult.Error -> Log.w("PaymentFragment", "Sender dropoff failed: ${result.message}")
-                    is NetworkResult.Loading<*> -> { /* no-op */ }
-                }
-            } catch (e: Exception) {
-                Log.w("PaymentFragment", "Sender dropoff error: ${e.message}")
-            }
-        }
-    }
-
     override fun onDestroyView() {
-        activeDoorMonitor?.stop()
-        activeDoorMonitor = null
-        lifecycleScope.launch {
-            try { lockerController.disconnect() } catch (_: Exception) {}
-        }
         super.onDestroyView()
         _binding = null
     }
