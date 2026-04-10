@@ -83,6 +83,7 @@ class CustomerMainActivity : BaseKioskActivity() {
                                 putExtra("DROP_RESERVED_ORDER_ID", pendingOrder.orderId)
                                 putExtra("DROP_RESERVED_TRACKING", pendingOrder.trackingNumber)
                                 putExtra("DROP_RESERVED_LOCKER_ID", pendingOrder.cabinetId ?: "")
+                                putExtra("DROP_RESERVED_CELL_ID", pendingOrder.cellId ?: "")
                             }
                             startActivity(intent)
                         }

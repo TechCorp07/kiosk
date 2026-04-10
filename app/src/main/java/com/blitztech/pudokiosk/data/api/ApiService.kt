@@ -235,7 +235,7 @@ interface ApiService {
     suspend fun senderDropoff(
         @Part("orderId") orderId: RequestBody,
         @Part("cellId") cellId: RequestBody,
-        @Part photos: List<MultipartBody.Part>?,
+        @Part photos: List<MultipartBody.Part>,
         @Header("Authorization") token: String
     ): Response<com.blitztech.pudokiosk.data.api.dto.common.ApiResponse>
 
@@ -246,6 +246,7 @@ interface ApiService {
      */
     @POST(ApiEndpoints.COURIER_PICKUP_LOCKER)
     suspend fun courierPickupFromLocker(
+        @Query("lockerId") lockerId: String,
         @Header("Authorization") token: String
     ): Response<CourierPickupApiResponse>
 
@@ -257,7 +258,8 @@ interface ApiService {
     @GET
     suspend fun getLockerCells(
         @Url url: String,
-        @Header("Authorization") token: String
+        @Header("X-API-KEY") apiKey: String,
+        @Header("X-API-SERVICE") apiService: String
     ): Response<KioskCellsApiResponse>
 
     /** PATCH /api/v1/lockers/{lockerId}/status?status=ONLINE — kiosk heartbeat */
@@ -265,7 +267,8 @@ interface ApiService {
     suspend fun patchLockerStatus(
         @Url url: String,
         @Query("status") status: String,
-        @Header("Authorization") token: String
+        @Header("X-API-KEY") apiKey: String,
+        @Header("X-API-SERVICE") apiService: String
     ): Response<ApiResponse>
 
     /** PATCH /api/v1/cells/{cellId}/status — report cell jam / maintenance */

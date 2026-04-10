@@ -91,16 +91,54 @@ class CourierCollectActivity : BaseKioskActivity() {
 
     private fun loadPendingParcels() {
         lifecycleScope.launch {
+            val token = prefs.getAccessToken().orEmpty()
+            val lockerId = prefs.getPrimaryLockerUuid()
+
+            // 1. Sync pending collections from Backend
+            showStatus("Syncing collections from backend...")
+            if (token.isNotBlank() && lockerId.isNotBlank()) {
+                when (val response = api.courierPickupFromLocker(lockerId, token)) {
+                    is NetworkResult.Success -> {
+                        val packages = response.data.pickedUpPackages ?: emptyList()
+                        // Upsert into local database
+                        packages.forEach { pkg ->
+                            if (!pkg.orderId.isNullOrBlank() && !pkg.waybillNumber.isNullOrBlank()) {
+                                db.parcels().upsert(
+                                    com.blitztech.pudokiosk.data.db.ParcelEntity(
+                                        id = pkg.cellId ?: java.util.UUID.randomUUID().toString(),
+                                        trackingCode = pkg.orderId,
+                                        lockNumber = pkg.cellNumber ?: 0,
+                                        status = "IN_LOCKER",
+                                        size = "M",
+                                        recipientId = "PUDO Recipient", // generic fallback
+                                        senderId = "PUDO Sender",
+                                        lockerId = lockerId,
+                                        createdAt = System.currentTimeMillis()
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        // Keep going, fallback to whatever is already in local DB
+                        android.util.Log.w(TAG, "Failed to sync collections from backend")
+                    }
+                }
+            }
+
+            // 2. Load from local Room DB
             val parcels = db.parcels().getByStatus("IN_LOCKER")
+
             if (parcels.isEmpty()) {
                 showStatus("No pending parcels for collection on this kiosk.")
                 binding.btnFinish.visibility = View.VISIBLE
             } else {
                 binding.parcelListGroup.visibility = View.VISIBLE
+                showStatus("Select parcels to collect:")
                 val courierParcels = parcels.map {
                     com.blitztech.pudokiosk.data.api.dto.courier.CourierParcel(
                         parcelId = it.id,
-                        orderId = it.trackingCode, // Ensure we have the right IDs mapped
+                        orderId = it.trackingCode, // DB currently maps backend orderId to trackingCode
                         lockNumber = it.lockNumber,
                         tracking = it.trackingCode,
                         size = it.size,
@@ -108,7 +146,7 @@ class CourierCollectActivity : BaseKioskActivity() {
                         status = it.status
                     )
                 }
-                
+
                 val adapter = CourierParcelAdapter(courierParcels) { selected ->
                     selectedParcels.clear()
                     selectedParcels.addAll(selected)

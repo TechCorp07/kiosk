@@ -43,12 +43,9 @@ class LockerSyncWorker(
         }
 
         val prefs = ZimpudoApp.prefs
-        val token = prefs.getAccessToken().orEmpty()
-
-        if (token.isBlank()) {
-            Log.w(TAG, "No access token — cannot sync lockers")
-            return Result.retry()
-        }
+        // Use a dummy string since the API Key architecture ignores the Bearer token for cell syncs.
+        // We keep the signature the same for backward compatibility in the repository method.
+        val token = prefs.getAccessToken().orEmpty().ifBlank { "background-sync" }
 
         val primaryLockerUuid = prefs.getPrimaryLockerUuid()
         if (primaryLockerUuid.isBlank()) {
@@ -72,7 +69,7 @@ class LockerSyncWorker(
                         CellEntity(
                             cellUuid = dto.id,
                             lockerUuid = lockerUuid,
-                            physicalDoorNumber = dto.number,
+                            physicalDoorNumber = dto.cellNumber,
                             cellSize = dto.size,
                             status = dto.status,
                             cabinetId = dto.cabinetId,

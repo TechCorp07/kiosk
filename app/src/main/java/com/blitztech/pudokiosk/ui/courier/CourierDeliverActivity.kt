@@ -141,8 +141,8 @@ class CourierDeliverActivity : BaseKioskActivity() {
     private suspend fun getFreeCellCount(): Int {
         return try {
             val db = ZimpudoApp.database
-            val available = db.lockers().getAvailable()
-            available.size
+            val lockerUuid = prefs.getPrimaryLockerUuid()
+            db.cells().countAvailable(lockerUuid)
         } catch (_: Exception) {
             -1 // DB unavailable — allow scanning as a safe fallback
         }

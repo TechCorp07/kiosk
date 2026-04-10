@@ -144,8 +144,10 @@ data class TransactionApiResponse(
  */
 @JsonClass(generateAdapter = true)
 data class PackageDeliveryDetails(
-    @Json(name = "trackingNumber") val trackingNumber: String,
-    @Json(name = "cellNumber") val cellNumber: Int
+    @Json(name = "waybillNumber") val waybillNumber: String?,
+    @Json(name = "orderId") val orderId: String?,
+    @Json(name = "cellId") val cellId: String?,
+    @Json(name = "cellNumber") val cellNumber: Int?
 )
 
 /**

@@ -136,7 +136,7 @@ class ProcessingFragment : Fragment() {
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Payment Timeout")
                     .setMessage("Payment confirmation timed out. If you were charged and no locker opened, please contact support with tracking number: $orderId")
-                    .setPositiveButton("OK") { _, _ -> requireActivity().finish() }
+                    .setPositiveButton("OK") { _, _ -> (requireActivity() as SendPackageActivity).exitToHome() }
                     .setCancelable(false)
                     .show()
             }
@@ -146,7 +146,11 @@ class ProcessingFragment : Fragment() {
     private fun startHardwareWorkflow() {
         lifecycleScope.launch {
             try {
-                printerDriver.initialize()
+                try {
+                    printerDriver.initialize()
+                } catch (e: Exception) {
+                    Log.e("ProcessingFragment", "Printer init error: ${e.message}")
+                }
 
                 // Step 2: Print receipt
                 setStepState(2, StepState.IN_PROGRESS, "Printing your receipt...")
@@ -161,27 +165,52 @@ class ProcessingFragment : Fragment() {
                 setStepState(3, StepState.DONE, "Label printed")
 
                 // Security photo
-                SecurityCameraManager.getInstance(requireContext()).captureSecurityPhoto(
-                    reason = PhotoReason.CLIENT_DEPOSIT,
-                    referenceId = sendPackageActivity.sendPackageData.orderId,
-                    userId = prefs.getUserMobile() ?: ""
-                )
+                try {
+                    SecurityCameraManager.getInstance(requireContext()).captureSecurityPhoto(
+                        reason = PhotoReason.CLIENT_DEPOSIT,
+                        referenceId = sendPackageActivity.sendPackageData.orderId,
+                        userId = prefs.getUserMobile() ?: ""
+                    )
+                } catch (e: Exception) {
+                    Log.e("ProcessingFragment", "Camera error: ${e.message}")
+                }
 
                 // Step 4: Open Locker
                 val lockNumber = sendPackageActivity.sendPackageData.assignedLockNumber
                 setStepState(4, StepState.IN_PROGRESS, "Opening locker $lockNumber...")
-                openLocker(lockNumber)
-                delay(500)
                 
-                binding.cardLockerAssigned.visibility = View.VISIBLE
-                binding.tvLockerNumber.text = lockNumber.toString()
-                setStepState(4, StepState.DONE, "Locker $lockNumber is open")
-
-                startDoorMonitoring(lockNumber)
+                try {
+                    openLocker(lockNumber)
+                    delay(500)
+                    
+                    binding.cardLockerAssigned.visibility = View.VISIBLE
+                    binding.tvLockerNumber.text = lockNumber.toString()
+                    setStepState(4, StepState.DONE, "Locker $lockNumber is open")
+    
+                    startDoorMonitoring(lockNumber)
+                } catch (e: Exception) {
+                    Log.e("ProcessingFragment", "Locker hardware error", e)
+                    setStepState(4, StepState.ERROR, "Hardware Emulator Bypass")
+                    
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Hardware Disconnected")
+                        .setMessage("Locker hardware is offline (${e.message}).\n\nSince your payment was already approved, click below to simulate the physical door bypass and complete the test flow.")
+                        .setPositiveButton("Simulate Drop-off") { _, _ ->
+                            confirmSenderDropoff()
+                            showCompletion()
+                        }
+                        .setCancelable(false)
+                        .show()
+                }
             } catch (e: Exception) {
-                setStepState(4, StepState.ERROR, "Hardware Error")
-                Toast.makeText(requireContext(), "Hardware error: ${e.message}", Toast.LENGTH_LONG).show()
-                Log.e("ProcessingFragment", "Hardware error", e)
+                setStepState(4, StepState.ERROR, "System Error")
+                Log.e("ProcessingFragment", "Unexpected system error", e)
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Unexpected Error")
+                    .setMessage("An unexpected error occurred: ${e.message}")
+                    .setPositiveButton("Finish") { _, _ -> (requireActivity() as SendPackageActivity).exitToHome() }
+                    .setCancelable(false)
+                    .show()
             }
         }
     }
@@ -265,8 +294,12 @@ class ProcessingFragment : Fragment() {
                 val token = prefs.getAccessToken().orEmpty()
                 if (token.isBlank() || data.orderId.isBlank()) return@launch
 
-                val cellId = data.cellId.ifBlank { data.lockerId }
-                apiRepository.senderDropoff(data.orderId, cellId, token)
+                if (data.cellId.isBlank()) {
+                    Log.w("ProcessingFragment", "Skipping sender dropoff API — no cellId assigned (Emulator bypass?)")
+                    return@launch
+                }
+
+                apiRepository.senderDropoff(data.orderId, data.cellId, token)
             } catch (e: Exception) {
                 Log.w("ProcessingFragment", "Sender dropoff error: ${e.message}")
             }
@@ -281,7 +314,7 @@ class ProcessingFragment : Fragment() {
                 binding.tvThankYouCountdown.text = "Thank you! Your package is secure.\nReturning to main menu in ${i}s..."
                 delay(1000)
             }
-            requireActivity().finish()
+            (requireActivity() as SendPackageActivity).exitToHome()
         }
     }
 

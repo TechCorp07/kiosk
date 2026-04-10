@@ -11,6 +11,10 @@ package com.blitztech.pudokiosk.data.api.config
  */
 object ApiEndpoints {
 
+    // ── Global Fleet Scope ──────────────────────────────────────
+    const val KIOSK_API_KEY = "zimpudo-kiosk-live-key"
+    const val KIOSK_API_SERVICE = "kiosk-fleet"
+
     // ── Auth Service ────────────────────────────────────────────
     const val AUTH_PIN = "api/v1/auth/pin"
     const val AUTH_OTP = "api/v1/auth/otp"

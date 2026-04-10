@@ -16,7 +16,7 @@ import com.squareup.moshi.JsonClass
 data class CellDto(
     @Json(name = "id") val id: String,                  // UUID — backend primary key
     @Json(name = "lockerId") val lockerId: String,       // UUID of parent locker
-    @Json(name = "number") val number: Int,              // Physical door number (1-20 per board)
+    @Json(name = "cellNumber") val cellNumber: Int,              // Physical door number (1-20 per board)
     @Json(name = "size") val size: String,               // XS / S / M / L / XL
     @Json(name = "status") val status: String,           // AVAILABLE / OCCUPIED / RESERVED / MAINTENANCE
     @Json(name = "cabinetId") val cabinetId: String? = null  // Board identifier e.g. "CAB-001"

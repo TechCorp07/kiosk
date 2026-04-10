@@ -88,6 +88,7 @@ class SendPackageActivity : BaseKioskActivity() {
         sendPackageData.orderId = reservedOrderId
         sendPackageData.trackingNumber = intent.getStringExtra("DROP_RESERVED_TRACKING") ?: ""
         sendPackageData.lockerId = intent.getStringExtra("DROP_RESERVED_LOCKER_ID") ?: ""
+        sendPackageData.cellId = intent.getStringExtra("DROP_RESERVED_CELL_ID") ?: ""
         sendPackageData.isDropReserved = true
         
         // Disable swipe/back navigation conceptually by locking to fast-forward
@@ -356,5 +357,13 @@ class SendPackageActivity : BaseKioskActivity() {
 
     override fun onBackPressed() {
         goToPreviousPage()
+    }
+
+    /**
+     * Safely exit the Send Package flow and return to the Kiosk Home Screen
+     * bypassing the Kiosk Mode block on the native finish() method.
+     */
+    fun exitToHome() {
+        finishSafely()
     }
 }

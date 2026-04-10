@@ -497,7 +497,7 @@ class ApiRepository(
                 listOf(part)
             } catch (e: Exception) {
                 Log.w(TAG, "Placeholder photo not found in assets, sending without photo", e)
-                null
+                emptyList<MultipartBody.Part>()
             }
 
             val response = apiService.senderDropoff(orderIdBody, cellIdBody, photos, "Bearer $token")
@@ -516,9 +516,10 @@ class ApiRepository(
      * No body — courier identity from JWT.
      */
     suspend fun courierPickupFromLocker(
+        lockerId: String,
         token: String
     ): NetworkResult<com.blitztech.pudokiosk.data.api.dto.courier.CourierPickupResponseDto> {
-        return when (val result = safeApiCall { apiService.courierPickupFromLocker("Bearer $token") }) {
+        return when (val result = safeApiCall { apiService.courierPickupFromLocker(lockerId, "Bearer $token") }) {
             is NetworkResult.Success -> {
                 result.data.body?.let { NetworkResult.Success(it) }
                     ?: NetworkResult.Error("Empty response body", 204)
@@ -541,7 +542,9 @@ class ApiRepository(
         token: String
     ): NetworkResult<List<CellDto>> {
         val url = ApiEndpoints.getLockerCellsUrl(lockerId)
-        return when (val result = safeApiCall { apiService.getLockerCells(url, "Bearer $token") }) {
+        return when (val result = safeApiCall { 
+            apiService.getLockerCells(url, ApiEndpoints.KIOSK_API_KEY, ApiEndpoints.KIOSK_API_SERVICE) 
+        }) {
             is NetworkResult.Success -> {
                 NetworkResult.Success(result.data.body ?: emptyList())
             }
@@ -560,7 +563,9 @@ class ApiRepository(
         token: String
     ): NetworkResult<ApiResponse> {
         val url = ApiEndpoints.getLockerStatusUrl(lockerId)
-        return safeApiCall { apiService.patchLockerStatus(url, status, "Bearer $token") }
+        return safeApiCall { 
+            apiService.patchLockerStatus(url, status, ApiEndpoints.KIOSK_API_KEY, ApiEndpoints.KIOSK_API_SERVICE) 
+        }
     }
 
     /**
