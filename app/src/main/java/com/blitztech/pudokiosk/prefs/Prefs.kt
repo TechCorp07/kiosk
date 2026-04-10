@@ -221,6 +221,14 @@ class Prefs(context: Context) {
     fun isMaintenanceMode(): Boolean = getBoolean("maintenance_mode", false)
     fun setMaintenanceMode(enabled: Boolean) = putBoolean("maintenance_mode", enabled)
 
+    // ── Developer Options ──────────────────────────────────────────────────
+    /**
+     * Set to TRUE to bypass RS485 and RS232 hardware requirements for Emulator testing.
+     * To turn it off, set the defaultValue to false.
+     */
+    fun isHardwareBypassEnabled(): Boolean = getBoolean("hardware_bypass_enabled", true)
+    fun setHardwareBypassEnabled(enabled: Boolean) = putBoolean("hardware_bypass_enabled", enabled)
+
     // OTA update settings
     fun getUpdateServerUrl(): String = getString("update_server_url", "https://api.zimpudo.com")
     fun setUpdateServerUrl(url: String) = putString("update_server_url", url)
@@ -269,7 +277,7 @@ class Prefs(context: Context) {
      * (locker UUID, site name, network config). Until provisioned, the kiosk
      * shows the provisioning screen instead of the customer/courier UI.
      */
-    fun isProvisioned(): Boolean = getBoolean(KEY_PROVISIONED, true) // TODO: revert to false for production
+    fun isProvisioned(): Boolean = getBoolean(KEY_PROVISIONED, false)
     fun setProvisioned(done: Boolean) = putBoolean(KEY_PROVISIONED, done)
 
     /** Human-readable name of the site (e.g. "Westgate Shopping Centre"). */

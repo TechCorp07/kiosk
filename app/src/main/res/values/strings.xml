@@ -103,7 +103,7 @@
     <string name="old_pin">Current PIN</string>
     <string name="new_pin">New PIN</string>
     <string name="confirm_pin">Confirm PIN</string>
-    <string name="pin_requirements">PIN must be 4–6 digits</string>
+    <string name="pin_requirements">PIN must be 6 digits</string>
     <string name="pins_dont_match">PINs don\'t match</string>
     <string name="save_pin">Save PIN</string>
 
@@ -284,7 +284,7 @@
     <!-- Error Messages -->
     <string name="error_network">Network error. Please check your connection.</string>
     <string name="error_invalid_phone">Please enter a valid phone number</string>
-    <string name="error_invalid_pin">PIN must be 4–6 digits</string>
+    <string name="error_invalid_pin">PIN must be 6 digits</string>
     <string name="error_invalid_otp">Please enter a valid 6-digit OTP</string>
     <string name="error_required_field">This field is required</string>
     <string name="error_mobile_required">Please enter your mobile number</string>

@@ -106,10 +106,35 @@ class CourierDeliverActivity : BaseKioskActivity() {
                 // Don't start scan listening — no point scanning if no cells
             } else {
                 val availability = if (freeCells > 0) " ($freeCells cell(s) available)" else ""
-                showStatus("📦 Scan a parcel barcode to drop off$availability")
+                showStatus("📦 Scan a parcel barcode to drop off$availability\n(Tap here to manually input if scanner is unavailable)")
+                binding.tvStatus.setOnClickListener {
+                    if (prefs.isHardwareBypassEnabled()) {
+                        showManualScanDialog()
+                    }
+                }
                 startScanListening()
             }
         }
+    }
+
+    private fun showManualScanDialog() {
+        val input = android.widget.EditText(this)
+        input.inputType = android.text.InputType.TYPE_CLASS_TEXT
+        input.hint = "Tracking Number / Barcode"
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Manual Barcode Input (DEV BYPASS)")
+            .setView(input)
+            .setPositiveButton("Submit") { _, _ ->
+                val barcode = input.text.toString().trim()
+                if (barcode.isNotBlank()) {
+                    scanJob?.cancel()
+                    resetIdleTimer()
+                    showStatus("Looking up parcel (Mock Scan): $barcode…")
+                    processDropoff(barcode)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     /** Query Room DB for unoccupied locker cells. Returns -1 if DB unavailable (allow scan). */
@@ -197,6 +222,15 @@ class CourierDeliverActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
+                if (prefs.isHardwareBypassEnabled()) {
+                    showStatus("🔓 SIMULATED (DEV BYPASS): Cell $cellNumber open!\nPretending to place parcel inside and close door...")
+                    // Simulate waiting 3 seconds for door close
+                    delay(3000)
+                    hw.speaker.playSuccessChime()
+                    confirmDropoffWithBackend(orderId, barcode, destinationLockerId)
+                    return@launch
+                }
+
                 val locker = hw.getLocker() ?: run {
                     showToast("Locker hardware unavailable")
                     // Free cell reservation on failure

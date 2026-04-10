@@ -162,6 +162,15 @@ class CourierCollectActivity : BaseKioskActivity() {
 
         lifecycleScope.launch {
             try {
+                if (prefs.isHardwareBypassEnabled()) {
+                    showStatus("🔓 SIMULATED (DEV BYPASS): Cell $cellNumber open!\nPretending to remove parcel and close door...")
+                    // Simulate waiting 3 seconds for door close
+                    delay(3000)
+                    hw.speaker.playSuccessChime()
+                    onPickupComplete(barcode, orderId, cellNumber, cellUuid, token)
+                    return@launch
+                }
+
                 val locker = hw.getLocker() ?: run {
                     showToast("Locker hardware unavailable")
                     isWaitingForDoor = false

@@ -19,13 +19,12 @@ import com.blitztech.pudokiosk.databinding.FragmentPackageDetailsBinding
 import com.blitztech.pudokiosk.prefs.Prefs
 import kotlinx.coroutines.launch
 
-/**
- * Fragment for entering package details
- */
+/** Fragment for entering package details */
 class PackageDetailsFragment : Fragment() {
 
     private var _binding: FragmentPackageDetailsBinding? = null
-    private val binding get() = _binding!!
+    private val binding
+        get() = _binding!!
 
     private lateinit var apiRepository: ApiRepository
     private lateinit var sendPackageActivity: SendPackageActivity
@@ -34,31 +33,34 @@ class PackageDetailsFragment : Fragment() {
     /** Content types fetched from backend GET /api/v1/orders/packages */
     private var contentTypes: List<String> = emptyList()
 
-    /**
-     * Static list of package class enum values matching the backend's PackageClass enum.
-     */
+    /** Static list of package class enum values matching the backend's PackageClass enum. */
     private data class PackageClassOption(val enumValue: String, val displayName: String)
-    private val packageClassOptions = listOf(
-        PackageClassOption("STANDARD", "Standard"),
-        PackageClassOption("FRAGILE", "Fragile ⚠️"),
-        PackageClassOption("EXPRESS", "Express ⚡"),
-        PackageClassOption("PERISHABLE", "Perishable 🧊")
-    )
+    private val packageClassOptions =
+            listOf(
+                    PackageClassOption("STANDARD", "Standard"),
+                    PackageClassOption("FRAGILE", "Fragile ⚠️"),
+                    PackageClassOption("EXPRESS", "Express ⚡"),
+                    PackageClassOption("PERISHABLE", "Perishable 🧊")
+            )
 
     /**
-     * Receiver mode options — the sender is always LOCKER_DROP (at the PUDO),
-     * but the recipient can choose their preferred delivery mode.
+     * Receiver mode options — the sender is always LOCKER_DROP (at the PUDO), but the recipient can
+     * choose their preferred delivery mode.
      */
     private data class ReceiverModeOption(val enumValue: String, val displayName: String)
-    private val receiverModeOptions = listOf(
-        ReceiverModeOption("LOCKER_PICKUP", "Locker Pickup — Recipient collects from PUDO"),
-        ReceiverModeOption("HOME_DELIVERY", "Home Delivery — Courier delivers to door")
-    )
+    private val receiverModeOptions =
+            listOf(
+                    ReceiverModeOption(
+                            "LOCKER_PICKUP",
+                            "Locker Pickup — Recipient collects from PUDO"
+                    ),
+                    ReceiverModeOption("HOME_DELIVERY", "Home Delivery — Courier delivers to door")
+            )
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         _binding = FragmentPackageDetailsBinding.inflate(inflater, container, false)
         return binding.root
@@ -85,18 +87,30 @@ class PackageDetailsFragment : Fragment() {
     private fun setupViews() {
         // Setup currency spinner
         val currencies = Currency.values().map { "${it.displayName} (${it.symbol})" }
-        val currencyAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, currencies)
+        val currencyAdapter =
+                ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, currencies)
         currencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerCurrency.adapter = currencyAdapter
 
         // Add text watchers to calculate package size automatically
-        val dimensionWatcher = object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                calculatePackageSize()
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        }
+        val dimensionWatcher =
+                object : TextWatcher {
+                    override fun beforeTextChanged(
+                            s: CharSequence?,
+                            start: Int,
+                            count: Int,
+                            after: Int
+                    ) {}
+                    override fun onTextChanged(
+                            s: CharSequence?,
+                            start: Int,
+                            before: Int,
+                            count: Int
+                    ) {
+                        calculatePackageSize()
+                    }
+                    override fun afterTextChanged(s: Editable?) {}
+                }
 
         binding.etLength.addTextChangedListener(dimensionWatcher)
         binding.etWidth.addTextChangedListener(dimensionWatcher)
@@ -104,8 +118,8 @@ class PackageDetailsFragment : Fragment() {
     }
 
     /**
-     * Load package content types from backend API.
-     * Falls back to a hardcoded list if the API call fails.
+     * Load package content types from backend API. Falls back to a hardcoded list if the API call
+     * fails.
      */
     private fun loadPackageContentTypes() {
         lifecycleScope.launch {
@@ -116,30 +130,45 @@ class PackageDetailsFragment : Fragment() {
                 }
                 is NetworkResult.Error -> {
                     // Fallback to static list if API fails
-                    contentTypes = listOf(
-                        "Documents", "Clothing", "Electronics", "Books",
-                        "Food (Non-Perishable)", "Cosmetics", "Medicine (OTC)",
-                        "Household Items", "Tools & Hardware", "Toys & Games",
-                        "Gifts & Accessories", "Stationery", "Footwear",
-                        "Phone Accessories", "Computer Accessories"
-                    )
+                    contentTypes =
+                            listOf(
+                                    "Documents",
+                                    "Clothing",
+                                    "Electronics",
+                                    "Books",
+                                    "Food (Non-Perishable)",
+                                    "Cosmetics",
+                                    "Medicine (OTC)",
+                                    "Household Items",
+                                    "Tools & Hardware",
+                                    "Toys & Games",
+                                    "Gifts & Accessories",
+                                    "Stationery",
+                                    "Footwear",
+                                    "Phone Accessories",
+                                    "Computer Accessories"
+                            )
                     setupContentsSpinner(contentTypes)
                 }
-                is NetworkResult.Loading -> { /* handled by spinner state */ }
+                is NetworkResult.Loading -> {
+                    /* handled by spinner state */
+                }
             }
         }
     }
 
     private fun setupContentsSpinner(items: List<String>) {
         val displayItems = listOf("Select Package Contents") + items
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, displayItems)
+        val adapter =
+                ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, displayItems)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerContents.adapter = adapter
 
         // Restore selection if data exists
         val data = sendPackageActivity.sendPackageData
         if (data.packageContents.isNotBlank()) {
-            val contentCategory = data.packageContents.split(" - ").firstOrNull() ?: data.packageContents
+            val contentCategory =
+                    data.packageContents.split(" - ").firstOrNull() ?: data.packageContents
             val index = items.indexOf(contentCategory)
             if (index >= 0) {
                 binding.spinnerContents.setSelection(index + 1)
@@ -149,14 +178,16 @@ class PackageDetailsFragment : Fragment() {
 
     private fun setupPackageClassSpinner() {
         val classNames = packageClassOptions.map { it.displayName }
-        val classAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, classNames)
+        val classAdapter =
+                ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, classNames)
         classAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerPackageClass.adapter = classAdapter
 
         // Restore previous selection
         val data = sendPackageActivity.sendPackageData
         if (data.packageClass.isNotBlank()) {
-            val selectedIndex = packageClassOptions.indexOfFirst { it.enumValue == data.packageClass }
+            val selectedIndex =
+                    packageClassOptions.indexOfFirst { it.enumValue == data.packageClass }
             if (selectedIndex >= 0) {
                 binding.spinnerPackageClass.setSelection(selectedIndex)
             }
@@ -165,7 +196,8 @@ class PackageDetailsFragment : Fragment() {
 
     private fun setupReceiverModeSpinner() {
         val modeNames = receiverModeOptions.map { it.displayName }
-        val modeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, modeNames)
+        val modeAdapter =
+                ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, modeNames)
         modeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerReceiverMode.adapter = modeAdapter
 
@@ -185,14 +217,10 @@ class PackageDetailsFragment : Fragment() {
             }
         }
 
-        binding.btnBack.setOnClickListener {
-            sendPackageActivity.goToPreviousPage()
-        }
+        binding.btnBack.setOnClickListener { sendPackageActivity.goToPreviousPage() }
     }
 
-    /**
-     * Calculate package size based on dimensions (user enters mm, we convert to meters)
-     */
+    /** Calculate package size based on dimensions (user enters mm, we convert to meters) */
     private fun calculatePackageSize() {
         try {
             val length = (binding.etLength.text.toString().toDoubleOrNull() ?: 0.0) / 1000.0
@@ -211,9 +239,7 @@ class PackageDetailsFragment : Fragment() {
         }
     }
 
-    /**
-     * Validate all inputs
-     */
+    /** Validate all inputs */
     private fun validateInputs(): Boolean {
         var isValid = true
 
@@ -242,16 +268,15 @@ class PackageDetailsFragment : Fragment() {
         }
 
         if (binding.spinnerContents.selectedItemPosition == 0) {
-            Toast.makeText(requireContext(), "Please select package contents", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Please select package contents", Toast.LENGTH_SHORT)
+                    .show()
             isValid = false
         }
 
         return isValid
     }
 
-    /**
-     * Save data to shared state
-     */
+    /** Save data to shared state */
     private fun saveData() {
         val data = sendPackageActivity.sendPackageData
 
@@ -262,24 +287,27 @@ class PackageDetailsFragment : Fragment() {
 
         // Contents: category + optional details
         val selectedContentPosition = binding.spinnerContents.selectedItemPosition
-        val contentCategory = if (selectedContentPosition > 0 && contentTypes.isNotEmpty()) {
-            contentTypes[selectedContentPosition - 1]
-        } else {
-            "Other"
-        }
+        val contentCategory =
+                if (selectedContentPosition > 0 && contentTypes.isNotEmpty()) {
+                    contentTypes[selectedContentPosition - 1]
+                } else {
+                    "Other"
+                }
         val additionalDetails = binding.etContents.text.toString().trim()
-        data.packageContents = if (additionalDetails.isNotBlank()) {
-            "$contentCategory - $additionalDetails"
-        } else {
-            contentCategory
-        }
+        data.packageContents =
+                if (additionalDetails.isNotBlank()) {
+                    "$contentCategory - $additionalDetails"
+                } else {
+                    contentCategory
+                }
 
         // Package size (derived from dimensions)
-        data.packageSize = PackageSize.fromDimensions(
-            data.packageLength,
-            data.packageWidth,
-            data.packageHeight
-        )
+        data.packageSize =
+                PackageSize.fromDimensions(
+                        data.packageLength,
+                        data.packageWidth,
+                        data.packageHeight
+                )
 
         // Currency
         data.currency = Currency.values()[binding.spinnerCurrency.selectedItemPosition]
@@ -299,9 +327,7 @@ class PackageDetailsFragment : Fragment() {
         }
     }
 
-    /**
-     * Create order via API
-     */
+    /** Create order via API */
     private fun createOrder() {
         binding.progressBar.visibility = View.VISIBLE
         binding.btnNext.isEnabled = false
@@ -310,7 +336,12 @@ class PackageDetailsFragment : Fragment() {
         val accessToken = prefs.getAccessToken()
 
         if (accessToken.isNullOrBlank()) {
-            Toast.makeText(requireContext(), "Session expired. Please login again.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                            requireContext(),
+                            "Session expired. Please login again.",
+                            Toast.LENGTH_LONG
+                    )
+                    .show()
             binding.progressBar.visibility = View.GONE
             binding.btnNext.isEnabled = true
             return
@@ -318,14 +349,15 @@ class PackageDetailsFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                val result = apiRepository.createOrder(
-                    packageDetails = data.buildPackageDetails(),
-                    recipient = data.buildRecipient(),
-                    senderLocation = data.buildSenderLocation(),
-                    currency = data.currency!!.code,
-                    token = accessToken,
-                    receiverMode = data.receiverMode
-                )
+                val result =
+                        apiRepository.createOrder(
+                                packageDetails = data.buildPackageDetails(),
+                                recipient = data.buildRecipient(),
+                                senderLocation = data.buildSenderLocation(),
+                                currency = data.currency!!.code,
+                                token = accessToken,
+                                receiverMode = data.receiverMode
+                        )
 
                 binding.progressBar.visibility = View.GONE
                 binding.btnNext.isEnabled = true
@@ -340,36 +372,37 @@ class PackageDetailsFragment : Fragment() {
                         data.orderPrice = response.price
                         data.orderDistance = response.distance
 
-                        // Use nearest locker from response
-                        data.lockerId = response.nearestLockers.firstOrNull()?.lockerResponse?.id
-                            ?: "current-locker-id"
+                        // Use nearest locker from response, fallback to the kiosk's primary locker
+                        // UUID
+                        data.lockerId =
+                                response.nearestLockers?.firstOrNull()?.lockerResponse?.id
+                                        ?: prefs.getPrimaryLockerUuid()
 
                         Toast.makeText(
-                            requireContext(),
-                            "Order created: ${response.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                                        requireContext(),
+                                        "Order created: ${response.message}",
+                                        Toast.LENGTH_SHORT
+                                )
+                                .show()
 
                         sendPackageActivity.goToNextPage()
                     }
                     is NetworkResult.Error -> {
                         Toast.makeText(
-                            requireContext(),
-                            "Order creation failed: ${result.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
+                                        requireContext(),
+                                        "Order creation failed: ${result.message}",
+                                        Toast.LENGTH_LONG
+                                )
+                                .show()
                     }
-
-                    is NetworkResult.Loading<*> -> { /* loading state handled by progressBar */ }
+                    is NetworkResult.Loading<*> -> {
+                        /* loading state handled by progressBar */
+                    }
                 }
             } catch (e: Exception) {
                 binding.progressBar.visibility = View.GONE
                 binding.btnNext.isEnabled = true
-                Toast.makeText(
-                    requireContext(),
-                    "Error: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -379,9 +412,7 @@ class PackageDetailsFragment : Fragment() {
         return if (mm % 1.0 == 0.0) mm.toInt().toString() else mm.toString()
     }
 
-    /**
-     * Restore previously entered data
-     */
+    /** Restore previously entered data */
     private fun restoreData() {
         val data = sendPackageActivity.sendPackageData
 

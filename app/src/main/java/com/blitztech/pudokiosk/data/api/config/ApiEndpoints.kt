@@ -55,6 +55,10 @@ object ApiEndpoints {
     const val COURIER_DROPOFF_AT_LOCKER = "api/v1/orders/{orderId}/dropoff"
     // POST /api/v1/orders/and-search  { trackingNumber: "..." } → resolve orderId from barcode
     const val ORDER_SEARCH = "api/v1/orders/and-search"
+    // GET /api/v1/orders/couriers?page=0&size=50 → View routes assigned to courier
+    const val COURIER_ORDERS = "api/v1/orders/couriers"
+    // POST /api/v1/orders/{orderId}/issue → Report issue with a parcel
+    const val COURIER_ISSUE = "api/v1/orders/{orderId}/issue"
 
     // ── Locker Cell Management (kiosk heartbeat + status reporting) ─
     const val LOCKER_STATUS = "api/v1/lockers/{lockerId}/status"   // PATCH ?status=ONLINE (API role)
@@ -85,6 +89,9 @@ object ApiEndpoints {
 
     fun getCourierDropoffUrl(orderId: String): String =
         COURIER_DROPOFF_AT_LOCKER.replace("{orderId}", orderId)
+
+    fun getCourierIssueUrl(orderId: String): String =
+        COURIER_ISSUE.replace("{orderId}", orderId)
 
     fun getLockerStatusUrl(lockerId: String): String =
         LOCKER_STATUS.replace("{lockerId}", lockerId)

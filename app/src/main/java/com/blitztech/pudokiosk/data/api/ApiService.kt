@@ -193,6 +193,28 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<CourierOpsResponse>
 
+    /**
+     * View today's route (orders assigned to this courier).
+     * GET /api/v1/orders/couriers
+     */
+    @GET(ApiEndpoints.COURIER_ORDERS)
+    suspend fun getCourierOrders(
+        @Header("Authorization") token: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 50
+    ): Response<PageOrder>
+
+    /**
+     * Report an issue with a parcel at the kiosk.
+     * POST /api/v1/orders/{orderId}/issue
+     */
+    @POST
+    suspend fun reportCourierIssue(
+        @Url url: String,
+        @Body request: Map<String, Any>,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse>
+
     // ─────────────────────────────────────────────────────────────
     //  Locker Service – Sender transactions
     // ─────────────────────────────────────────────────────────────

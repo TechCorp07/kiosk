@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
  * Courier Route / Today's Manifest Screen
  *
  * Fetches the courier's active orders for the session via:
- *   GET /api/v1/orders/logged-in  (reuses getLoggedInOrders from ApiRepository)
+ *   GET /api/v1/orders/couriers  (via getCourierOrders from ApiRepository)
  *
  * Displays a summary list of pending deliveries assigned to this courier.
  * This gives the courier a quick view of how many parcels to collect/deliver
@@ -48,7 +48,7 @@ class CourierRouteActivity : BaseKioskActivity() {
                 return@launch
             }
 
-            when (val result = api.getLoggedInOrders(token)) {
+            when (val result = api.getCourierOrders(token)) {
                 is NetworkResult.Success -> {
                     setLoading(false)
                     val orders = result.data.content

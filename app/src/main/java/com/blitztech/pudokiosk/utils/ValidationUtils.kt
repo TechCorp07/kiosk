@@ -16,8 +16,8 @@ object ValidationUtils {
     }
 
     fun isValidPin(pin: String): Boolean {
-        // PIN should be 4-6 digits
-        return pin.matches(Regex("^[0-9]{4,6}$"))
+        // PIN should be 6 digits
+        return pin.matches(Regex("^[0-9]{6}$"))
     }
 
     fun isValidOtp(otp: String): Boolean {

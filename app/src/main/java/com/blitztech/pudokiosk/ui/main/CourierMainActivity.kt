@@ -13,6 +13,8 @@ import com.blitztech.pudokiosk.ui.courier.CourierDeliverActivity
 import com.blitztech.pudokiosk.ui.courier.CourierProfileActivity
 import com.blitztech.pudokiosk.ui.courier.CourierRouteActivity
 import com.blitztech.pudokiosk.ui.courier.CourierStatusUpdateActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 /**
  * Main dashboard for courier users
@@ -31,6 +33,30 @@ class CourierMainActivity : BaseKioskActivity() {
         setupDependencies()
         setupViews()
         setupClickListeners()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateBadges()
+    }
+
+    private fun updateBadges() {
+        lifecycleScope.launch {
+            try {
+                // Database query should be done on IO dispatcher if room doesn't suspend automatically
+                val parcels = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    ZimpudoApp.database.parcels().getByStatus("IN_LOCKER")
+                }
+                if (parcels.isNotEmpty()) {
+                    binding.tvCollectBadge.text = parcels.size.toString()
+                    binding.tvCollectBadge.visibility = android.view.View.VISIBLE
+                } else {
+                    binding.tvCollectBadge.visibility = android.view.View.GONE
+                }
+            } catch (e: Exception) {
+                binding.tvCollectBadge.visibility = android.view.View.GONE
+            }
+        }
     }
 
     private fun setupDependencies() {

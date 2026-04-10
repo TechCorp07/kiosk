@@ -53,10 +53,10 @@ class CourierProfileActivity : BaseKioskActivity() {
 
     private fun validate(old: String, new: String, confirm: String): Boolean {
         var ok = true
-        if (old.length != 4)  { binding.tilOldPin.error = "Current PIN must be 4 digits"; ok = false }
+        if (old.length != 6)  { binding.tilOldPin.error = "Current PIN must be 6 digits"; ok = false }
         else binding.tilOldPin.error = null
 
-        if (new.length != 4)  { binding.tilNewPin.error = "New PIN must be 4 digits"; ok = false }
+        if (new.length != 6)  { binding.tilNewPin.error = "New PIN must be 6 digits"; ok = false }
         else binding.tilNewPin.error = null
 
         if (new != confirm)   { binding.tilConfirmPin.error = "PINs do not match"; ok = false }

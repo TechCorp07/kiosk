@@ -105,15 +105,37 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/tvPickupPackages"
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="Pickup Packages"
-                            android:textColor="@color/text_primary"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="@dimen/spacing_sm">
+
+                            <TextView
+                                android:id="@+id/tvPickupPackages"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pickup Packages"
+                                android:textColor="@color/text_primary"
+                                android:textSize="26sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvCollectBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:background="@color/error"
+                                android:textColor="@color/white"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/tvPickupDescription"

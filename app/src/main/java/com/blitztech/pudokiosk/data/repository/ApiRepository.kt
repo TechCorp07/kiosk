@@ -423,6 +423,35 @@ class ApiRepository(
         }
     }
 
+    /**
+     * Fetch all orders assigned to this courier for today's route.
+     * GET /api/v1/orders/couriers
+     */
+    suspend fun getCourierOrders(
+        token: String,
+        page: Int = 0,
+        size: Int = 50
+    ): NetworkResult<PageOrder> {
+        return safeApiCall {
+            apiService.getCourierOrders("Bearer $token", page, size)
+        }
+    }
+
+    /**
+     * Report an issue with a parcel.
+     * POST /api/v1/orders/{orderId}/issue
+     */
+    suspend fun reportCourierIssue(
+        orderId: String,
+        payload: Map<String, Any>,
+        token: String
+    ): NetworkResult<ApiResponse> {
+        return safeApiCall {
+            val url = ApiEndpoints.getCourierIssueUrl(orderId)
+            apiService.reportCourierIssue(url, payload, "Bearer $token")
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────
     //  Locker Transactions – Sender
     // ─────────────────────────────────────────────────────────────

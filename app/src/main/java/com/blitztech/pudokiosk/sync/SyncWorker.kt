@@ -133,9 +133,24 @@ class SyncWorker(
 
             // ── Issue report (pending backend endpoint) ─────────────────────────
             "courier_issue_report" -> {
-                // TODO: Wire to dedicated backend issue-reporting endpoint when available.
-                Log.d(TAG, "courier_issue_report event pending backend endpoint — will retry")
-                false
+                val map = moshi.adapter(Map::class.java).fromJson(event.payloadJson)
+                    ?: return false
+                @Suppress("UNCHECKED_CAST")
+                val m = map as Map<String, Any?>
+                val trackingNumber = m["trackingNumber"] as? String ?: return false
+                // The API needs orderId, but we might only have trackingNumber.
+                // Wait, if CourierStatusUpdateActivity only captured trackingNumber!
+                // But the backend `POST /api/v1/orders/{orderId}/issue` expects orderId.
+                // We'll search the order first to fetch the orderId!
+                val searchResult = api.searchOrder(trackingNumber, token)
+                if (searchResult !is NetworkResult.Success || searchResult.data.content.isEmpty()) {
+                    Log.w(TAG, "Cannot report issue: order not found for $trackingNumber")
+                    return false
+                }
+                val orderId = searchResult.data.content[0].orderId ?: return false
+                val safeMap = m.filterValues { it != null } as Map<String, Any>
+                val result = api.reportCourierIssue(orderId, safeMap, token)
+                result is NetworkResult.Success
             }
 
             // ── Security Photo Upload (pending backend endpoint) ────────────────

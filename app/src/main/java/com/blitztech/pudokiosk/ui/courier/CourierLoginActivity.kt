@@ -79,8 +79,8 @@ class CourierLoginActivity : BaseKioskActivity() {
             binding.tilMobile.error = "Enter a valid mobile number"
             ok = false
         }
-        if (pin.length != 4) {
-            binding.tilPin.error = "PIN must be 4 digits"
+        if (pin.length != 6) {
+            binding.tilPin.error = "PIN must be 6 digits"
             ok = false
         }
         return ok

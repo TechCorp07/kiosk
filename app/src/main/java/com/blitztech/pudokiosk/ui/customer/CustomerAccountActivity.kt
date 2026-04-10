@@ -160,13 +160,13 @@ class CustomerAccountActivity : BaseKioskActivity() {
 
     private fun validatePin(old: String, new: String, confirm: String): Boolean {
         var ok = true
-        if (old.length != 4) {
-            binding.tilOldPin.error = "Current PIN must be 4 digits"
+        if (old.length != 6) {
+            binding.tilOldPin.error = "Current PIN must be 6 digits"
             ok = false
         } else binding.tilOldPin.error = null
 
-        if (new.length != 4) {
-            binding.tilNewPin.error = "New PIN must be 4 digits"
+        if (new.length != 6) {
+            binding.tilNewPin.error = "New PIN must be 6 digits"
             ok = false
         } else binding.tilNewPin.error = null
 
