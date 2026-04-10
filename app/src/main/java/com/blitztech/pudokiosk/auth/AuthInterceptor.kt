@@ -64,8 +64,8 @@ class AuthInterceptor(private val prefs: Prefs) : Interceptor {
         val original = chain.request()
         val path = original.url.encodedPath
 
-        // 1. Always bypass auth header on public paths
-        if (PUBLIC_PATHS.any { path.contains(it, ignoreCase = true) }) {
+        // 1. Always bypass auth header on public paths or when X-API-KEY is provided
+        if (PUBLIC_PATHS.any { path.contains(it, ignoreCase = true) } || original.header("X-API-KEY") != null) {
             return chain.proceed(original)
         }
 
