@@ -410,16 +410,36 @@ class ApiRepository(
 
     /**
      * Courier drops parcel at destination PUDO locker.
-     * POST /api/v1/orders/{orderId}/dropoff?barcode=...&destinationLockerId=...
+     * POST /api/v1/transactions/courier/dropoff
      */
     suspend fun courierDropoffAtLocker(
-        dropoffUrl: String,
+        orderId: String,
         barcode: String,
         destinationLockerId: String,
+        cellId: String,
         token: String
-    ): NetworkResult<CourierOpsResponse> {
+    ): NetworkResult<com.blitztech.pudokiosk.data.api.dto.common.ApiResponse> {
         return safeApiCall {
-            apiService.courierDropoffAtLocker(dropoffUrl, barcode, destinationLockerId, "Bearer $token")
+            val orderIdBody = orderId.toRequestBody("text/plain".toMediaType())
+            val barcodeBody = barcode.toRequestBody("text/plain".toMediaType())
+            val destinationLockerIdBody = destinationLockerId.toRequestBody("text/plain".toMediaType())
+            val cellIdBody = cellId.toRequestBody("text/plain".toMediaType())
+
+            val photos = try {
+                val bytes = context.assets.open("placeholder_deposit.jpg").readBytes()
+                val requestBody = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData(
+                    name = "photos",
+                    filename = "placeholder_deposit.jpg",
+                    body = requestBody
+                )
+                listOf(part)
+            } catch (e: Exception) {
+                Log.w(TAG, "Placeholder photo not found in assets, sending without photo", e)
+                emptyList<MultipartBody.Part>()
+            }
+
+            apiService.courierDropoffAtLocker(orderIdBody, barcodeBody, destinationLockerIdBody, cellIdBody, photos, "Bearer $token")
         }
     }
 

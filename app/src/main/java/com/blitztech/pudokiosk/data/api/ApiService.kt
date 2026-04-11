@@ -183,15 +183,18 @@ interface ApiService {
 
     /**
      * Courier drops parcel at destination PUDO locker.
-     * POST /api/v1/orders/{orderId}/dropoff?barcode=...&destinationLockerId=...
+     * POST /api/v1/transactions/courier/dropoff
      */
-    @POST
+    @Multipart
+    @POST(ApiEndpoints.COURIER_DROPOFF_LOCKER)
     suspend fun courierDropoffAtLocker(
-        @Url url: String,
-        @Query("barcode") barcode: String,
-        @Query("destinationLockerId") destinationLockerId: String,
+        @Part("orderId") orderId: RequestBody,
+        @Part("waybillNumber") waybillNumber: RequestBody,
+        @Part("destinationLockerId") destinationLockerId: RequestBody,
+        @Part("cellId") cellId: RequestBody,
+        @Part photos: List<MultipartBody.Part>,
         @Header("Authorization") token: String
-    ): Response<CourierOpsResponse>
+    ): Response<com.blitztech.pudokiosk.data.api.dto.common.ApiResponse>
 
     /**
      * View today's route (orders assigned to this courier).

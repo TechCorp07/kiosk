@@ -206,13 +206,14 @@ class CourierDeliverActivity : BaseKioskActivity() {
             // Mark cell as occupied locally immediately to prevent double-assignment
             ZimpudoApp.database.cells().markCellOccupied(cell.cellUuid)
 
-            openLockerForDropoff(cell.physicalDoorNumber, orderId, barcode, lockerUuid)
+            openLockerForDropoff(cell.physicalDoorNumber, cell.cellUuid, orderId, barcode, lockerUuid)
         }
     }
 
     // ── Open locker ──────────────────────────────────────────────
     private fun openLockerForDropoff(
         cellNumber: Int,
+        cellUuid: String,
         orderId: String,
         barcode: String,
         destinationLockerId: String
@@ -227,7 +228,7 @@ class CourierDeliverActivity : BaseKioskActivity() {
                     // Simulate waiting 3 seconds for door close
                     delay(3000)
                     hw.speaker.playSuccessChime()
-                    confirmDropoffWithBackend(orderId, barcode, destinationLockerId)
+                    confirmDropoffWithBackend(orderId, barcode, destinationLockerId, cellUuid)
                     return@launch
                 }
 
@@ -282,7 +283,7 @@ class CourierDeliverActivity : BaseKioskActivity() {
                             hw.speaker.stopDoorCloseReminder()
                             hw.speaker.playSuccessChime()
                             // Confirm with backend after door close
-                            confirmDropoffWithBackend(orderId, barcode, destinationLockerId)
+                            confirmDropoffWithBackend(orderId, barcode, destinationLockerId, cellUuid)
                         }
                     )
                 }
@@ -293,16 +294,15 @@ class CourierDeliverActivity : BaseKioskActivity() {
         }
     }
 
-    private fun confirmDropoffWithBackend(orderId: String, barcode: String, destinationLockerId: String) {
+    private fun confirmDropoffWithBackend(orderId: String, barcode: String, destinationLockerId: String, cellUuid: String) {
         lifecycleScope.launch {
             val token = prefs.getAccessToken() ?: ""
-            val dropoffUrl = ApiEndpoints.getCourierDropoffUrl(orderId)
 
-            val result = api.courierDropoffAtLocker(dropoffUrl, barcode, destinationLockerId, token)
+            val result = api.courierDropoffAtLocker(orderId, barcode, destinationLockerId, cellUuid, token)
 
             if (result !is NetworkResult.Success || !result.data.success) {
                 // Write to outbox for background retry
-                writeDropoffToOutbox(orderId, barcode, destinationLockerId)
+                writeDropoffToOutbox(orderId, barcode, destinationLockerId, cellUuid)
                 android.util.Log.w(TAG, "Dropoff confirmation queued to outbox for $barcode")
             }
 
@@ -310,9 +310,9 @@ class CourierDeliverActivity : BaseKioskActivity() {
         }
     }
 
-    private suspend fun writeDropoffToOutbox(orderId: String, barcode: String, destinationLockerId: String) {
+    private suspend fun writeDropoffToOutbox(orderId: String, barcode: String, destinationLockerId: String, cellUuid: String) {
         try {
-            val payload = """{"orderId":"$orderId","barcode":"$barcode","destinationLockerId":"$destinationLockerId"}"""
+            val payload = """{"orderId":"$orderId","barcode":"$barcode","destinationLockerId":"$destinationLockerId","cellId":"$cellUuid"}"""
             val event = OutboxEventEntity(
                 idempotencyKey = "dropoff_${barcode}_${System.currentTimeMillis()}",
                 type = "courier_dropoff",

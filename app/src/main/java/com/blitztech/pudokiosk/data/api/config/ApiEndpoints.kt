@@ -50,13 +50,11 @@ object ApiEndpoints {
     const val SENDER_DROPOFF = "api/v1/transactions/sender/dropoff"
     // Locker-service courier endpoints
     const val COURIER_PICKUP_LOCKER = "api/v1/transactions/courier/pickup"     // No body — courier identity from JWT
-    // const val COURIER_DROPOFF_LOCKER = "api/v1/transactions/courier/dropoff" // Alternative to orders-service dropoff
+    const val COURIER_DROPOFF_LOCKER = "api/v1/transactions/courier/dropoff"
 
     // ── Orders Service – Courier kiosk operations ────────────────
     // POST /api/v1/orders/{orderId}/pickup-scan?barcode=...   → marks PICKED_UP
     const val COURIER_PICKUP_SCAN = "api/v1/orders/{orderId}/pickup-scan"
-    // POST /api/v1/orders/{orderId}/dropoff?barcode=...&destinationLockerId=... → AWAITING_COLLECTION
-    const val COURIER_DROPOFF_AT_LOCKER = "api/v1/orders/{orderId}/dropoff"
     // POST /api/v1/orders/and-search  { trackingNumber: "..." } → resolve orderId from barcode
     const val ORDER_SEARCH = "api/v1/orders/and-search"
     // GET /api/v1/orders/couriers?page=0&size=50 → View routes assigned to courier
@@ -90,9 +88,6 @@ object ApiEndpoints {
 
     fun getCourierPickupScanUrl(orderId: String): String =
         COURIER_PICKUP_SCAN.replace("{orderId}", orderId)
-
-    fun getCourierDropoffUrl(orderId: String): String =
-        COURIER_DROPOFF_AT_LOCKER.replace("{orderId}", orderId)
 
     fun getCourierIssueUrl(orderId: String): String =
         COURIER_ISSUE.replace("{orderId}", orderId)

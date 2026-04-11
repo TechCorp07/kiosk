@@ -117,17 +117,17 @@ class SyncWorker(
                 result is NetworkResult.Success
             }
 
-            // ── Courier dropoff at locker (orders-service) ──────────────────────
+            // ── Courier dropoff at locker (transactions) ──────────────────────
             "courier_dropoff" -> {
                 val map = moshi.adapter(Map::class.java).fromJson(event.payloadJson)
                     ?: return false
                 @Suppress("UNCHECKED_CAST")
                 val m = map as Map<String, Any?>
-                val dropoffUrl = m["dropoffUrl"] as? String
-                    ?: ApiEndpoints.getCourierDropoffUrl(m["orderId"] as? String ?: return false)
+                val orderId = m["orderId"] as? String ?: return false
                 val barcode = m["barcode"] as? String ?: return false
-                val lockerId = m["lockerId"] as? String ?: return false
-                val result = api.courierDropoffAtLocker(dropoffUrl, barcode, lockerId, token)
+                val lockerId = m["destinationLockerId"] as? String ?: return false
+                val cellId = m["cellId"] as? String ?: return false
+                val result = api.courierDropoffAtLocker(orderId, barcode, lockerId, cellId, token)
                 result is NetworkResult.Success
             }
 
