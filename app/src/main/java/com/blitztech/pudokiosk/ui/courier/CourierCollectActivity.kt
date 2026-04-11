@@ -102,7 +102,7 @@ class CourierCollectActivity : BaseKioskActivity() {
                         val packages = response.data.pickedUpPackages ?: emptyList()
                         // Upsert into local database
                         packages.forEach { pkg ->
-                            if (!pkg.orderId.isNullOrBlank() && !pkg.waybillNumber.isNullOrBlank()) {
+                            if (!pkg.orderId.isNullOrBlank()) {
                                 db.parcels().upsert(
                                     com.blitztech.pudokiosk.data.db.ParcelEntity(
                                         id = pkg.cellId ?: java.util.UUID.randomUUID().toString(),

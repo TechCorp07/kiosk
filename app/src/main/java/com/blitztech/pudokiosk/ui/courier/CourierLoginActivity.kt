@@ -100,6 +100,13 @@ class CourierLoginActivity : BaseKioskActivity() {
                             navigateToOtpVerification(mobile, pin, resp.accessToken)
                         }
                         AuthStatus.AUTHENTICATED -> {
+                            // Validate role from JWT before granting dashboard access
+                            val tokenRole = com.blitztech.pudokiosk.utils.JwtUtils.extractRole(resp.accessToken)
+                            if (tokenRole != "COURIER" && tokenRole != "SYS_ADMIN" && tokenRole != "PUDO_ADMIN") {
+                                showError("Unauthorized: Please use the Customer login screen.")
+                                return@launch
+                            }
+
                             // Direct authentication (no OTP required for this account)
                             prefs.saveAuthData(
                                 accessToken = resp.accessToken.orEmpty(),

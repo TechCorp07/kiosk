@@ -229,13 +229,24 @@ class PackageDetailsFragment : Fragment() {
 
             if (length > 0 && width > 0 && height > 0) {
                 val size = PackageSize.fromDimensions(length, width, height)
-                binding.tvCalculatedSize.text = "Calculated Size: ${size.displayName}"
-                binding.tvCalculatedSize.visibility = View.VISIBLE
+                if (size != null) {
+                    binding.tvCalculatedSize.text = "Calculated Size: ${size.displayName}"
+                    binding.tvCalculatedSize.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), com.blitztech.pudokiosk.R.color.text_primary))
+                    binding.tvCalculatedSize.visibility = View.VISIBLE
+                    binding.btnNext.isEnabled = true
+                } else {
+                    binding.tvCalculatedSize.text = "Error: Package exceeds maximum locker size!"
+                    binding.tvCalculatedSize.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), com.blitztech.pudokiosk.R.color.error))
+                    binding.tvCalculatedSize.visibility = View.VISIBLE
+                    binding.btnNext.isEnabled = false
+                }
             } else {
                 binding.tvCalculatedSize.visibility = View.GONE
+                binding.btnNext.isEnabled = true
             }
         } catch (e: Exception) {
             binding.tvCalculatedSize.visibility = View.GONE
+            binding.btnNext.isEnabled = true
         }
     }
 
@@ -272,6 +283,17 @@ class PackageDetailsFragment : Fragment() {
                     .show()
             isValid = false
         }
+        
+        // Block if dimensions are physically too large for the locker
+        val lengthInMeters = (length ?: 0.0) / 1000.0
+        val widthInMeters = (width ?: 0.0) / 1000.0
+        val heightInMeters = (height ?: 0.0) / 1000.0
+        if (lengthInMeters > 0 && widthInMeters > 0 && heightInMeters > 0) {
+            if (PackageSize.fromDimensions(lengthInMeters, widthInMeters, heightInMeters) == null) {
+                Toast.makeText(requireContext(), "Your package is too large to fit in any of our lockers here. Please correct your dimensions.", Toast.LENGTH_LONG).show()
+                isValid = false
+            }
+        }
 
         return isValid
     }
@@ -302,12 +324,12 @@ class PackageDetailsFragment : Fragment() {
                 }
 
         // Package size (derived from dimensions)
-        data.packageSize =
-                PackageSize.fromDimensions(
-                        data.packageLength,
-                        data.packageWidth,
-                        data.packageHeight
-                )
+        val computedSize = PackageSize.fromDimensions(
+            data.packageLength,
+            data.packageWidth,
+            data.packageHeight
+        ) ?: PackageSize.XXL // fallback just in case, though validateInputs prevents it
+        data.packageSize = computedSize
 
         // Currency
         data.currency = Currency.values()[binding.spinnerCurrency.selectedItemPosition]

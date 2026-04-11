@@ -117,31 +117,41 @@ data class PaymentSearchResult(
     @Json(name = "paymentReference") val paymentReference: String? = null
 )
 
-// Enum for package sizes with dimension thresholds
+// Enum for package sizes with actual hardware dimension thresholds (in meters)
+// Hardware Depth=0.46m, Width=0.408m
 enum class PackageSize(
     val displayName: String,
-    val maxLength: Double,
-    val maxWidth: Double,
-    val maxHeight: Double
+    val dim1: Double,
+    val dim2: Double,
+    val dim3: Double
 ) {
-    XS("Extra Small", 0.15, 0.15, 0.10),
-    S("Small", 0.30, 0.25, 0.20),
-    M("Medium", 0.50, 0.40, 0.30),
-    L("Large", 0.70, 0.60, 0.50),
-    XL("Extra Large", 1.00, 0.80, 0.70);
+    XS("Extra Small", 0.460, 0.408, 0.051),
+    S("Small", 0.460, 0.408, 0.127),
+    M("Medium", 0.460, 0.408, 0.278),
+    L("Large", 0.460, 0.408, 0.430),
+    XL("Extra Large", 0.460, 0.408, 0.580),
+    XXL("Double Extra Large", 0.460, 0.408, 0.760);
 
     companion object {
         /**
-         * Determine package size based on dimensions (in meters)
+         * Determine package size based on dimensions (in meters).
+         * Package can be rotated, so we sort the user dimensions and the locker dimensions
+         * to see if the package can physically fit inside the cell.
          */
-        fun fromDimensions(length: Double, width: Double, height: Double): PackageSize {
-            return when {
-                length <= XS.maxLength && width <= XS.maxWidth && height <= XS.maxHeight -> XS
-                length <= S.maxLength && width <= S.maxWidth && height <= S.maxHeight -> S
-                length <= M.maxLength && width <= M.maxWidth && height <= M.maxHeight -> M
-                length <= L.maxLength && width <= L.maxWidth && height <= L.maxHeight -> L
-                else -> XL
+        fun fromDimensions(length: Double, width: Double, height: Double): PackageSize? {
+            val userDims = listOf(length, width, height).sorted()
+            
+            for (size in values()) {
+                val boxDims = listOf(size.dim1, size.dim2, size.dim3).sorted()
+                
+                // Check if all user dimensions fit inside the sorted box dimensions
+                if (userDims[0] <= boxDims[0] && userDims[1] <= boxDims[1] && userDims[2] <= boxDims[2]) {
+                    return size
+                }
             }
+            
+            // Exceeds maximum physical hardware size
+            return null
         }
     }
 }

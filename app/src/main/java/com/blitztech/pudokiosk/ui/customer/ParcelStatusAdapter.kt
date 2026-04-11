@@ -33,7 +33,14 @@ class ParcelStatusAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val parcel = parcels[position]
-        holder.tvTracking.text = parcel.trackingCode
+        
+        val displayTracking = if (parcel.trackingCode.length >= 8) {
+            "ZIM-" + parcel.trackingCode.takeLast(8).uppercase()
+        } else {
+            parcel.trackingCode
+        }
+        holder.tvTracking.text = displayTracking
+        
         holder.tvStatus.text = parcel.status.replace("_", " ")
         holder.tvLocker.text = if ((parcel.lockNumber ?: 0) > 0) "Locker ${parcel.lockNumber}" else "—"
         holder.tvSize.text = parcel.parcelSize

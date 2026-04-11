@@ -143,6 +143,11 @@ class SignInActivity : BaseKioskActivity() {
                         AuthStatus.AUTHENTICATED -> {
                             // First-time user - needs to change PIN
                             response.accessToken?.let { token ->
+                                val tokenRole = com.blitztech.pudokiosk.utils.JwtUtils.extractRole(token)
+                                if (tokenRole != "CUSTOMER") {
+                                    showError("Unauthorized: Please log in through the correct user portal.")
+                                    return@launch
+                                }
                                 navigateToFirstTimePinChange(token)
                             } ?: run {
                                 showError("Authentication error: Missing access token")

@@ -1,126 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="@color/background_primary"
+    android:orientation="vertical">
 
     <!-- Header row -->
     <LinearLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/zimpudo_primary"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:padding="16dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white" />
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            app:tint="@color/white" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_gravity="center_horizontal|center_vertical"
             android:layout_weight="1"
             android:text="Pickup Packages"
+            android:textAlignment="center"
             android:textColor="@color/white"
-            android:textSize="30sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
+
+        <!-- Placeholder for symmetry -->
+        <View
+            android:layout_width="64dp"
+            android:layout_height="64dp" />
     </LinearLayout>
 
-    <!-- Status (used in scan mode and complete mode) -->
-    <TextView
-        android:id="@+id/tvStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/bg_status_card"
-        android:gravity="center"
-        android:padding="16dp"
-        android:textColor="@color/white"
-        android:textSize="22sp"
-        android:visibility="gone" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp"
-        android:visibility="gone" />
-
-    <!-- Parcel selection group -->
     <LinearLayout
-        android:id="@+id/parcelListGroup"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:padding="24dp">
 
+        <!-- Status (used in scan mode and complete mode) -->
         <TextView
+            android:id="@+id/tvStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Select parcels to collect:"
-            android:textColor="@color/text_secondary"
-            android:textSize="20sp" />
+            android:background="@drawable/bg_status_card"
+            android:gravity="center"
+            android:padding="16dp"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:visibility="gone" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvParcels"
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+        <!-- Parcel selection group -->
+        <LinearLayout
+            android:id="@+id/parcelListGroup"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:visibility="gone">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select parcels to collect:"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                android:textSize="20sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvParcels"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="16dp"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStartCollection"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="16dp"
+                android:enabled="false"
+                android:text="Start Collection"
+                android:textSize="28sp"
+                android:backgroundTint="@color/zimpudo_primary" />
+        </LinearLayout>
+
+        <!-- Scan group (shown during scan phase) -->
+        <LinearLayout
+            android:id="@+id/scanGroup"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_barcode_scan"
+                app:tint="@color/zimpudo_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Waiting for barcode scan…"
+                android:textColor="@color/text_secondary"
+                android:textSize="20sp" />
+        </LinearLayout>
+
+        <!-- Finish button (shown after completion) -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnStartCollection"
+            android:id="@+id/btnFinish"
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:layout_marginTop="16dp"
-            android:enabled="false"
-            android:text="Start Collection"
-            android:textSize="28sp" />
+            android:text="Finish &amp; Return"
+            android:textSize="28sp"
+            android:backgroundTint="@color/zimpudo_primary"
+            android:visibility="gone" />
+
     </LinearLayout>
-
-    <!-- Scan group (shown during scan phase) -->
-    <LinearLayout
-        android:id="@+id/scanGroup"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <ImageView
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:src="@drawable/ic_barcode_scan"
-            android:tint="@color/zimpudo_primary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Waiting for barcode scan…"
-            android:textColor="@color/text_secondary"
-            android:textSize="20sp" />
-    </LinearLayout>
-
-    <!-- Finish button (shown after completion) -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnFinish"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:layout_marginTop="16dp"
-        android:text="Finish &amp; Return"
-        android:textSize="28sp"
-        android:visibility="gone" />
 
 </LinearLayout>

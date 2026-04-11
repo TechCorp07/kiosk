@@ -73,7 +73,7 @@ class CustomerMainActivity : BaseKioskActivity() {
                     }
 
                     // 2. Check for orders needing physical drop-off
-                    val dropOffStatuses = setOf("LOCKER_RESERVED", "AWAITING_DEPOSIT", "AWAITING_COURIER")
+                    val dropOffStatuses = setOf("LOCKER_RESERVED", "AWAITING_DEPOSIT")
                     val pendingOrder = page.content.firstOrNull { it.status in dropOffStatuses }
 
                     if (pendingOrder != null) {

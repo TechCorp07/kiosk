@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="@color/background_primary"
+    android:orientation="vertical">
 
     <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/zimpudo_primary"
         android:gravity="center_vertical"
+        android:padding="16dp"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Back"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white" />
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            app:tint="@color/white" />
 
         <TextView
             android:layout_width="0dp"
@@ -31,56 +35,70 @@
             android:textColor="@color/white"
             android:textSize="30sp"
             android:textStyle="bold" />
+
+        <!-- Placeholder for symmetry -->
+        <View
+            android:layout_width="64dp"
+            android:layout_height="64dp" />
     </LinearLayout>
 
-    <!-- Delivery counter -->
-    <TextView
-        android:id="@+id/tvDeliveredCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Parcels delivered this session: 0"
-        android:textColor="@color/text_secondary"
-        android:textSize="20sp" />
-
-    <!-- Central scan area -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/ic_barcode_scan"
-            android:tint="@color/zimpudo_primary" />
-
-        <!-- Status text -->
+        <!-- Delivery counter -->
         <TextView
-            android:id="@+id/tvStatus"
+            android:id="@+id/tvDeliveredCount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_status_card"
-            android:gravity="center"
-            android:padding="20dp"
-            android:text="Scan a parcel barcode to begin drop-off"
-            android:textColor="@color/white"
-            android:textSize="26sp"
-            android:visibility="visible" />
-    </LinearLayout>
+            android:layout_marginTop="8dp"
+            android:text="Parcels delivered this session: 0"
+            android:textColor="@color/text_secondary"
+            android:textSize="20sp" />
 
-    <!-- Finish button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnFinishDropoff"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:layout_marginTop="16dp"
-        android:text="Finish Drop-off Session"
-        android:textSize="28sp"
-        android:textColor="@color/zimpudo_primary" />
+        <!-- Central scan area -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_barcode_scan"
+                app:tint="@color/zimpudo_primary" />
+
+            <!-- Status text -->
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_status_card"
+                android:gravity="center"
+                android:padding="20dp"
+                android:text="Scan a parcel barcode to begin drop-off"
+                android:textColor="@color/white"
+                android:textSize="26sp"
+                android:visibility="visible" />
+        </LinearLayout>
+
+        <!-- Finish button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFinishDropoff"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginTop="16dp"
+            android:text="Finish Drop-off Session"
+            android:textSize="28sp"
+            android:textColor="@color/zimpudo_primary"
+            app:strokeColor="@color/zimpudo_primary" />
+
+    </LinearLayout>
 
 </LinearLayout>

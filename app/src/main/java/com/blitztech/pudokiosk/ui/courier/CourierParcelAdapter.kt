@@ -35,7 +35,15 @@ class CourierParcelAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val parcel = parcels[position]
-        holder.tvTracking.text = parcel.tracking
+        
+        // Format the long UUID into a clean tracking number (e.g. ZIM-A053BF6F)
+        val displayTracking = if (parcel.tracking.length >= 8) {
+            "ZIM-" + parcel.tracking.takeLast(8).uppercase()
+        } else {
+            parcel.tracking
+        }
+        holder.tvTracking.text = displayTracking
+        
         holder.tvDetails.text = "${parcel.recipientName}  •  ${parcel.size}"
         holder.tvLocker.text = "Locker ${parcel.lockNumber}"
         holder.cbSelect.isChecked = selected.contains(parcel.parcelId)

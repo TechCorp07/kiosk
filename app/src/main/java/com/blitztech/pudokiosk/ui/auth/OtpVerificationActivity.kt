@@ -169,8 +169,19 @@ class OtpVerificationActivity : BaseKioskActivity() {
                     val response = result.data
                     when (response.status) {
                         AuthStatus.AUTHENTICATED -> {
+                            val tokenRole = com.blitztech.pudokiosk.utils.JwtUtils.extractRole(response.accessToken)
+                            
+                            // Prevent crossing user flows
+                            if (userType == UserType.COURIER && tokenRole != "COURIER" && tokenRole != "SYS_ADMIN" && tokenRole != "PUDO_ADMIN") {
+                                showError("Unauthorized: Please use the Customer login screen.")
+                                return@launch
+                            } else if (userType == UserType.CUSTOMER && tokenRole == "COURIER") {
+                                showError("Unauthorized: Please use the Courier login screen.")
+                                return@launch
+                            }
+                            
                             // Save authentication data and navigate to main menu
-                            saveUserDataAndNavigate(response.accessToken, response.refreshToken)
+                            saveUserDataAndNavigate(response.accessToken ?: "", response.refreshToken ?: "")
                         }
                         AuthStatus.FAILED -> {
                             showError(getString(R.string.error_invalid_otp))

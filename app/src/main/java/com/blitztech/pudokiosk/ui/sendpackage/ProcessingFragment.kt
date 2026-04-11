@@ -126,6 +126,27 @@ class ProcessingFragment : Fragment() {
 
             if (isApproved) {
                 val data = sendPackageActivity.sendPackageData
+                
+                // If it's a walk-in, the backend might not have assigned a cellId yet.
+                // We must query the local Room DB to find an available cell and assign it.
+                if (assignedCellId.isBlank() || assignedCellNumber == 0) {
+                    try {
+                        val lockerUuid = prefs.getPrimaryLockerUuid()
+                        val localCell = com.blitztech.pudokiosk.ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
+                        if (localCell != null) {
+                            assignedCellId = localCell.cellUuid
+                            assignedCellNumber = localCell.physicalDoorNumber
+                            // Mark cell as occupied locally to prevent double assignment
+                            com.blitztech.pudokiosk.ZimpudoApp.database.cells().markCellOccupied(localCell.cellUuid)
+                            android.util.Log.i("ProcessingFragment", "Walk-in locally assigned cellId: $assignedCellId (door $assignedCellNumber)")
+                        } else {
+                            android.util.Log.e("ProcessingFragment", "No available cells found in local DB!")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("ProcessingFragment", "Error fetching local cell", e)
+                    }
+                }
+
                 if (assignedCellId.isNotBlank()) data.cellId = assignedCellId
                 if (assignedCellNumber > 0) data.assignedLockNumber = assignedCellNumber
 
