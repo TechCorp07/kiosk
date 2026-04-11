@@ -291,6 +291,10 @@ class CustomTG2480HIIIDriver(
         bold: Boolean = false,
         centered: Boolean = false
     ): Result<Boolean> = withContext(Dispatchers.IO) {
+        if (Build.FINGERPRINT.contains("generic")) {
+            Log.d(TAG, "EMULATOR BYPASS: printText -> '$text'")
+            return@withContext Result.success(true)
+        }
         try {
             ensureConnected()
 
@@ -346,6 +350,10 @@ class CustomTG2480HIIIDriver(
      * Print barcode using bitmap generation + Custom API printImage
      */
     suspend fun printBarcode(config: BarcodeConfig): Result<Boolean> = withContext(Dispatchers.IO) {
+        if (Build.FINGERPRINT.contains("generic")) {
+            Log.d(TAG, "EMULATOR BYPASS: printBarcode -> '${config.data}'")
+            return@withContext Result.success(true)
+        }
         try {
             ensureConnected()
 
@@ -586,6 +594,10 @@ class CustomTG2480HIIIDriver(
      * Feed and cut paper
      */
     suspend fun feedAndCut(): Result<Boolean> = withContext(Dispatchers.IO) {
+        if (Build.FINGERPRINT.contains("generic")) {
+            Log.d(TAG, "EMULATOR BYPASS: feedAndCut")
+            return@withContext Result.success(true)
+        }
         try {
             ensureConnected()
 
