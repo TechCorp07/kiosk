@@ -33,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_md"
-                android:text="Payment"
+                android:text="@string/auto_payment"
                 android:textColor="@color/text_primary"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -56,7 +56,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_sm"
-                        android:text="Order Summary"
+                        android:text="@string/auto_order_summary"
                         android:textColor="@color/text_primary"
                         android:textSize="28sp"
                         android:textStyle="bold" />
@@ -65,7 +65,7 @@
                         android:id="@+id/tvOrderId"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Order ID: ORD-123456"
+                        android:text="@string/auto_order_id_ord_123456"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
@@ -73,7 +73,7 @@
                         android:id="@+id/tvRecipient"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="To: John Doe"
+                        android:text="@string/auto_to_john_doe"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
@@ -81,7 +81,7 @@
                         android:id="@+id/tvPackageSize"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Size: Medium"
+                        android:text="@string/auto_size_medium"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
@@ -89,7 +89,7 @@
                         android:id="@+id/tvDistance"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Distance: 15 km"
+                        android:text="@string/auto_distance_15_km"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
@@ -108,7 +108,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Total Amount:"
+                            android:text="@string/auto_total_amount"
                             android:textColor="@color/text_primary"
                             android:textSize="28sp"
                             android:textStyle="bold" />
@@ -117,7 +117,7 @@
                             android:id="@+id/tvPrice"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="$10.00"
+                            android:text="@string/auto_10_00"
                             android:textColor="@color/zimpudo_primary"
                             android:textSize="36sp"
                             android:textStyle="bold" />
@@ -127,7 +127,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/spacing_xs"
-                            android:text="USD"
+                            android:text="@string/auto_usd"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -139,7 +139,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Payment Method"
+                android:text="@string/auto_payment_method"
                 android:textColor="@color/text_secondary"
                 android:textSize="20sp" />
 
@@ -166,7 +166,7 @@
                     android:id="@+id/etPaymentMobile"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Mobile Money Number"
+                    android:hint="@string/auto_mobile_money_number"
                     android:inputType="phone"
                     android:textSize="22sp"
                     android:maxLines="1" />
@@ -179,7 +179,7 @@
                 android:layout_marginTop="@dimen/spacing_md"
                 android:background="@color/info_light"
                 android:padding="@dimen/spacing_md"
-                android:text="Processing..."
+                android:text="@string/auto_processing"
                 android:textAlignment="center"
                 android:textColor="@color/info"
                 android:textSize="20sp"
@@ -204,7 +204,7 @@
             android:layout_height="80dp"
             android:layout_marginEnd="@dimen/spacing_sm"
             android:layout_weight="1"
-            android:text="Back"
+            android:text="@string/auto_back"
             android:textSize="24sp"
             android:textColor="@color/zimpudo_primary"
             app:strokeColor="@color/zimpudo_primary" />
@@ -216,7 +216,7 @@
             android:layout_marginStart="@dimen/spacing_sm"
             android:layout_weight="1"
             android:backgroundTint="@color/success"
-            android:text="Pay Now"
+            android:text="@string/auto_pay_now"
             android:textSize="24sp"
             android:textColor="@color/white" />
     </LinearLayout>

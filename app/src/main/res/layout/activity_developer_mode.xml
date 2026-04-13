@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Developer Mode"
+                android:text="@string/auto_developer_mode"
                 android:textColor="@color/text_white"
                 android:textSize="28sp"
                 android:textStyle="bold" />
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_lg"
             android:gravity="center"
-            android:text="Advanced developer and debug configuration"
+            android:text="@string/auto_advanced_developer_and_debug_c"
             android:textColor="@color/text_white"
             android:textSize="20sp" />
 
@@ -66,7 +66,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_sm"
-                    android:text="Feature Flags"
+                    android:text="@string/auto_feature_flags"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -76,7 +76,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_xs"
-                    android:text="Simulate hardware (RS485 &amp; Scanner)"
+                    android:text="@string/auto_simulate_hardware_rs485_amp_sc"
                     android:textColor="@color/text_primary" />
 
                 <CheckBox
@@ -84,7 +84,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_xs"
-                    android:text="Enable verbose debug logging"
+                    android:text="@string/auto_enable_verbose_debug_logging"
                     android:textColor="@color/text_primary" />
 
                 <CheckBox
@@ -92,7 +92,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_xs"
-                    android:text="Use mock API responses (offline mode)"
+                    android:text="@string/auto_use_mock_api_responses_offline"
                     android:textColor="@color/text_primary" />
 
                 <CheckBox
@@ -100,14 +100,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_xs"
-                    android:text="Use mock GPS location (dev only)"
+                    android:text="@string/auto_use_mock_gps_location_dev_only"
                     android:textColor="@color/text_primary" />
 
                 <CheckBox
                     android:id="@+id/chkSkipOtp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Skip OTP verification (dev only)"
+                    android:text="@string/auto_skip_otp_verification_dev_only"
                     android:textColor="@color/text_primary" />
 
             </LinearLayout>
@@ -131,7 +131,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_sm"
-                    android:text="Environment"
+                    android:text="@string/auto_environment"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -146,21 +146,21 @@
                         android:id="@+id/rbEnvProduction"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Production (68.183.176.201:8222)"
+                        android:text="@string/auto_production_68_183_176_201_8222"
                         android:textColor="@color/text_primary" />
 
                     <RadioButton
                         android:id="@+id/rbEnvStaging"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Staging (staging.zimpudo.com:8222)"
+                        android:text="@string/auto_staging_staging_zimpudo_com_82"
                         android:textColor="@color/text_primary" />
 
                     <RadioButton
                         android:id="@+id/rbEnvLocal"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Local (192.168.1.x:8222)"
+                        android:text="@string/auto_local_192_168_1_x_8222"
                         android:textColor="@color/text_primary" />
 
                 </RadioGroup>
@@ -170,7 +170,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
-                    android:hint="Custom Base URL">
+                    android:hint="@string/auto_custom_base_url">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etCustomUrl"
@@ -202,7 +202,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_sm"
-                    android:text="Log Level"
+                    android:text="@string/auto_log_level"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -217,7 +217,7 @@
                     android:id="@+id/tvCurrentLogLevel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Current: INFO"
+                    android:text="@string/auto_current_info"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp" />
 
@@ -242,7 +242,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_sm"
-                    android:text="Performance Monitor"
+                    android:text="@string/auto_performance_monitor"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -253,7 +253,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_sm"
                     android:fontFamily="monospace"
-                    android:text="Loading..."
+                    android:text="@string/auto_loading"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -262,7 +262,7 @@
                     style="@style/Button.Secondary"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
-                    android:text="Refresh Stats" />
+                    android:text="@string/auto_refresh_stats" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -285,7 +285,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/spacing_sm"
-                    android:text="Build Information"
+                    android:text="@string/auto_build_information"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -295,7 +295,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
-                    android:text="Loading..."
+                    android:text="@string/auto_loading"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp" />
 
@@ -309,7 +309,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/button_height"
             android:layout_marginBottom="@dimen/spacing_md"
-            android:text="Save Developer Settings" />
+            android:text="@string/auto_save_developer_settings" />
 
         <!-- Last saved info -->
         <TextView
@@ -318,7 +318,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_lg"
             android:gravity="center"
-            android:text="No settings saved yet"
+            android:text="@string/auto_no_settings_saved_yet"
             android:textColor="@color/text_white"
             android:textSize="16sp" />
 

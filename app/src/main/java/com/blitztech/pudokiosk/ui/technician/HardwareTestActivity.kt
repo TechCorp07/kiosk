@@ -150,7 +150,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         // RS485 Communication Events
         btnClearLockerLog.setOnClickListener {
             lockerController.clearLog()
-            tvLockerLog.text = "Log cleared."
+            tvLockerLog.text = getString(R.string.auto_kt_log_cleared)
         }
         btnConnectLocker.setOnClickListener { connectToLockerController() }
         btnTestCommunication.setOnClickListener { testLockerCommunication() }
@@ -262,7 +262,7 @@ class HardwareTestActivity : BaseKioskActivity() {
 
                 if (success) {
                     lockerConnected = true
-                    btnConnectLocker.text = "Disconnect"
+                    btnConnectLocker.text = getString(R.string.auto_kt_disconnect)
                     updateLockerStatus("✅ Connected to Locker Controller")
 
                     // Enable other buttons
@@ -296,7 +296,7 @@ class HardwareTestActivity : BaseKioskActivity() {
             try {
                 lockerController.disconnect()
                 lockerConnected = false
-                btnConnectLocker.text = "Connect"
+                btnConnectLocker.text = getString(R.string.auto_kt_connect)
                 updateLockerStatus("🔌 Disconnected from Locker Controller")
 
                 // Disable other buttons
@@ -464,7 +464,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         // Show confirmation dialog for emergency unlock
         AlertDialog.Builder(this)
             .setTitle("⚠️ Emergency Unlock")
-            .setMessage("This will attempt to unlock ALL 16 locks. Continue?")
+            .setMessage(getString(R.string.auto_rem_this_will_attempt_to_unlock_al))
             .setPositiveButton("YES, UNLOCK ALL") { _, _ ->
                 performEmergencyUnlock()
             }
@@ -574,7 +574,7 @@ class HardwareTestActivity : BaseKioskActivity() {
         }
 
         isListening = true
-        btnStartListening.text = "Stop Listening"
+        btnStartListening.text = getString(R.string.auto_kt_stop_listening)
         updateSerialStatus("👂 Listening for incoming data...")
 
         lifecycleScope.launch {
@@ -593,13 +593,13 @@ class HardwareTestActivity : BaseKioskActivity() {
 
     private fun stopListening() {
         isListening = false
-        btnStartListening.text = "Start Listening"
+        btnStartListening.text = getString(R.string.auto_kt_start_listening)
         updateSerialStatus("👂 Listening stopped")
     }
 
     private fun clearCommunicationLog() {
         rs485Driver.clearLog()
-        tvCommLog.text = "Communication log cleared\n"
+        tvCommLog.text = getString(R.string.auto_kt_communication_log_cleared_n)
         updateSerialStatus("🧹 Log cleared")
     }
 

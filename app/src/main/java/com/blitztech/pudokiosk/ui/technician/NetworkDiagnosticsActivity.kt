@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
@@ -52,8 +54,8 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = "Network Diagnostics"
-        binding.tvSubtitle.text = "Network connectivity and performance testing"
+        binding.tvTitle.text = getString(R.string.auto_kt_network_diagnostics)
+        binding.tvSubtitle.text = getString(R.string.auto_kt_network_connectivity_and_perfo)
         binding.tvLastUpdated.text = "Last updated: ${dateFormatter.format(Date())}"
     }
 

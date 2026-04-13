@@ -12,7 +12,7 @@
         android:layout_width="@dimen/onboarding_image_size"
         android:layout_height="@dimen/onboarding_image_size"
         android:layout_marginBottom="@dimen/spacing_xl"
-        android:contentDescription="Onboarding illustration"
+        android:contentDescription="@string/auto_rem_onboarding_illustration"
         android:scaleType="centerCrop" />
 
     <!-- Slide Title -->
@@ -24,7 +24,7 @@
         android:layout_marginBottom="@dimen/spacing_lg"
         android:textColor="@color/text_white"
         android:gravity="center"
-        android:text="Slide Title" />
+        android:text="@string/auto_slide_title" />
 
     <!-- Slide Subtitle -->
     <TextView
@@ -35,6 +35,6 @@
         android:textColor="@color/text_white"
         android:gravity="center"
         android:lineSpacingMultiplier="1.4"
-        android:text="Slide subtitle text goes here with detailed description of the feature" />
+        android:text="@string/auto_slide_subtitle_text_goes_here_" />
 
 </LinearLayout>

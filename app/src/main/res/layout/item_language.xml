@@ -30,7 +30,7 @@
                 android:id="@+id/tvLanguageName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="English"
+                android:text="@string/auto_english"
                 android:textColor="@color/text_primary"
                 android:textSize="66sp"
                 android:textStyle="bold" />
@@ -40,7 +40,7 @@
                 android:id="@+id/tvLanguageNative"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="English"
+                android:text="@string/auto_english"
                 android:textColor="@color/text_secondary"
                 android:textSize="60sp" />
         </LinearLayout>

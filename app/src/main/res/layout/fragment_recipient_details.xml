@@ -36,7 +36,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_lg"
-                android:text="Enter Recipient Details"
+                android:text="@string/auto_enter_recipient_details"
                 android:textColor="@color/text_primary"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -228,7 +228,7 @@
             android:layout_height="80dp"
             android:layout_marginEnd="@dimen/spacing_sm"
             android:layout_weight="1"
-            android:text="Back"
+            android:text="@string/auto_back"
             android:textSize="24sp"
             android:textColor="@color/zimpudo_primary"
             app:strokeColor="@color/zimpudo_primary" />
@@ -240,7 +240,7 @@
             android:layout_marginStart="@dimen/spacing_sm"
             android:layout_weight="1"
             android:backgroundTint="@color/zimpudo_primary"
-            android:text="Next"
+            android:text="@string/auto_next"
             android:textSize="24sp"
             android:textColor="@color/white" />
     </LinearLayout>

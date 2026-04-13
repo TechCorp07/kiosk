@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -44,8 +46,8 @@ class RemoteSupportActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = "Remote Support"
-        binding.tvSubtitle.text = "Enable remote assistance and generate support codes"
+        binding.tvTitle.text = getString(R.string.auto_kt_remote_support)
+        binding.tvSubtitle.text = getString(R.string.auto_kt_enable_remote_assistance_and_g)
         binding.tvLastUpdated.text = "Last updated: ${dateFormatter.format(Date())}"
     }
 
@@ -211,8 +213,8 @@ Timestamp: ${dateFormatter.format(Date())}
 
     private fun updateSessionUI() {
         if (supportSessionActive) {
-            binding.btnStartSession.text = "End Session"
-            binding.tvSessionStatus.text = "🟢 Support session is ACTIVE"
+            binding.btnStartSession.text = getString(R.string.auto_kt_end_session)
+            binding.tvSessionStatus.text = getString(R.string.auto_kt_support_session_is_active)
             binding.tvSessionDetails.text = """
 Remote technician can now:
 • View system diagnostics
@@ -224,8 +226,8 @@ Session started: ${dateFormatter.format(Date())}
 Support Code: $supportCode
             """.trimIndent()
         } else {
-            binding.btnStartSession.text = "Start Session"
-            binding.tvSessionStatus.text = "⚪ No active session"
+            binding.btnStartSession.text = getString(R.string.auto_kt_start_session)
+            binding.tvSessionStatus.text = getString(R.string.auto_kt_no_active_session)
             binding.tvSessionDetails.text = """
 Click 'Start Session' to enable remote support.
 
@@ -349,7 +351,7 @@ Additional Context:
     }
 
     private fun refreshSupportInfo() {
-        binding.tvLastUpdated.text = "Refreshing..."
+        binding.tvLastUpdated.text = getString(R.string.auto_kt_refreshing)
         loadDeviceInfo()
     }
 

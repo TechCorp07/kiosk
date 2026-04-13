@@ -21,13 +21,13 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:tint="@color/white"
-            android:contentDescription="Back" />
+            android:contentDescription="@string/auto_rem_back" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Courier Profile"
+            android:text="@string/auto_courier_profile"
             android:textColor="@color/white"
             android:textSize="30sp"
             android:textStyle="bold"
@@ -62,7 +62,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Courier Details"
+                        android:text="@string/auto_courier_details"
                         android:textSize="22sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
@@ -71,7 +71,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Mobile Number"
+                        android:text="@string/auto_mobile_number"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
@@ -86,7 +86,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="User Type"
+                        android:text="@string/auto_user_type"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
@@ -101,7 +101,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Assigned Kiosk"
+                        android:text="@string/auto_assigned_kiosk"
                         android:textSize="20sp"
                         android:textColor="@color/text_secondary" />
 
@@ -131,7 +131,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Change PIN"
+                        android:text="@string/auto_change_pin"
                         android:textSize="22sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
@@ -143,7 +143,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        android:hint="Current PIN">
+                        android:hint="@string/auto_current_pin">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etOldPin"
@@ -160,7 +160,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        android:hint="New PIN">
+                        android:hint="@string/auto_new_pin">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etNewPin"
@@ -177,7 +177,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:hint="Confirm New PIN">
+                        android:hint="@string/auto_confirm_new_pin">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etConfirmPin"
@@ -199,7 +199,7 @@
                         android:id="@+id/btnChangePin"
                         android:layout_width="match_parent"
                         android:layout_height="120dp"
-                        android:text="Change PIN"
+                        android:text="@string/auto_change_pin"
                         android:textSize="28sp" />
 
                 </LinearLayout>

@@ -52,7 +52,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Quick Registration" />
+                android:text="@string/auto_quick_registration" />
 
             <!-- Subtitle -->
             <TextView
@@ -61,7 +61,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_lg"
-                android:text="Please provide your details for this sending process." />
+                android:text="@string/auto_please_provide_your_details_fo" />
 
             <!-- Personal Information Section -->
             <TextView

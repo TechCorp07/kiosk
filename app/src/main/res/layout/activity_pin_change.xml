@@ -51,7 +51,7 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="@dimen/spacing_lg"
                 android:src="@drawable/ic_pin_security"
-                android:contentDescription="PIN security" />
+                android:contentDescription="@string/auto_rem_pin_security" />
 
             <!-- Title -->
             <TextView

@@ -27,7 +27,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|center_vertical"
-                android:text="Tracking History"
+                android:text="@string/auto_tracking_history"
                 android:textColor="@color/white"
                 android:textSize="48sp"
                 android:textStyle="bold" />
@@ -41,7 +41,7 @@
                 android:src="@drawable/ic_arrow_back"
                 android:scaleType="fitCenter"
                 android:tint="@color/white"
-                android:contentDescription="Close" />
+                android:contentDescription="@string/auto_rem_close" />
         </FrameLayout>
 
         <!-- Loading -->

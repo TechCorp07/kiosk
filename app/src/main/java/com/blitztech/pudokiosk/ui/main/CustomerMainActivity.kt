@@ -121,8 +121,8 @@ class CustomerMainActivity : BaseKioskActivity() {
         val btnCancelOrder = dialogView.findViewById<Button>(R.id.btnCancelOrder)
         val btnResumePayment = dialogView.findViewById<Button>(R.id.btnResumePayment)
 
-        tvTitle.text = "📦 Pending Order Found"
-        tvMessage.text = "You have an unpaid order that needs attention:\n\n" +
+        tvTitle.text = getString(R.string.auto_kt_pending_order_found)
+        tvMessage.text = getString(R.string.auto_kt_you_have_an_unpaid_order_that_) +
                 "Tracking: ${order.trackingNumber ?: "N/A"}\n" +
                 "Recipient: $recipientText\n" +
                 "Amount: $amountText\n" +
@@ -182,13 +182,13 @@ class CustomerMainActivity : BaseKioskActivity() {
         val btnCancelOrder = dialogView.findViewById<Button>(R.id.btnCancelOrder)
         val btnResumePayment = dialogView.findViewById<Button>(R.id.btnResumePayment)
 
-        tvTitle.text = "⚠️ Confirm Cancellation"
-        tvMessage.text = "Are you sure you want to cancel this order?\n\n" +
+        tvTitle.text = getString(R.string.auto_kt_confirm_cancellation)
+        tvMessage.text = getString(R.string.auto_kt_are_you_sure_you_want_to_cance) +
                 "Tracking: ${order.trackingNumber ?: "N/A"}\n\n" +
                 "This action cannot be undone."
 
-        btnLater.text = "No, Keep Order"
-        btnCancelOrder.text = "Yes, Cancel Order"
+        btnLater.text = getString(R.string.auto_kt_no_keep_order)
+        btnCancelOrder.text = getString(R.string.auto_kt_yes_cancel_order)
         btnResumePayment.visibility = android.view.View.GONE
 
         val dialog = AlertDialog.Builder(this)
@@ -219,7 +219,7 @@ class CustomerMainActivity : BaseKioskActivity() {
                     is NetworkResult.Success -> {
                         Toast.makeText(
                             this@CustomerMainActivity,
-                            "Order cancelled successfully.",
+                            getString(R.string.auto_rem_order_cancelled_successfully),
                             Toast.LENGTH_SHORT
                         ).show()
                         checkPendingOrders()

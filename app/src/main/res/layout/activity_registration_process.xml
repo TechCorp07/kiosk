@@ -50,7 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_lg"
-                android:text="Step 1 of 2: Creating Account"
+                android:text="@string/auto_step_1_of_2_creating_account"
                 android:textColor="@color/zimpudo_primary"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -63,7 +63,7 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="@dimen/spacing_lg"
                 android:src="@drawable/ic_document_verification"
-                android:contentDescription="Document verification" />
+                android:contentDescription="@string/auto_rem_document_verification" />
 
             <!-- Title -->
             <TextView
@@ -132,7 +132,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="For this kiosk setup, we'll use a placeholder document as no camera is available."
+                        android:text="@string/auto_for_this_kiosk_setup_we_ll_use"
                         android:textColor="@color/text_secondary"
                         android:textSize="20sp"
                         android:lineSpacingMultiplier="1.3" />

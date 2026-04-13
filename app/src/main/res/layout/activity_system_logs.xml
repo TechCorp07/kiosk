@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="System Logs"
+            android:text="@string/auto_system_logs"
             android:textColor="@color/text_white"
             android:textSize="48sp"
             android:textStyle="bold" />
@@ -47,7 +47,7 @@
         android:layout_marginHorizontal="@dimen/spacing_md"
         android:layout_marginBottom="@dimen/spacing_lg"
         android:gravity="center"
-        android:text="Application and system diagnostic logs"
+        android:text="@string/auto_application_and_system_diagnos"
         android:textColor="@color/text_white"
         android:textSize="28sp" />
 
@@ -74,7 +74,7 @@
                 android:layout_height="36dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
-                android:text="All"
+                android:text="@string/auto_all"
                 android:textSize="16sp" />
 
             <Button
@@ -84,7 +84,7 @@
                 android:layout_height="36dp"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
-                android:text="Errors"
+                android:text="@string/auto_errors"
                 android:textSize="16sp" />
 
             <Button
@@ -94,7 +94,7 @@
                 android:layout_height="36dp"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
-                android:text="Warnings"
+                android:text="@string/auto_warnings"
                 android:textSize="16sp" />
 
             <Button
@@ -104,7 +104,7 @@
                 android:layout_height="36dp"
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
-                android:text="Info"
+                android:text="@string/auto_info"
                 android:textSize="16sp" />
         </LinearLayout>
 
@@ -124,7 +124,7 @@
                 android:layout_marginEnd="8dp"
                 android:drawableStart="@drawable/ic_refresh"
                 android:drawablePadding="8dp"
-                android:text="Refresh"
+                android:text="@string/auto_refresh"
                 android:textSize="20sp" />
 
             <Button
@@ -134,7 +134,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
-                android:text="Clear"
+                android:text="@string/auto_clear"
                 android:textSize="20sp" />
 
             <Button
@@ -144,7 +144,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Export"
+                android:text="@string/auto_export"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -154,7 +154,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_sm"
-            android:text="Last updated: --"
+            android:text="@string/auto_last_updated"
             android:textColor="@color/text_secondary"
             android:textSize="16sp" />
 
@@ -171,7 +171,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
-                android:text="Loading logs..."
+                android:text="@string/auto_loading_logs"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textIsSelectable="true" />

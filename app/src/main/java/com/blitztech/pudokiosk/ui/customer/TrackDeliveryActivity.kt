@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.customer
 
+import com.blitztech.pudokiosk.R
+
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -38,7 +40,7 @@ class TrackDeliveryActivity : BaseKioskActivity() {
             if (trackingNum.isNotEmpty()) {
                 showTrackingDetails(trackingNum)
             } else {
-                Toast.makeText(this, "Please enter a tracking number", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.auto_rem_please_enter_a_tracking_number), Toast.LENGTH_SHORT).show()
             }
         }
         

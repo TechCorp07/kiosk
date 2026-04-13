@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.customer
 
+import com.blitztech.pudokiosk.R
+
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -161,17 +163,17 @@ class CustomerAccountActivity : BaseKioskActivity() {
     private fun validatePin(old: String, new: String, confirm: String): Boolean {
         var ok = true
         if (old.length != 6) {
-            binding.tilOldPin.error = "Current PIN must be 6 digits"
+            binding.tilOldPin.error = getString(R.string.auto_rem_current_pin_must_be_6_digits)
             ok = false
         } else binding.tilOldPin.error = null
 
         if (new.length != 6) {
-            binding.tilNewPin.error = "New PIN must be 6 digits"
+            binding.tilNewPin.error = getString(R.string.auto_rem_new_pin_must_be_6_digits)
             ok = false
         } else binding.tilNewPin.error = null
 
         if (new != confirm) {
-            binding.tilConfirmPin.error = "PINs do not match"
+            binding.tilConfirmPin.error = getString(R.string.auto_rem_pins_do_not_match)
             ok = false
         } else binding.tilConfirmPin.error = null
 

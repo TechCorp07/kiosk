@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
@@ -35,8 +37,8 @@ class DataManagementActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = "Data Management"
-        binding.tvSubtitle.text = "Clear cache, logs, and manage app data"
+        binding.tvTitle.text = getString(R.string.auto_kt_data_management)
+        binding.tvSubtitle.text = getString(R.string.auto_kt_clear_cache_logs_and_manage_ap)
         binding.tvLastUpdated.text = "Last updated: ${dateFormatter.format(Date())}"
     }
 

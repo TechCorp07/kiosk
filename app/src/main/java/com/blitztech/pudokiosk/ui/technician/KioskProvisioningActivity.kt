@@ -155,7 +155,7 @@ class KioskProvisioningActivity : AppCompatActivity() {
         // Save the OTP locally — it will be sent to the backend with the provision request.
         // The backend validates it, not the kiosk.
         dailyOtpCode = entered
-        Toast.makeText(this, "Code captured — enter locker details", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.auto_rem_code_captured_enter_locker_det), Toast.LENGTH_SHORT).show()
         showStep2()
     }
 
@@ -231,7 +231,7 @@ class KioskProvisioningActivity : AppCompatActivity() {
 
                         setStatus("✅ Kiosk provisioned: ${body.lockerCount} lockers, ${body.totalCells} cells")
                         Toast.makeText(this@KioskProvisioningActivity,
-                            "✅ Kiosk provisioned successfully!",
+                            getString(R.string.auto_rem_kiosk_provisioned_successfully),
                             Toast.LENGTH_LONG).show()
 
                         // Navigate to main UI
@@ -305,7 +305,7 @@ class KioskProvisioningActivity : AppCompatActivity() {
     private fun requestAllPermissions() {
         val missing = REQUIRED_PERMISSIONS.filter { !isPermGranted(it) }
         if (missing.isEmpty()) {
-            Toast.makeText(this, "All permissions already granted ✅", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.auto_rem_all_permissions_already_grante), Toast.LENGTH_SHORT).show()
             refreshPermissionStatus()
             return
         }
@@ -325,7 +325,7 @@ class KioskProvisioningActivity : AppCompatActivity() {
                 .filter { it.second != PackageManager.PERMISSION_GRANTED }
                 .map { it.first.substringAfterLast('.') }
             if (denied.isEmpty()) {
-                Toast.makeText(this, "✅ All permissions granted!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.auto_rem_all_permissions_granted), Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "⚠️ Still denied: ${denied.joinToString()}", Toast.LENGTH_LONG).show()
             }

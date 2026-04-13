@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -58,9 +60,9 @@ class SystemLogsActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = "System Logs"
-        binding.tvSubtitle.text = "Application and hardware diagnostic logs (filtered)"
-        binding.tvLogsContent.text = "Loading filtered logs..."
+        binding.tvTitle.text = getString(R.string.auto_kt_system_logs)
+        binding.tvSubtitle.text = getString(R.string.auto_kt_application_and_hardware_diagn)
+        binding.tvLogsContent.text = getString(R.string.auto_kt_loading_filtered_logs)
         binding.tvLastUpdated.text = "Last updated: ${dateFormatter.format(Date())}"
     }
 
@@ -104,7 +106,7 @@ class SystemLogsActivity : BaseKioskActivity() {
     }
 
     private fun refreshLogs() {
-        binding.tvLastUpdated.text = "Refreshing..."
+        binding.tvLastUpdated.text = getString(R.string.auto_kt_refreshing)
         loadLogsWithFilter("*")
     }
 
@@ -239,7 +241,7 @@ class SystemLogsActivity : BaseKioskActivity() {
     }
 
     private fun clearLogs() {
-        binding.tvLogsContent.text = "Logs cleared.\n\nNew log entries will appear here.\n" +
+        binding.tvLogsContent.text = getString(R.string.auto_kt_logs_cleared_n_nnew_log_entrie) +
                 "Audio system logs will be automatically filtered."
         binding.tvLastUpdated.text = "Cleared: ${dateFormatter.format(Date())}"
         showToast("Logs cleared - audio filtering active")

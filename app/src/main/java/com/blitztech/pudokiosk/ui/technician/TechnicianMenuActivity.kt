@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -36,8 +38,8 @@ class TechnicianMenuActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = "Technician Diagnostics"
-        binding.tvSubtitle.text = "Select diagnostic tool or setting"
+        binding.tvTitle.text = getString(R.string.auto_kt_technician_diagnostics)
+        binding.tvSubtitle.text = getString(R.string.auto_kt_select_diagnostic_tool_or_sett)
         updateMaintenanceButton()
         updateVersionInfo()
     }
@@ -45,12 +47,12 @@ class TechnicianMenuActivity : BaseKioskActivity() {
     private fun updateMaintenanceButton() {
         val inMaintenance = ZimpudoApp.prefs.isMaintenanceMode()
         if (inMaintenance) {
-            binding.tvMaintenanceLabel.text = "Exit Maintenance"
+            binding.tvMaintenanceLabel.text = getString(R.string.auto_kt_exit_maintenance)
             binding.cardMaintenance.setCardBackgroundColor(
                 resources.getColor(com.blitztech.pudokiosk.R.color.warning_light, theme)
             )
         } else {
-            binding.tvMaintenanceLabel.text = "Maintenance Mode"
+            binding.tvMaintenanceLabel.text = getString(R.string.auto_kt_maintenance_mode)
             binding.cardMaintenance.setCardBackgroundColor(
                 resources.getColor(com.blitztech.pudokiosk.R.color.white, theme)
             )
@@ -128,18 +130,18 @@ class TechnicianMenuActivity : BaseKioskActivity() {
         if (currentlyInMaintenance) {
             // Exiting maintenance mode — re-lock the kiosk
             KioskLockManager.setMaintenanceMode(this, false)
-            Toast.makeText(this, "Maintenance mode OFF — Kiosk will re-lock", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.auto_rem_maintenance_mode_off_kiosk_wil), Toast.LENGTH_LONG).show()
         } else {
             // Entering maintenance mode — unlock the kiosk
             KioskLockManager.setMaintenanceMode(this, true)
-            Toast.makeText(this, "Maintenance mode ON — You can now access the system", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.auto_rem_maintenance_mode_on_you_can_no), Toast.LENGTH_LONG).show()
         }
 
         updateMaintenanceButton()
     }
 
     private fun checkForUpdates() {
-        Toast.makeText(this, "Checking for updates...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.auto_rem_checking_for_updates), Toast.LENGTH_SHORT).show()
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -161,14 +163,14 @@ class TechnicianMenuActivity : BaseKioskActivity() {
                     if (!success) {
                         Toast.makeText(
                             this@TechnicianMenuActivity,
-                            "Update download failed. Please try again.",
+                            getString(R.string.auto_rem_update_download_failed_please_),
                             Toast.LENGTH_LONG
                         ).show()
                     }
                 } else {
                     Toast.makeText(
                         this@TechnicianMenuActivity,
-                        "App is up to date!",
+                        getString(R.string.auto_rem_app_is_up_to_date),
                         Toast.LENGTH_SHORT
                     ).show()
                 }

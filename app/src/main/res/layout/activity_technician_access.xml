@@ -64,7 +64,7 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="@dimen/spacing_lg"
                 android:src="@drawable/ic_settings"
-                android:contentDescription="Technician Access" />
+                android:contentDescription="@string/auto_rem_technician_access" />
 
             <!-- Welcome Title -->
             <TextView
@@ -73,7 +73,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:gravity="center"
-                android:text="Technician Access"
+                android:text="@string/auto_technician_access"
                 android:textColor="@color/text_primary"
                 android:textSize="60sp"
                 android:textStyle="bold" />
@@ -84,7 +84,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_xl"
                 android:gravity="center"
-                android:text="Enter technician credentials to access diagnostic tools"
+                android:text="@string/auto_enter_technician_credentials_t"
                 android:textColor="@color/text_secondary"
                 android:textSize="32sp" />
 
@@ -104,7 +104,7 @@
                     android:id="@+id/etUsername"
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
-                    android:hint="Username"
+                    android:hint="@string/auto_username"
                     android:inputType="textNoSuggestions"
                     android:textSize="32sp"
                     android:maxLines="1" />
@@ -127,7 +127,7 @@
                     android:id="@+id/etPassword"
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
-                    android:hint="Password"
+                    android:hint="@string/auto_password"
                     android:inputType="textPassword"
                     android:textSize="32sp"
                     android:maxLines="1" />
@@ -147,7 +147,7 @@
                     android:layout_gravity="center"
                     android:layout_marginStart="100dp"
                     android:layout_marginEnd="100dp"
-                    android:text="Login"
+                    android:text="@string/auto_login"
                     android:textSize="78sp" />
 
                 <!-- If you add a progress bar later, it's nice to have the FrameLayout ready -->

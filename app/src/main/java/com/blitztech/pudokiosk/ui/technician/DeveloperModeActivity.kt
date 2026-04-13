@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -156,7 +158,7 @@ class DeveloperModeActivity : BaseKioskActivity() {
         val savedAt = dateFormatter.format(Date())
         binding.tvLastSaved.text = "Last saved: $savedAt"
 
-        Toast.makeText(this, "Developer settings saved", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.auto_rem_developer_settings_saved), Toast.LENGTH_SHORT).show()
     }
 
     // ─── Performance Stats ───────────────────────────────────────────────────

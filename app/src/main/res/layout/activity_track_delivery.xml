@@ -18,7 +18,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="My Parcels"
+            android:text="@string/auto_my_parcels"
             android:textColor="@color/white"
             android:textSize="60sp"
             android:textStyle="bold"
@@ -31,7 +31,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:tint="@color/white"
-            android:contentDescription="Back" />
+            android:contentDescription="@string/auto_rem_back" />
     </LinearLayout>
 
     <!-- Search Bar for Manual Tracking -->
@@ -59,7 +59,7 @@
                 android:id="@+id/etSearchTracking"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
-                android:hint="Enter Tracking Number"
+                android:hint="@string/auto_enter_tracking_number"
                 android:inputType="textCapCharacters"
                 android:textSize="32sp"
                 android:maxLines="1" />
@@ -69,7 +69,7 @@
             android:id="@+id/btnSearchTracking"
             android:layout_width="200dp"
             android:layout_height="120dp"
-            android:text="Search"
+            android:text="@string/auto_search"
             android:textSize="32sp"
             android:textColor="@color/white"
             android:backgroundTint="@color/zimpudo_secondary"
@@ -110,12 +110,12 @@
                     android:layout_height="160dp"
                     android:src="@drawable/ic_pickup"
                     android:alpha="0.3"
-                    android:contentDescription="No parcels" />
+                    android:contentDescription="@string/auto_rem_no_parcels" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="No parcels found"
+                    android:text="@string/auto_no_parcels_found"
                     android:textSize="48sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="24dp" />

@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.courier
 
+import com.blitztech.pudokiosk.R
+
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -68,7 +70,7 @@ class CourierStatusUpdateActivity : BaseKioskActivity() {
         binding.btnReport.setOnClickListener {
             val tracking = binding.etTrackingNumber.text.toString().trim()
             if (tracking.isEmpty()) {
-                binding.tilTrackingNumber.error = "Please scan or enter a tracking number"
+                binding.tilTrackingNumber.error = getString(R.string.auto_rem_please_scan_or_enter_a_trackin)
                 return@setOnClickListener
             }
             binding.tilTrackingNumber.error = null

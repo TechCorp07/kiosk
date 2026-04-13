@@ -54,7 +54,7 @@ class SendPackageActivity : BaseKioskActivity() {
         } else {
             Toast.makeText(
                 this,
-                "Location permission denied. Cannot get sender location.",
+                getString(R.string.auto_rem_location_permission_denied_can),
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -259,7 +259,7 @@ class SendPackageActivity : BaseKioskActivity() {
     private fun showExitConfirmation() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Cancel Package Sending")
-            .setMessage("Are you sure you want to cancel? All entered data will be lost.")
+            .setMessage(getString(R.string.auto_rem_are_you_sure_you_want_to_cance))
             .setPositiveButton("Yes, Cancel") { _, _ ->
                 finishSafely()
             }
@@ -312,7 +312,7 @@ class SendPackageActivity : BaseKioskActivity() {
                     sendPackageData.senderLongitude = prefs.getKioskLongitude()
                     Toast.makeText(
                         this,
-                        "Using Provisioned Kiosk Location.",
+                        getString(R.string.auto_rem_using_provisioned_kiosk_locati),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -320,7 +320,7 @@ class SendPackageActivity : BaseKioskActivity() {
         } catch (e: Exception) {
             sendPackageData.senderLatitude = prefs.getKioskLatitude()
             sendPackageData.senderLongitude = prefs.getKioskLongitude()
-            Toast.makeText(this, "Location error. Using provisioned kiosk location.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.auto_rem_location_error_using_provision), Toast.LENGTH_SHORT).show()
         }
     }
 

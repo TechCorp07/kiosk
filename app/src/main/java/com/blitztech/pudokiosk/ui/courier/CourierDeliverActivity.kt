@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.courier
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -120,7 +122,7 @@ class CourierDeliverActivity : BaseKioskActivity() {
     private fun showManualScanDialog() {
         val input = android.widget.EditText(this)
         input.inputType = android.text.InputType.TYPE_CLASS_TEXT
-        input.hint = "Tracking Number / Barcode"
+        input.hint = getString(R.string.auto_rem_tracking_number_barcode)
         android.app.AlertDialog.Builder(this)
             .setTitle("Manual Barcode Input (DEV BYPASS)")
             .setView(input)

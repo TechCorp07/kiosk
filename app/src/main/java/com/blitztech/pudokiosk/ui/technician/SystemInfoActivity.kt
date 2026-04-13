@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.app.ActivityManager
 import android.content.Intent
 import android.os.Build
@@ -40,8 +42,8 @@ class SystemInfoActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = "System Information"
-        binding.tvSubtitle.text = "Hardware and software specifications"
+        binding.tvTitle.text = getString(R.string.auto_kt_system_information)
+        binding.tvSubtitle.text = getString(R.string.auto_kt_hardware_and_software_specific)
         binding.tvLastUpdated.text = "Last updated: ${dateFormatter.format(Date())}"
     }
 

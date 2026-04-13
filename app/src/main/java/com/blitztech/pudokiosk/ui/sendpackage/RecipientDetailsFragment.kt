@@ -226,14 +226,14 @@ class RecipientDetailsFragment : Fragment() {
         // Name
         val name = binding.etRecipientName.text.toString().trim()
         if (name.isEmpty()) {
-            binding.tilRecipientName.error = "Name is required"
+            binding.tilRecipientName.error = getString(R.string.auto_rem_name_is_required)
             isValid = false
         }
 
         // Surname
         val surname = binding.etRecipientSurname.text.toString().trim()
         if (surname.isEmpty()) {
-            binding.tilRecipientSurname.error = "Surname is required"
+            binding.tilRecipientSurname.error = getString(R.string.auto_rem_surname_is_required)
             isValid = false
         }
 
@@ -254,26 +254,26 @@ class RecipientDetailsFragment : Fragment() {
         // House Number
         val houseNumber = binding.etHouseNumber.text.toString().trim()
         if (houseNumber.isEmpty()) {
-            binding.tilHouseNumber.error = "House number is required"
+            binding.tilHouseNumber.error = getString(R.string.auto_rem_house_number_is_required)
             isValid = false
         }
 
         // Street
         val street = binding.etStreet.text.toString().trim()
         if (street.isEmpty()) {
-            binding.tilStreet.error = "Street is required"
+            binding.tilStreet.error = getString(R.string.auto_rem_street_is_required)
             isValid = false
         }
 
         // City
         if (binding.spinnerCity.selectedItemPosition == 0) {
-            Toast.makeText(requireContext(), "Please select a city", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.auto_rem_please_select_a_city), Toast.LENGTH_SHORT).show()
             isValid = false
         }
 
         // Suburb
         if (binding.spinnerSuburb.selectedItemPosition == 0 || filteredSuburbs.isEmpty()) {
-            Toast.makeText(requireContext(), "Please select a suburb", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.auto_rem_please_select_a_suburb), Toast.LENGTH_SHORT).show()
             isValid = false
         }
 

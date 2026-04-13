@@ -38,7 +38,7 @@
                     android:layout_gravity="end"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_logout"
-                    android:contentDescription="Logout"
+                    android:contentDescription="@string/auto_rem_logout"
                     app:tint="@color/white" />
             </FrameLayout>
 
@@ -49,7 +49,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:gravity="center"
-                android:text="Welcome, Customer!"
+                android:text="@string/auto_welcome_customer"
                 android:textColor="@color/text_white"
                 android:textSize="32sp"
                 android:textStyle="bold" />
@@ -59,7 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Select an option to proceed"
+                android:text="@string/auto_select_an_option_to_proceed"
                 android:textColor="@color/text_white"
                 android:textSize="22sp" />
         </LinearLayout>
@@ -110,7 +110,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="Send Package"
+                            android:text="@string/auto_send_package"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -119,7 +119,7 @@
                             android:id="@+id/tvSendDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Send packages nationwide with secure delivery"
+                            android:text="@string/auto_send_packages_nationwide_with_"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -173,7 +173,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="Drop-off Reserved Package"
+                            android:text="@string/auto_drop_off_reserved_package"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -182,7 +182,7 @@
                             android:id="@+id/tvDropoffReservedDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="You have a pending package to deposit into the locker."
+                            android:text="@string/auto_you_have_a_pending_package_to_"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -234,7 +234,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="Track Delivery"
+                            android:text="@string/auto_track_delivery"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -243,7 +243,7 @@
                             android:id="@+id/tvTrackDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Track your packages in real-time"
+                            android:text="@string/auto_track_your_packages_in_real_ti"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -294,7 +294,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="My Account"
+                            android:text="@string/auto_my_account"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -303,7 +303,7 @@
                             android:id="@+id/tvAccountDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Manage your profile and delivery history"
+                            android:text="@string/auto_manage_your_profile_and_delive"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>

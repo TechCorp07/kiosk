@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_xl"
                 android:gravity="center"
-                android:text="My Account"
+                android:text="@string/auto_my_account"
                 android:textColor="@color/text_primary"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -81,7 +81,7 @@
                     android:id="@+id/etName"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="First Name"
+                    android:hint="@string/auto_first_name"
                     android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -99,7 +99,7 @@
                     android:id="@+id/etSurname"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Surname"
+                    android:hint="@string/auto_surname"
                     android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -117,7 +117,7 @@
                     android:id="@+id/etEmail"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Email (Optional)"
+                    android:hint="@string/auto_email_optional"
                     android:inputType="textEmailAddress"
                     android:textSize="22sp"
                     android:maxLines="1" />
@@ -136,7 +136,7 @@
                     android:id="@+id/etMobileNumber"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Mobile Number (e.g. +263...)"
+                    android:hint="@string/auto_mobile_number_e_g_263"
                     android:inputType="phone"
                     android:textSize="22sp"
                     android:maxLines="1" />
@@ -155,7 +155,7 @@
                     android:id="@+id/etNationalId"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="National ID (e.g. 29-279774-Q-13)"
+                    android:hint="@string/auto_national_id_e_g_29_279774_q_13"
                     android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -173,7 +173,7 @@
                     android:id="@+id/etHouseNumber"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="House/Street Number"
+                    android:hint="@string/auto_house_street_number"
                     android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -191,7 +191,7 @@
                     android:id="@+id/etStreet"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Street Name"
+                    android:hint="@string/auto_street_name"
                     android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -209,7 +209,7 @@
                     android:id="@+id/etSuburb"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Suburb"
+                    android:hint="@string/auto_suburb"
                     android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -227,7 +227,7 @@
                     android:id="@+id/etCity"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="City"
+                    android:hint="@string/auto_city"
                     android:textSize="22sp"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -244,7 +244,7 @@
                     android:layout_gravity="center"
                     android:layout_marginStart="100dp"
                     android:layout_marginEnd="100dp"
-                    android:text="Save Profile"
+                    android:text="@string/auto_save_profile"
                     android:textSize="24sp" />
                 <ProgressBar
                     android:id="@+id/progressBarProfile"
@@ -268,7 +268,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_xl"
                 android:gravity="center"
-                android:text="Change PIN"
+                android:text="@string/auto_change_pin"
                 android:textColor="@color/text_primary"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -287,7 +287,7 @@
                     android:id="@+id/etOldPin"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Current PIN"
+                    android:hint="@string/auto_current_pin"
                     android:inputType="numberPassword"
                     android:maxLength="4"
                     android:textSize="22sp" />
@@ -307,7 +307,7 @@
                     android:id="@+id/etNewPin"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="New PIN (4 digits)"
+                    android:hint="@string/auto_new_pin_4_digits"
                     android:inputType="numberPassword"
                     android:maxLength="4"
                     android:textSize="22sp" />
@@ -327,7 +327,7 @@
                     android:id="@+id/etConfirmPin"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Confirm New PIN"
+                    android:hint="@string/auto_confirm_new_pin"
                     android:inputType="numberPassword"
                     android:maxLength="4"
                     android:textSize="22sp" />
@@ -345,7 +345,7 @@
                     android:layout_gravity="center"
                     android:layout_marginStart="100dp"
                     android:layout_marginEnd="100dp"
-                    android:text="Change PIN"
+                    android:text="@string/auto_change_pin"
                     android:textSize="24sp" />
                 <ProgressBar
                     android:id="@+id/progressBar"

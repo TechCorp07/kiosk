@@ -38,7 +38,7 @@
                     android:layout_gravity="end"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_logout"
-                    android:contentDescription="Logout"
+                    android:contentDescription="@string/auto_rem_logout"
                     app:tint="@color/white" />
             </FrameLayout>
 
@@ -49,7 +49,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
                 android:gravity="center"
-                android:text="Welcome, Courier!"
+                android:text="@string/auto_welcome_courier"
                 android:textColor="@color/text_white"
                 android:textSize="32sp"
                 android:textStyle="bold" />
@@ -59,7 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Ready to make deliveries?"
+                android:text="@string/auto_ready_to_make_deliveries"
                 android:textColor="@color/text_white"
                 android:textSize="22sp" />
         </LinearLayout>
@@ -116,7 +116,7 @@
                                 android:id="@+id/tvPickupPackages"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Pickup Packages"
+                                android:text="@string/auto_pickup_packages"
                                 android:textColor="@color/text_primary"
                                 android:textSize="26sp"
                                 android:textStyle="bold" />
@@ -141,7 +141,7 @@
                             android:id="@+id/tvPickupDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Collect packages from this kiosk location"
+                            android:text="@string/auto_collect_packages_from_this_kio"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -193,7 +193,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="Deliver Packages"
+                            android:text="@string/auto_deliver_packages"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -202,7 +202,7 @@
                             android:id="@+id/tvDeliverDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Drop off packages at this kiosk location"
+                            android:text="@string/auto_drop_off_packages_at_this_kios"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -254,7 +254,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="View My Route"
+                            android:text="@string/auto_view_my_route"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -263,7 +263,7 @@
                             android:id="@+id/tvRouteDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="See your assigned delivery route and schedule"
+                            android:text="@string/auto_see_your_assigned_delivery_rou"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -315,7 +315,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="Update Status"
+                            android:text="@string/auto_update_status"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -324,7 +324,7 @@
                             android:id="@+id/tvStatusDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Update delivery status and add notes"
+                            android:text="@string/auto_update_delivery_status_and_add"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>
@@ -375,7 +375,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacing_sm"
-                            android:text="My Profile"
+                            android:text="@string/auto_my_profile"
                             android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
@@ -384,7 +384,7 @@
                             android:id="@+id/tvProfileDescription"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Manage your courier profile and performance"
+                            android:text="@string/auto_manage_your_courier_profile_an"
                             android:textColor="@color/text_secondary"
                             android:textSize="20sp" />
                     </LinearLayout>

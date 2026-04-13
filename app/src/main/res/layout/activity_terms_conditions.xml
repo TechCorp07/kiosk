@@ -51,7 +51,7 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="@dimen/spacing_lg"
                 android:src="@drawable/ic_privacy"
-                android:contentDescription="Privacy policy" />
+                android:contentDescription="@string/auto_rem_privacy_policy" />
 
             <!-- Title -->
             <TextView

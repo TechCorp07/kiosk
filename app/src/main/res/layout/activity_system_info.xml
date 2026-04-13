@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="System Information"
+            android:text="@string/auto_system_information"
             android:textColor="@color/text_white"
             android:textSize="48sp"
             android:textStyle="bold" />
@@ -49,7 +49,7 @@
             android:layout_marginHorizontal="@dimen/spacing_md"
             android:layout_marginBottom="@dimen/spacing_lg"
             android:gravity="center"
-            android:text="Hardware and software specifications"
+            android:text="@string/auto_hardware_and_software_specific"
             android:textColor="@color/text_white"
             android:textSize="28sp" />
 
@@ -78,7 +78,7 @@
                 android:layout_marginEnd="8dp"
                 android:drawableStart="@drawable/ic_refresh"
                 android:drawablePadding="8dp"
-                android:text="Refresh"
+                android:text="@string/auto_refresh"
                 android:textSize="20sp" />
 
             <Button
@@ -88,7 +88,7 @@
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Export"
+                android:text="@string/auto_export"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -126,7 +126,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Android\nSystem"
+                        android:text="@string/auto_android_nsystem"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -159,7 +159,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Memory &amp;\nStorage"
+                        android:text="@string/auto_memory_amp_nstorage"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -192,7 +192,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="CPU &amp;\nHardware"
+                        android:text="@string/auto_cpu_amp_nhardware"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -206,7 +206,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_sm"
-            android:text="Last updated: --"
+            android:text="@string/auto_last_updated"
             android:textColor="@color/text_secondary"
             android:textSize="16sp" />
 
@@ -223,7 +223,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
-                android:text="Loading system information..."
+                android:text="@string/auto_loading_system_information"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textIsSelectable="true" />

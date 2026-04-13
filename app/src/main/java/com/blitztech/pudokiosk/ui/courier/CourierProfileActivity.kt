@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.courier
 
+import com.blitztech.pudokiosk.R
+
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
@@ -35,7 +37,7 @@ class CourierProfileActivity : BaseKioskActivity() {
 
     private fun setupViews() {
         binding.tvCourierMobile.text = prefs.getUserMobile() ?: "—"
-        binding.tvCourierType.text   = "Courier"
+        binding.tvCourierType.text   = getString(R.string.auto_kt_courier)
         binding.tvKioskId.text       = prefs.getLocationId().ifBlank { "Not assigned" }
     }
 
@@ -53,13 +55,13 @@ class CourierProfileActivity : BaseKioskActivity() {
 
     private fun validate(old: String, new: String, confirm: String): Boolean {
         var ok = true
-        if (old.length != 6)  { binding.tilOldPin.error = "Current PIN must be 6 digits"; ok = false }
+        if (old.length != 6)  { binding.tilOldPin.error = getString(R.string.auto_rem_current_pin_must_be_6_digits); ok = false }
         else binding.tilOldPin.error = null
 
-        if (new.length != 6)  { binding.tilNewPin.error = "New PIN must be 6 digits"; ok = false }
+        if (new.length != 6)  { binding.tilNewPin.error = getString(R.string.auto_rem_new_pin_must_be_6_digits); ok = false }
         else binding.tilNewPin.error = null
 
-        if (new != confirm)   { binding.tilConfirmPin.error = "PINs do not match"; ok = false }
+        if (new != confirm)   { binding.tilConfirmPin.error = getString(R.string.auto_rem_pins_do_not_match); ok = false }
         else binding.tilConfirmPin.error = null
 
         return ok

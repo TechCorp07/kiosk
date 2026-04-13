@@ -28,7 +28,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
                 android:tint="@color/white"
-                android:contentDescription="Back" />
+                android:contentDescription="@string/auto_rem_back" />
         </FrameLayout>
 
         <!-- Logo -->
@@ -65,13 +65,13 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:src="@drawable/ic_courier"
                 android:tint="@color/zimpudo_primary"
-                android:contentDescription="Courier icon" />
+                android:contentDescription="@string/auto_rem_courier_icon" />
 
             <!-- Title -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Courier"
+                android:text="@string/auto_courier"
                 android:textColor="@color/text_primary"
                 android:textSize="78sp"
                 android:textStyle="bold"
@@ -87,7 +87,7 @@
                 android:layout_marginStart="60dp"
                 android:layout_marginEnd="60dp"
                 android:layout_marginBottom="@dimen/spacing_lg"
-                android:hint="Mobile Number"
+                android:hint="@string/auto_mobile_number"
                 app:startIconDrawable="@drawable/ic_phone">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -96,7 +96,7 @@
                     android:layout_height="180dp"
                     android:inputType="phone"
                     android:maxLength="15"
-                    android:hint="+2637XXXXXXXX"
+                    android:hint="@string/auto_2637xxxxxxxx"
                     android:textColorHint="@color/text_hint"
                     android:textSize="32sp" />
 
@@ -111,7 +111,7 @@
                 android:layout_marginStart="60dp"
                 android:layout_marginEnd="60dp"
                 android:layout_marginBottom="@dimen/spacing_xl"
-                android:hint="6-digit PIN"
+                android:hint="@string/auto_6_digit_pin"
                 app:endIconMode="password_toggle"
                 app:startIconDrawable="@drawable/ic_pin_security">
 
@@ -147,7 +147,7 @@
                     android:layout_gravity="center"
                     android:layout_marginStart="100dp"
                     android:layout_marginEnd="100dp"
-                    android:text="Sign In"
+                    android:text="@string/auto_sign_in"
                     android:textSize="52sp"
                     android:textStyle="bold"
                     android:backgroundTint="@color/zimpudo_primary"

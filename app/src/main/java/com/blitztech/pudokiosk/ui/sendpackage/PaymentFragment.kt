@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.sendpackage
 
+import com.blitztech.pudokiosk.R
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -129,7 +131,7 @@ class PaymentFragment : Fragment() {
         binding.tilPaymentMobile.visibility = View.GONE
         binding.btnPay.visibility = View.GONE
         binding.tvStatus.visibility = View.VISIBLE
-        binding.tvStatus.text = "Verifying reservation..."
+        binding.tvStatus.text = getString(R.string.auto_kt_verifying_reservation)
         binding.progressBar.visibility = View.VISIBLE
         
         confirmReservationWithBackend()
@@ -172,7 +174,7 @@ class PaymentFragment : Fragment() {
                     }
                     
                     binding.progressBar.visibility = View.GONE
-                    binding.tvStatus.text = "Failed to locate locker cell parameters for reserved order."
+                    binding.tvStatus.text = getString(R.string.auto_kt_failed_to_locate_locker_cell_p)
                 } else {
                     binding.progressBar.visibility = View.GONE
                     val errorMsg = (searchResult as? com.blitztech.pudokiosk.data.api.NetworkResult.Error)?.message ?: "Unknown error"
@@ -181,7 +183,7 @@ class PaymentFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 binding.progressBar.visibility = View.GONE
-                binding.tvStatus.text = "System error during verification."
+                binding.tvStatus.text = getString(R.string.auto_kt_system_error_during_verificati)
             }
         }
     }
@@ -193,7 +195,7 @@ class PaymentFragment : Fragment() {
         val rawMobile = binding.etPaymentMobile.text.toString().trim()
 
         if (rawMobile.isEmpty()) {
-            binding.tilPaymentMobile.error = "Mobile number is required"
+            binding.tilPaymentMobile.error = getString(R.string.auto_rem_mobile_number_is_required)
             return false
         }
 
@@ -218,7 +220,7 @@ class PaymentFragment : Fragment() {
         val accessToken = prefs.getAccessToken()
 
         if (accessToken.isNullOrBlank()) {
-            Toast.makeText(requireContext(), "Session expired. Please login again.", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), getString(R.string.auto_rem_session_expired_please_login_a), Toast.LENGTH_LONG).show()
             binding.progressBar.visibility = View.GONE
             binding.btnPay.isEnabled = true
             return
@@ -249,13 +251,13 @@ class PaymentFragment : Fragment() {
                         if (response.success) {
                             Toast.makeText(
                                 requireContext(),
-                                "Payment initiated. Waiting for confirmation...",
+                                getString(R.string.auto_rem_payment_initiated_waiting_for_),
                                 Toast.LENGTH_SHORT
                             ).show()
                             
                             binding.progressBar.visibility = View.VISIBLE
                             binding.tvStatus.visibility = View.VISIBLE
-                            binding.tvStatus.text = "Waiting for payment approval..."
+                            binding.tvStatus.text = getString(R.string.auto_kt_waiting_for_payment_approval)
                             
                             // Backend uses Paynow webhook to update order status.
                             // We proceed to ProcessingFragment which will poll the status.

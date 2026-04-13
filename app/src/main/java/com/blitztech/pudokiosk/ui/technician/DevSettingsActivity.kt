@@ -34,7 +34,7 @@ class DevSettingsActivity : BaseKioskActivity() {
         btnSave.setOnClickListener {
             val baud = etScannerBaud.text.toString().toIntOrNull() ?: 115200
             prefs.setScannerBaud(baud)
-            Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.auto_rem_saved), Toast.LENGTH_SHORT).show()
             finish()
         }
     }

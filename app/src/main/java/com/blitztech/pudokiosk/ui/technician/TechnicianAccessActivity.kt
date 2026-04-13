@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.technician
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -34,11 +36,11 @@ class TechnicianAccessActivity : BaseKioskActivity() {
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = "Technician Access"
-        binding.tvSubtitle.text = "Enter technician credentials to access diagnostic tools"
-        binding.etUsername.hint = "Username"
-        binding.etPassword.hint = "Password"
-        binding.btnLogin.text = "Login"
+        binding.tvTitle.text = getString(R.string.auto_kt_technician_access)
+        binding.tvSubtitle.text = getString(R.string.auto_kt_enter_technician_credentials_t)
+        binding.etUsername.hint = getString(R.string.auto_rem_username)
+        binding.etPassword.hint = getString(R.string.auto_rem_password)
+        binding.btnLogin.text = getString(R.string.auto_kt_login)
     }
 
     private fun setupClickListeners() {
@@ -61,7 +63,7 @@ class TechnicianAccessActivity : BaseKioskActivity() {
         }
 
         if (validCredentials[username] == password) {
-            Toast.makeText(this, "Access granted", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.auto_rem_access_granted), Toast.LENGTH_SHORT).show()
             navigateToTechMenu()
         } else {
             showError("Invalid credentials")

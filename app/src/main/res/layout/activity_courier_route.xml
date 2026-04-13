@@ -21,13 +21,13 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_arrow_back"
             android:tint="@color/white"
-            android:contentDescription="Back" />
+            android:contentDescription="@string/auto_rem_back" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Today's Route"
+            android:text="@string/auto_today_s_route"
             android:textColor="@color/white"
             android:textSize="30sp"
             android:textStyle="bold"
@@ -40,7 +40,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_refresh"
             android:tint="@color/white"
-            android:contentDescription="Refresh" />
+            android:contentDescription="@string/auto_rem_refresh" />
 
     </LinearLayout>
 
@@ -95,7 +95,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="No deliveries"
+                    android:text="@string/auto_no_deliveries"
                     android:textSize="28sp"
                     android:textColor="@color/text_secondary"
                     android:alpha="0.5" />

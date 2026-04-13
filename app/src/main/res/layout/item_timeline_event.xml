@@ -24,7 +24,7 @@
             android:layout_height="32dp"
             android:src="@drawable/ic_check_circle"
             android:tint="@color/zimpudo_primary"
-            android:contentDescription="Event" />
+            android:contentDescription="@string/auto_rem_event" />
 
         <View
             android:id="@+id/vLineBottom"
@@ -46,7 +46,7 @@
             android:id="@+id/tvActivity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="PACKAGE CREATED"
+            android:text="@string/auto_package_created"
             android:textColor="@color/text_primary"
             android:textSize="32sp"
             android:textStyle="bold" />
@@ -55,7 +55,7 @@
             android:id="@+id/tvDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="The order has been created and is awaiting drop-off."
+            android:text="@string/auto_the_order_has_been_created_and"
             android:textColor="@color/text_secondary"
             android:textSize="28sp"
             android:layout_marginTop="4dp" />
@@ -64,7 +64,7 @@
             android:id="@+id/tvDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2026-04-05 14:00"
+            android:text="@string/auto_2026_04_05_14_00"
             android:textColor="@color/text_secondary"
             android:textSize="22sp"
             android:layout_marginTop="8dp" />

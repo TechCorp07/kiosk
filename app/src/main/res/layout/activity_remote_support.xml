@@ -45,7 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Generate support codes and enable remote assistance"
+                android:text="@string/auto_generate_support_codes_and_ena"
                 android:textColor="@color/text_white" />
 
             <TextView
@@ -53,7 +53,7 @@
                 style="@style/Text.Caption"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Last updated: --"
+                android:text="@string/auto_last_updated"
                 android:textColor="@color/text_white" />
 
         </LinearLayout>
@@ -89,7 +89,7 @@
                     android:layout_marginEnd="8dp"
                     android:drawableStart="@drawable/ic_refresh"
                     android:drawablePadding="8dp"
-                    android:text="Generate Code"
+                    android:text="@string/auto_generate_code"
                     android:textSize="20sp" />
 
                 <Button
@@ -101,7 +101,7 @@
                     android:layout_marginStart="8dp"
                     android:drawableStart="@drawable/ic_refresh"
                     android:drawablePadding="8dp"
-                    android:text="Refresh"
+                    android:text="@string/auto_refresh"
                     android:textSize="20sp" />
 
             </LinearLayout>
@@ -124,7 +124,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_sm"
-                        android:text="Support Code"
+                        android:text="@string/auto_support_code"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -138,7 +138,7 @@
                         android:fontFamily="monospace"
                         android:gravity="center"
                         android:padding="@dimen/spacing_md"
-                        android:text="No code generated"
+                        android:text="@string/auto_no_code_generated"
                         android:textColor="@color/text_primary"
                         android:textSize="26sp"
                         android:textStyle="bold" />
@@ -149,7 +149,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_sm"
                         android:gravity="center"
-                        android:text="Valid until: --"
+                        android:text="@string/auto_valid_until"
                         android:textColor="@color/text_secondary"
                         android:textSize="16sp" />
 
@@ -161,7 +161,7 @@
                         android:drawableStart="@drawable/ic_copy"
                         android:drawablePadding="8dp"
                         android:enabled="false"
-                        android:text="Copy Code"
+                        android:text="@string/auto_copy_code"
                         android:textSize="20sp" />
 
                 </LinearLayout>
@@ -186,7 +186,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_sm"
-                        android:text="Support Session"
+                        android:text="@string/auto_support_session"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -196,7 +196,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_sm"
-                        android:text="⚪ No active session"
+                        android:text="@string/auto_no_active_session"
                         android:textColor="@color/text_secondary"
                         android:textSize="20sp" />
 
@@ -206,7 +206,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_md"
                         android:lineSpacingExtra="4dp"
-                        android:text="Click 'Start Session' to enable remote support."
+                        android:text="@string/auto_click_start_session_to_enable_"
                         android:textColor="@color/text_secondary"
                         android:textSize="18sp" />
 
@@ -218,7 +218,7 @@
                         android:drawableStart="@drawable/ic_play"
                         android:drawablePadding="8dp"
                         android:enabled="false"
-                        android:text="Start Session"
+                        android:text="@string/auto_start_session"
                         android:textSize="20sp" />
 
                 </LinearLayout>
@@ -243,7 +243,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/spacing_sm"
-                        android:text="Device Information"
+                        android:text="@string/auto_device_information"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -255,7 +255,7 @@
                         android:background="@drawable/bg_info_display"
                         android:fontFamily="monospace"
                         android:padding="@dimen/spacing_md"
-                        android:text="Loading device information..."
+                        android:text="@string/auto_loading_device_information"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp" />
 
@@ -278,7 +278,7 @@
                     android:layout_marginEnd="8dp"
                     android:drawableStart="@drawable/ic_share"
                     android:drawablePadding="8dp"
-                    android:text="Share Info"
+                    android:text="@string/auto_share_info"
                     android:textSize="20sp" />
 
                 <Button
@@ -290,7 +290,7 @@
                     android:layout_marginStart="8dp"
                     android:drawableStart="@drawable/ic_phone"
                     android:drawablePadding="8dp"
-                    android:text="Contact"
+                    android:text="@string/auto_contact"
                     android:textSize="20sp" />
 
             </LinearLayout>

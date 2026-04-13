@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_weight="1"
-            android:text="Send Package"
+            android:text="@string/auto_send_package"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="28sp"
@@ -74,7 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_sm"
-                android:text="Recipient"
+                android:text="@string/auto_recipient"
                 android:textColor="@color/text_hint"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -109,7 +109,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_sm"
-                android:text="Package"
+                android:text="@string/auto_package"
                 android:textColor="@color/text_hint"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -144,7 +144,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_sm"
-                android:text="Payment"
+                android:text="@string/auto_payment"
                 android:textColor="@color/text_hint"
                 android:textSize="18sp" />
         </LinearLayout>
@@ -178,7 +178,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_sm"
-                android:text="Processing"
+                android:text="@string/auto_processing"
                 android:textColor="@color/text_hint"
                 android:textSize="18sp" />
         </LinearLayout>

@@ -51,7 +51,7 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="@dimen/spacing_lg"
                 android:src="@drawable/ic_forgot_password"
-                android:contentDescription="Forgot PIN" />
+                android:contentDescription="@string/auto_rem_forgot_pin" />
 
             <!-- Title -->
             <TextView
@@ -69,7 +69,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_xl"
-                android:text="Enter your mobile number and we'll send you instructions to reset your PIN" />
+                android:text="@string/auto_enter_your_mobile_number_and_w" />
 
             <!-- Mobile Number Input -->
             <com.google.android.material.textfield.TextInputLayout
@@ -103,7 +103,7 @@
                     style="@style/Button.Primary"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/button_height"
-                    android:text="Send Instructions" />
+                    android:text="@string/auto_send_instructions" />
 
                 <ProgressBar
                     android:id="@+id/progressBar"

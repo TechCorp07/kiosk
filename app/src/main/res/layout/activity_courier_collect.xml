@@ -20,7 +20,7 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
+            android:contentDescription="@string/auto_rem_back"
             android:src="@drawable/ic_arrow_back"
             android:scaleType="fitCenter"
             android:padding="8dp"
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|center_vertical"
             android:layout_weight="1"
-            android:text="Pickup Packages"
+            android:text="@string/auto_pickup_packages"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="28sp"
@@ -81,7 +81,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Select parcels to collect:"
+                android:text="@string/auto_select_parcels_to_collect"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:textSize="20sp" />
@@ -99,7 +99,7 @@
                 android:layout_height="120dp"
                 android:layout_marginTop="16dp"
                 android:enabled="false"
-                android:text="Start Collection"
+                android:text="@string/auto_start_collection"
                 android:textSize="28sp"
                 android:backgroundTint="@color/zimpudo_primary" />
         </LinearLayout>
@@ -124,7 +124,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Waiting for barcode scan…"
+                android:text="@string/auto_waiting_for_barcode_scan"
                 android:textColor="@color/text_secondary"
                 android:textSize="20sp" />
         </LinearLayout>
@@ -135,7 +135,7 @@
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:layout_marginTop="16dp"
-            android:text="Finish &amp; Return"
+            android:text="@string/auto_finish_amp_return"
             android:textSize="28sp"
             android:backgroundTint="@color/zimpudo_primary"
             android:visibility="gone" />

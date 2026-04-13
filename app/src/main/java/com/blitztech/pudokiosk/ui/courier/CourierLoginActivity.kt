@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.courier
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -76,11 +78,11 @@ class CourierLoginActivity : BaseKioskActivity() {
     private fun validate(mobile: String, pin: String): Boolean {
         var ok = true
         if (mobile.length < 9) {
-            binding.tilMobile.error = "Enter a valid mobile number"
+            binding.tilMobile.error = getString(R.string.auto_rem_enter_a_valid_mobile_number)
             ok = false
         }
         if (pin.length != 6) {
-            binding.tilPin.error = "PIN must be 6 digits"
+            binding.tilPin.error = getString(R.string.auto_rem_pin_must_be_6_digits)
             ok = false
         }
         return ok

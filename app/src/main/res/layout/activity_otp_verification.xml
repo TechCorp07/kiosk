@@ -52,7 +52,7 @@
                 android:layout_gravity="center"
                 android:layout_marginBottom="@dimen/spacing_lg"
                 android:src="@drawable/ic_sms"
-                android:contentDescription="OTP verification" />
+                android:contentDescription="@string/auto_rem_otp_verification" />
 
             <!-- Title -->
             <TextView

@@ -26,14 +26,14 @@
                 android:layout_height="80dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_arrow_back"
-                android:contentDescription="Back"
+                android:contentDescription="@string/auto_rem_back"
                 android:tint="#2E7D32" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="🔧 PUDO Kiosk Hardware Test Center"
+                android:text="@string/auto_pudo_kiosk_hardware_test_cente"
                 android:textSize="30sp"
                 android:textStyle="bold"
                 android:textColor="#2E7D32"
@@ -62,7 +62,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🔒 STM32L412 Locker Controller"
+                android:text="@string/auto_stm32l412_locker_controller"
                 android:textStyle="bold"
                 android:textSize="26sp"
                 android:textColor="#1976D2"
@@ -71,7 +71,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="RS485 communication with up to 4 STM32L412 boards (64 locks) via Winnsen protocol @ 9600 baud"
+                android:text="@string/auto_rs485_communication_with_up_to"
                 android:textSize="15sp"
                 android:textColor="#666666"
                 android:layout_marginBottom="12dp" />
@@ -81,7 +81,7 @@
                 android:id="@+id/tvLockerStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="⚪ Not connected"
+                android:text="@string/auto_not_connected"
                 android:textSize="16sp"
                 android:padding="10dp"
                 android:background="#E8F5E8"
@@ -100,7 +100,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="🔌 Connect"
+                    android:text="@string/auto_connect"
                     android:background="#1976D2"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp"
@@ -111,7 +111,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="🧪 Test Comm"
+                    android:text="@string/auto_test_comm"
                     android:background="#388E3C"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp"
@@ -130,7 +130,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Board:"
+                    android:text="@string/auto_board"
                     android:textSize="16sp"
                     android:textColor="#333333"
                     android:layout_marginEnd="6dp" />
@@ -144,7 +144,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lock:"
+                    android:text="@string/auto_lock"
                     android:textSize="16sp"
                     android:textColor="#333333"
                     android:layout_marginEnd="6dp" />
@@ -160,7 +160,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="🔓 Unlock"
+                    android:text="@string/auto_unlock"
                     android:background="#FF9800"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp"
@@ -172,7 +172,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="📊 Status"
+                    android:text="@string/auto_status"
                     android:background="#607D8B"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp"
@@ -192,7 +192,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Check All"
+                    android:text="@string/auto_check_all"
                     android:background="#5E35B1"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp"
@@ -204,7 +204,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="⚠️ Emergency"
+                    android:text="@string/auto_emergency"
                     android:background="#D32F2F"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp"
@@ -217,7 +217,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="👂 Listen"
+                    android:text="@string/auto_listen"
                     android:background="#607D8B"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp"
@@ -237,7 +237,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="📋 Communication Log"
+                    android:text="@string/auto_communication_log"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:textColor="#333333" />
@@ -246,7 +246,7 @@
                     android:id="@+id/btnClearLockerLog"
                     android:layout_width="wrap_content"
                     android:layout_height="28dp"
-                    android:text="Clear Log"
+                    android:text="@string/auto_clear_log"
                     android:background="#795548"
                     android:textColor="#FFFFFF"
                     android:textSize="9sp"
@@ -267,7 +267,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
                     android:padding="6dp"
-                    android:text="Log..."
+                    android:text="@string/auto_log"
                     android:textColor="#4FC3F7"
                     android:textSize="9sp" />
             </ScrollView>
@@ -286,7 +286,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="📱 Honeywell Xenon 1900 Barcode Scanner"
+                android:text="@string/auto_honeywell_xenon_1900_barcode_s"
                 android:textStyle="bold"
                 android:textSize="26sp"
                 android:textColor="#1976D2"
@@ -295,7 +295,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="15-pin SUB-D to RS232 connection @ 115200 baud"
+                android:text="@string/auto_15_pin_sub_d_to_rs232_connecti"
                 android:textSize="16sp"
                 android:textColor="#666666"
                 android:layout_marginBottom="12dp" />
@@ -305,7 +305,7 @@
                 android:id="@+id/tvScannerStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Scanner status: Initializing..."
+                android:text="@string/auto_scanner_status_initializing"
                 android:textSize="16sp"
                 android:background="#FFF8E1"
                 android:padding="8dp"
@@ -323,7 +323,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Focus Input"
+                    android:text="@string/auto_focus_input"
                     android:background="#FF9800"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp" />
@@ -333,7 +333,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="📸 Trigger Scan"
+                    android:text="@string/auto_trigger_scan"
                     android:background="#4CAF50"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp"
@@ -352,7 +352,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Clear Results"
+                    android:text="@string/auto_clear_results"
                     android:background="#9E9E9E"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp" />
@@ -362,7 +362,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Reconnect"
+                    android:text="@string/auto_reconnect"
                     android:background="#2196F3"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp" />
@@ -372,7 +372,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="📋 Instructions: Press 'Trigger Scan' then point scanner at barcode and pull physical trigger. Results appear below with timestamps."
+                android:text="@string/auto_instructions_press_trigger_sca"
                 android:textSize="15sp"
                 android:textColor="#757575"
                 android:background="#F5F5F5"
@@ -383,7 +383,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="📸 Scanned Results:"
+                android:text="@string/auto_scanned_results"
                 android:textStyle="bold"
                 android:textSize="20sp"
                 android:layout_marginBottom="4dp" />
@@ -393,7 +393,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
                 android:gravity="top"
-                android:hint="Scanned barcodes will appear here with timestamps...\n\nClick 'Trigger Scan' to activate scanner.\nPoint scanner at barcode and pull physical trigger."
+                android:hint="@string/auto_scanned_barcodes_will_appear_h"
                 android:inputType="textMultiLine"
                 android:background="#F8F8F8"
                 android:padding="12dp"
@@ -407,7 +407,7 @@
                 android:id="@+id/tvScannerInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Connection info will appear here when connected"
+                android:text="@string/auto_connection_info_will_appear_he"
                 android:textSize="14sp"
                 android:textColor="#9E9E9E"
                 android:visibility="gone" />
@@ -427,7 +427,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🖨️ Custom TG2480HIII Thermal Printer"
+                android:text="@string/auto_custom_tg2480hiii_thermal_prin"
                 android:textStyle="bold"
                 android:textSize="26sp"
                 android:textColor="#1976D2"
@@ -436,7 +436,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="USB connection using Custom SpA Android API"
+                android:text="@string/auto_usb_connection_using_custom_sp"
                 android:textSize="16sp"
                 android:textColor="#666666"
                 android:layout_marginBottom="12dp" />
@@ -446,7 +446,7 @@
                 android:id="@+id/tvPrinterStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Printer status: Initializing..."
+                android:text="@string/auto_printer_status_initializing"
                 android:textSize="16sp"
                 android:background="#E3F2FD"
                 android:padding="8dp"
@@ -457,7 +457,7 @@
                 android:id="@+id/tvPrinterDetails"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ready: ? | Paper: ? | Connection: ?"
+                android:text="@string/auto_ready_paper_connection"
                 android:textSize="15sp"
                 android:padding="6dp"
                 android:background="#FAFAFA"
@@ -475,7 +475,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Print Test Page"
+                    android:text="@string/auto_print_test_page"
                     android:background="#4CAF50"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp" />
@@ -485,7 +485,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Check Status"
+                    android:text="@string/auto_check_status"
                     android:background="#2196F3"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp" />
@@ -502,7 +502,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Print Receipt"
+                    android:text="@string/auto_print_receipt"
                     android:background="#FF9800"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="4dp" />
@@ -512,7 +512,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Print Barcodes"
+                    android:text="@string/auto_print_barcodes"
                     android:background="#9C27B0"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="4dp" />
@@ -533,7 +533,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="🔍 Comprehensive Testing"
+                android:text="@string/auto_comprehensive_testing"
                 android:textStyle="bold"
                 android:textSize="26sp"
                 android:textColor="#1976D2"
@@ -549,7 +549,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="🧪 Run All Tests"
+                    android:text="@string/auto_run_all_tests"
                     android:background="#4CAF50"
                     android:textColor="#FFFFFF"
                     android:layout_marginEnd="8dp"
@@ -561,7 +561,7 @@
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="🔄 Reset All"
+                    android:text="@string/auto_reset_all"
                     android:background="#FF5722"
                     android:textColor="#FFFFFF"
                     android:layout_marginStart="8dp"
@@ -584,7 +584,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ℹ️ System Information"
+                android:text="@string/auto_system_information"
                 android:textStyle="bold"
                 android:textSize="26sp"
                 android:textColor="#1976D2"
@@ -593,7 +593,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Hardware Platform: Rockchip RK3399-all Android Box\nAndroid Version: 7.1.2 (API Level 25)\nScreen: 10.1&quot; Portrait Orientation\n\nHardware Components:\n• STM32L412 Locker Controllers (RS485)\n• Honeywell Xenon 1900 Scanner (RS232)\n• Custom TG2480HIII Thermal Printer (USB)\n\nSoftware Stack:\n• Kotlin for Android 7.1.2\n• TypeScript compatible interfaces\n• Custom manufacturer APIs\n• Serial communication libraries"
+                android:text="@string/auto_hardware_platform_rockchip_rk3"
                 android:textSize="15sp"
                 android:padding="12dp"
                 android:background="#F8F8F8"

@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Technician Diagnostics"
+                android:text="@string/auto_technician_diagnostics"
                 android:textColor="@color/text_white"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -43,7 +43,7 @@
                 android:layout_gravity="end"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_logout"
-                android:contentDescription="Logout"
+                android:contentDescription="@string/auto_rem_logout"
                 app:tint="@color/white" />
         </FrameLayout>
 
@@ -53,7 +53,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_xl"
             android:gravity="center"
-            android:text="Select diagnostic tool or setting"
+            android:text="@string/auto_select_diagnostic_tool_or_sett"
             android:textColor="@color/text_white"
             android:textSize="24sp" />
 
@@ -97,7 +97,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Hardware Test"
+                        android:text="@string/auto_hardware_test"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -136,7 +136,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="System Logs"
+                        android:text="@string/auto_system_logs"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -175,7 +175,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Device Settings"
+                        android:text="@string/auto_device_settings"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -214,7 +214,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Network Diagnostics"
+                        android:text="@string/auto_network_diagnostics"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -253,7 +253,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Developer Mode"
+                        android:text="@string/auto_developer_mode"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -292,7 +292,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="System Info"
+                        android:text="@string/auto_system_info"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -331,7 +331,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Clear Data"
+                        android:text="@string/auto_clear_data"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -370,7 +370,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Remote Support"
+                        android:text="@string/auto_remote_support"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -410,7 +410,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Maintenance Mode"
+                        android:text="@string/auto_maintenance_mode"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -449,7 +449,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:text="Check for Updates"
+                        android:text="@string/auto_check_for_updates"
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold" />
@@ -465,7 +465,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_md"
             android:gravity="center"
-            android:text="App Version: --"
+            android:text="@string/auto_app_version"
             android:textColor="@color/text_white"
             android:textSize="20sp" />
 

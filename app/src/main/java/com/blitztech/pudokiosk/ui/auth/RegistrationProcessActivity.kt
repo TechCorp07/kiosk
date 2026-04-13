@@ -143,13 +143,13 @@ class RegistrationProcessActivity : BaseKioskActivity() {
     private fun updateStepUI(step: Int) {
         when (step) {
             1 -> {
-                binding.tvStepIndicator.text = "Step 1 of 2: Creating Account"
+                binding.tvStepIndicator.text = getString(R.string.auto_kt_step_1_of_2_creating_account)
                 binding.cardKyc.visibility = View.GONE
                 binding.btnUploadDocument.visibility = View.GONE
                 binding.progressBar.visibility = View.VISIBLE
             }
             2 -> {
-                binding.tvStepIndicator.text = "Step 2 of 2: Document Verification"
+                binding.tvStepIndicator.text = getString(R.string.auto_kt_step_2_of_2_document_verificat)
                 binding.cardKyc.visibility = View.VISIBLE
                 binding.btnUploadDocument.visibility = View.VISIBLE
                 binding.progressBar.visibility = View.GONE

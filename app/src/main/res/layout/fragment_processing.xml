@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_lg"
-                android:text="Processing Your Package"
+                android:text="@string/auto_processing_your_package"
                 android:textColor="@color/text_primary"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -48,7 +48,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Locker Opened"
+                        android:text="@string/auto_locker_opened"
                         android:textColor="@color/success_text"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -58,7 +58,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_sm"
-                        android:text="--"
+                        android:text="@string/auto_"
                         android:textColor="@color/success_dark"
                         android:textSize="120sp"
                         android:textStyle="bold" />
@@ -67,7 +67,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_sm"
-                        android:text="Please place your package inside and securely close the door."
+                        android:text="@string/auto_please_place_your_package_insi"
                         android:textColor="@color/success_text"
                         android:textSize="20sp"
                         android:textAlignment="center" />
@@ -114,7 +114,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/spacing_md"
                         android:layout_weight="1"
-                        android:text="Waiting for payment approval..."
+                        android:text="@string/auto_waiting_for_payment_approval"
                         android:textColor="@color/text_primary"
                         android:textSize="24sp" />
                 </LinearLayout>
@@ -160,7 +160,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/spacing_md"
                         android:layout_weight="1"
-                        android:text="Printing your receipt"
+                        android:text="@string/auto_printing_your_receipt"
                         android:textColor="@color/text_primary"
                         android:textSize="24sp" />
                 </LinearLayout>
@@ -206,7 +206,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/spacing_md"
                         android:layout_weight="1"
-                        android:text="Printing waybill label"
+                        android:text="@string/auto_printing_waybill_label"
                         android:textColor="@color/text_primary"
                         android:textSize="24sp" />
                 </LinearLayout>
@@ -252,7 +252,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/spacing_md"
                         android:layout_weight="1"
-                        android:text="Opening locker"
+                        android:text="@string/auto_opening_locker"
                         android:textColor="@color/text_primary"
                         android:textSize="24sp" />
                 </LinearLayout>
@@ -263,7 +263,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_xl"
-                android:text="Thank you! Returning to main menu in 5s..."
+                android:text="@string/auto_thank_you_returning_to_main_me"
                 android:textAlignment="center"
                 android:textColor="@color/text_secondary"
                 android:textSize="24sp"

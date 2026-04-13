@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.auth
 
+import com.blitztech.pudokiosk.R
+
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -36,12 +38,12 @@ class WalkInRegistrationActivity : BaseKioskActivity() {
         val suburb = binding.etSuburb.text.toString().trim()
 
         if (name.isEmpty() || surname.isEmpty() || mobile.isEmpty() || nationalId.isEmpty() || street.isEmpty() || city.isEmpty()) {
-            Toast.makeText(this, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.auto_rem_please_fill_in_all_required_fi), Toast.LENGTH_SHORT).show()
             return
         }
 
         binding.btnNext.isEnabled = false
-        binding.btnNext.text = "Registering..."
+        binding.btnNext.text = getString(R.string.auto_kt_registering)
 
         lifecycleScope.launch {
             val result = ZimpudoApp.apiRepository.partialRegisterUser(
@@ -58,7 +60,7 @@ class WalkInRegistrationActivity : BaseKioskActivity() {
 
             when (result) {
                 is NetworkResult.Success -> {
-                    Toast.makeText(this@WalkInRegistrationActivity, "Registration successful!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@WalkInRegistrationActivity, getString(R.string.auto_rem_registration_successful), Toast.LENGTH_SHORT).show()
                     // Save mobile in prefs to simulate "logged in" for the send package flow
                     ZimpudoApp.prefs.saveUserMobile(mobile)
                     // Move to Send Package activity
@@ -68,7 +70,7 @@ class WalkInRegistrationActivity : BaseKioskActivity() {
                 is NetworkResult.Error -> {
                     Toast.makeText(this@WalkInRegistrationActivity, "Error: ${result.message}", Toast.LENGTH_LONG).show()
                     binding.btnNext.isEnabled = true
-                    binding.btnNext.text = "Next"
+                    binding.btnNext.text = getString(R.string.auto_kt_next)
                 }
                 is NetworkResult.Loading -> {}
             }

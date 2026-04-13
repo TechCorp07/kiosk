@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Kiosk Provisioning"
+            android:text="@string/auto_kiosk_provisioning"
             android:textColor="@color/white"
             android:textSize="36sp"
             android:textStyle="bold" />
@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="First-time setup"
+            android:text="@string/auto_first_time_setup"
             android:textColor="#CCEECC"
             android:textSize="24sp" />
 
@@ -74,7 +74,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Device Permissions"
+                    android:text="@string/auto_device_permissions"
                     android:textColor="@color/text_primary"
                     android:textSize="28sp"
                     android:textStyle="bold" />
@@ -83,7 +83,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="All permissions must be granted before the kiosk can operate."
+                    android:text="@string/auto_all_permissions_must_be_grante"
                     android:textColor="@color/text_secondary"
                     android:textSize="20sp" />
 
@@ -93,7 +93,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="📷 Camera: checking…"
+                    android:text="@string/auto_camera_checking"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp" />
 
@@ -102,7 +102,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="📍 Location: checking…"
+                    android:text="@string/auto_location_checking"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp" />
 
@@ -111,7 +111,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="💾 Storage: checking…"
+                    android:text="@string/auto_storage_checking"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp" />
 
@@ -121,7 +121,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="80dp"
                     android:layout_marginTop="16dp"
-                    android:text="Grant All Permissions"
+                    android:text="@string/auto_grant_all_permissions"
                     android:textColor="@color/zimpudo_primary"
                     android:textSize="24sp"
                     app:strokeColor="@color/zimpudo_primary" />
@@ -131,7 +131,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="✅ All permissions granted"
+                    android:text="@string/auto_all_permissions_granted"
                     android:textColor="@color/success"
                     android:textSize="22sp"
                     android:textStyle="bold"
@@ -152,7 +152,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Step 1 — Daily Provisioning Code"
+                    android:text="@string/auto_step_1_daily_provisioning_code"
                     android:textColor="@color/text_primary"
                     android:textSize="28sp"
                     android:textStyle="bold" />
@@ -161,7 +161,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Enter the 6-digit code from your SYS_ADMIN dashboard."
+                    android:text="@string/auto_enter_the_6_digit_code_from_yo"
                     android:textColor="@color/text_secondary"
                     android:textSize="20sp" />
 
@@ -176,7 +176,7 @@
                         android:id="@+id/etProvisioningPasscode"
                         android:layout_width="match_parent"
                         android:layout_height="120dp"
-                        android:hint="6-Digit Provisioning Code"
+                        android:hint="@string/auto_6_digit_provisioning_code"
                         android:inputType="number"
                         android:maxLength="6"
                         android:textSize="36sp"
@@ -190,7 +190,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="100dp"
                     android:layout_marginTop="@dimen/spacing_lg"
-                    android:text="Verify Code"
+                    android:text="@string/auto_verify_code"
                     android:textSize="32sp"
                     android:backgroundTint="@color/zimpudo_primary"
                     android:textColor="@color/white" />
@@ -210,7 +210,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Step 2 — Locker Configuration"
+                    android:text="@string/auto_step_2_locker_configuration"
                     android:textColor="@color/text_primary"
                     android:textSize="28sp"
                     android:textStyle="bold" />
@@ -219,7 +219,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Enter locker short codes from the Admin Portal (e.g. ZLK4X9M2)."
+                    android:text="@string/auto_enter_locker_short_codes_from_"
                     android:textColor="@color/text_secondary"
                     android:textSize="20sp" />
 
@@ -235,7 +235,7 @@
                         android:id="@+id/etLockerCode1"
                         android:layout_width="match_parent"
                         android:layout_height="90dp"
-                        android:hint="Locker 1 Code (required)"
+                        android:hint="@string/auto_locker_1_code_required"
                         android:inputType="textCapCharacters|textNoSuggestions"
                         android:maxLength="8"
                         android:textSize="28sp"
@@ -254,7 +254,7 @@
                         android:id="@+id/etLockerCode2"
                         android:layout_width="match_parent"
                         android:layout_height="90dp"
-                        android:hint="Locker 2 Code (optional)"
+                        android:hint="@string/auto_locker_2_code_optional"
                         android:inputType="textCapCharacters|textNoSuggestions"
                         android:maxLength="8"
                         android:textSize="28sp"
@@ -273,7 +273,7 @@
                         android:id="@+id/etLockerCode3"
                         android:layout_width="match_parent"
                         android:layout_height="90dp"
-                        android:hint="Locker 3 Code (optional)"
+                        android:hint="@string/auto_locker_3_code_optional"
                         android:inputType="textCapCharacters|textNoSuggestions"
                         android:maxLength="8"
                         android:textSize="28sp"
@@ -292,7 +292,7 @@
                         android:id="@+id/etLockerCode4"
                         android:layout_width="match_parent"
                         android:layout_height="90dp"
-                        android:hint="Locker 4 Code (optional)"
+                        android:hint="@string/auto_locker_4_code_optional"
                         android:inputType="textCapCharacters|textNoSuggestions"
                         android:maxLength="8"
                         android:textSize="28sp"
@@ -311,7 +311,7 @@
                         android:id="@+id/etSiteName"
                         android:layout_width="match_parent"
                         android:layout_height="90dp"
-                        android:hint="Site Name (e.g. Westgate Mall)"
+                        android:hint="@string/auto_site_name_e_g_westgate_mall"
                         android:inputType="textCapWords"
                         android:textSize="26sp" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -328,7 +328,7 @@
                         android:id="@+id/etApiUrlOverride"
                         android:layout_width="match_parent"
                         android:layout_height="90dp"
-                        android:hint="API URL Override (blank = production)"
+                        android:hint="@string/auto_api_url_override_blank_product"
                         android:inputType="textUri"
                         android:textSize="22sp" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -340,7 +340,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="100dp"
                     android:layout_marginTop="@dimen/spacing_xl"
-                    android:text="Provision Kiosk"
+                    android:text="@string/auto_provision_kiosk"
                     android:textSize="32sp"
                     android:backgroundTint="@color/zimpudo_primary"
                     android:textColor="@color/white" />
@@ -375,7 +375,7 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="48dp"
                     android:layout_marginBottom="32dp"
-                    android:text="Developer Settings"
+                    android:text="@string/auto_developer_settings"
                     android:textColor="@color/text_secondary"
                     android:textSize="20sp" />
 

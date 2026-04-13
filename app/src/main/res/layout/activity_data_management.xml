@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Data Management"
+                android:text="@string/auto_data_management"
                 android:textColor="@color/text_white"
                 android:textSize="48sp"
                 android:textStyle="bold" />
@@ -51,7 +51,7 @@
             android:layout_marginHorizontal="@dimen/spacing_md"
             android:layout_marginBottom="@dimen/spacing_lg"
             android:gravity="center"
-            android:text="Clear cache, logs, and manage app data"
+            android:text="@string/auto_clear_cache_logs_and_manage_ap"
             android:textColor="@color/text_white"
             android:textSize="28sp" />
 
@@ -68,7 +68,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Storage Information"
+                android:text="@string/auto_storage_information"
                 android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -96,7 +96,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Current Usage:"
+                            android:text="@string/auto_current_usage"
                             android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold" />
@@ -106,7 +106,7 @@
                             style="@style/Button.Outlined.Small"
                             android:layout_width="wrap_content"
                             android:layout_height="32dp"
-                            android:text="Refresh"
+                            android:text="@string/auto_refresh"
                             android:textSize="16sp" />
                     </LinearLayout>
 
@@ -115,7 +115,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="monospace"
-                        android:text="Loading storage information..."
+                        android:text="@string/auto_loading_storage_information"
                         android:textColor="@color/text_secondary"
                         android:textSize="16sp" />
 
@@ -124,7 +124,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/spacing_sm"
-                        android:text="Last updated: --"
+                        android:text="@string/auto_last_updated"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -135,7 +135,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_md"
-                android:text="Safe Operations"
+                android:text="@string/auto_safe_operations"
                 android:textColor="@color/text_primary"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -178,7 +178,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:text="Clear\nCache"
+                            android:text="@string/auto_clear_ncache"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -216,7 +216,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center"
-                            android:text="Clear\nLogs"
+                            android:text="@string/auto_clear_nlogs"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -252,7 +252,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Export User Data"
+                            android:text="@string/auto_export_user_data"
                             android:textColor="@color/text_primary"
                             android:textSize="20sp"
                             android:textStyle="bold" />
@@ -265,7 +265,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_md"
-                android:text="⚠️ Warning: Data Loss Operations"
+                android:text="@string/auto_warning_data_loss_operations"
                 android:textColor="@color/warning_text"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -300,7 +300,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Clear User Data &amp; Settings"
+                        android:text="@string/auto_clear_user_data_amp_settings"
                         android:textColor="@color/warning_text"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -313,7 +313,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_md"
                 android:layout_marginBottom="@dimen/spacing_md"
-                android:text="🚨 Critical: Destructive Operations"
+                android:text="@string/auto_critical_destructive_operation"
                 android:textColor="@color/error_text"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -348,7 +348,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Reset Database (All Package Data)"
+                        android:text="@string/auto_reset_database_all_package_dat"
                         android:textColor="@color/error_text"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -384,7 +384,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Factory Reset (Complete App Reset)"
+                        android:text="@string/auto_factory_reset_complete_app_res"
                         android:textColor="@color/error_text"
                         android:textSize="20sp"
                         android:textStyle="bold" />

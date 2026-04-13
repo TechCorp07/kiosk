@@ -34,7 +34,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_md"
-                android:text="Enter Package Details"
+                android:text="@string/auto_enter_package_details"
                 android:textColor="@color/text_primary"
                 android:textSize="36sp"
                 android:textStyle="bold" />
@@ -44,7 +44,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_sm"
-                android:text="Package Dimensions (in mm)"
+                android:text="@string/auto_package_dimensions_in_mm"
                 android:textColor="@color/text_primary"
                 android:textSize="28sp"
                 android:textStyle="bold" />
@@ -62,7 +62,7 @@
                     android:id="@+id/etLength"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Length (mm)"
+                    android:hint="@string/auto_length_mm"
                     android:inputType="number"
                     android:textSize="22sp"
                     android:maxLines="1" />
@@ -81,7 +81,7 @@
                     android:id="@+id/etWidth"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Width (mm)"
+                    android:hint="@string/auto_width_mm"
                     android:inputType="number"
                     android:textSize="22sp"
                     android:maxLines="1" />
@@ -100,7 +100,7 @@
                     android:id="@+id/etHeight"
                     android:layout_width="match_parent"
                     android:layout_height="90dp"
-                    android:hint="Height (mm)"
+                    android:hint="@string/auto_height_mm"
                     android:inputType="number"
                     android:textSize="22sp"
                     android:maxLines="1" />
@@ -114,7 +114,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:background="@color/success_light"
                 android:padding="@dimen/spacing_md"
-                android:text="Calculated Size: Medium"
+                android:text="@string/auto_calculated_size_medium"
                 android:textColor="@color/success"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -124,7 +124,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Package Contents"
+                android:text="@string/auto_package_contents"
                 android:textColor="@color/text_secondary"
                 android:textSize="20sp" />
 
@@ -149,7 +149,7 @@
                     android:id="@+id/etContents"
                     android:layout_width="match_parent"
                     android:layout_height="70dp"
-                    android:hint="Additional Details (optional)"
+                    android:hint="@string/auto_additional_details_optional"
                     android:inputType="textCapSentences"
                     android:textSize="20sp"
                     android:maxLines="2" />
@@ -159,7 +159,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Currency"
+                android:text="@string/auto_currency"
                 android:textColor="@color/text_secondary"
                 android:textSize="20sp" />
 
@@ -175,7 +175,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Package Class"
+                android:text="@string/auto_package_class"
                 android:textColor="@color/text_secondary"
                 android:textSize="20sp" />
 
@@ -191,7 +191,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Delivery Mode (Recipient)"
+                android:text="@string/auto_delivery_mode_recipient"
                 android:textColor="@color/text_secondary"
                 android:textSize="20sp" />
 
@@ -221,7 +221,7 @@
             android:layout_height="80dp"
             android:layout_marginEnd="@dimen/spacing_sm"
             android:layout_weight="1"
-            android:text="Back"
+            android:text="@string/auto_back"
             android:textSize="24sp"
             android:textColor="@color/zimpudo_primary"
             app:strokeColor="@color/zimpudo_primary" />
@@ -233,7 +233,7 @@
             android:layout_marginStart="@dimen/spacing_sm"
             android:layout_weight="1"
             android:backgroundTint="@color/zimpudo_primary"
-            android:text="Create Order"
+            android:text="@string/auto_create_order"
             android:textSize="24sp"
             android:textColor="@color/white" />
     </LinearLayout>

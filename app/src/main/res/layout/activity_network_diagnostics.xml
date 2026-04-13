@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Network Diagnostics"
+            android:text="@string/auto_network_diagnostics"
             android:textColor="@color/text_white"
             android:textSize="48sp"
             android:textStyle="bold" />
@@ -47,7 +47,7 @@
         android:layout_marginHorizontal="@dimen/spacing_md"
         android:layout_marginBottom="@dimen/spacing_lg"
         android:gravity="center"
-        android:text="Network connectivity and performance testing"
+        android:text="@string/auto_network_connectivity_and_perfo"
         android:textColor="@color/text_white"
         android:textSize="28sp" />
 
@@ -78,7 +78,7 @@
                 android:layout_marginBottom="8dp"
                 android:drawableStart="@drawable/ic_refresh"
                 android:drawablePadding="8dp"
-                android:text="Run All Tests"
+                android:text="@string/auto_run_all_tests"
                 android:textSize="20sp" />
 
             <Button
@@ -89,7 +89,7 @@
                 android:layout_columnWeight="1"
                 android:layout_marginStart="8dp"
                 android:layout_marginBottom="8dp"
-                android:text="Ping Test"
+                android:text="@string/auto_ping_test"
                 android:textSize="20sp" />
 
             <Button
@@ -99,7 +99,7 @@
                 android:layout_height="48dp"
                 android:layout_columnWeight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Connectivity"
+                android:text="@string/auto_connectivity"
                 android:textSize="20sp" />
 
             <Button
@@ -109,7 +109,7 @@
                 android:layout_height="48dp"
                 android:layout_columnWeight="1"
                 android:layout_marginStart="8dp"
-                android:text="Speed Info"
+                android:text="@string/auto_speed_info"
                 android:textSize="20sp" />
         </GridLayout>
 
@@ -139,7 +139,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="WiFi"
+                    android:text="@string/auto_wifi"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -161,7 +161,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Internet"
+                    android:text="@string/auto_internet"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -183,7 +183,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Backend"
+                    android:text="@string/auto_backend"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp" />
             </LinearLayout>
@@ -195,7 +195,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_sm"
-            android:text="Last updated: --"
+            android:text="@string/auto_last_updated"
             android:textColor="@color/text_secondary"
             android:textSize="16sp" />
 
@@ -212,7 +212,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
-                android:text="Tap 'Run All Tests' to start network diagnostics..."
+                android:text="@string/auto_tap_run_all_tests_to_start_net"
                 android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textIsSelectable="true" />

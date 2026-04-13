@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.collect
 
+import com.blitztech.pudokiosk.R
+
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -63,8 +65,8 @@ class CollectionCodeActivity : BaseKioskActivity() {
     private fun setupFieldHints() {
         // The layout has two fields: etTrackingNumber and etOtpCode
         // If the kiosk only has one input field (old layout), both fields show in same control
-        binding.tilTrackingNumber.hint = "Tracking Number (e.g. ZP-20260328-XXXX)"
-        binding.tilCollectionCode.hint = "Collection OTP (6-digit code from SMS)"
+        binding.tilTrackingNumber.hint = getString(R.string.auto_rem_tracking_number_e_g_zp_2026032)
+        binding.tilCollectionCode.hint = getString(R.string.auto_rem_collection_otp_6_digit_code_fr)
     }
 
     private fun setupClickListeners() {
@@ -74,11 +76,11 @@ class CollectionCodeActivity : BaseKioskActivity() {
             val otp = binding.etCollectionCode.text.toString().trim()
 
             if (tracking.isEmpty()) {
-                binding.tilTrackingNumber.error = "Please enter your tracking number"
+                binding.tilTrackingNumber.error = getString(R.string.auto_rem_please_enter_your_tracking_num)
                 return@setOnClickListener
             }
             if (otp.isEmpty() || otp.length < 4) {
-                binding.tilCollectionCode.error = "Please enter your OTP code"
+                binding.tilCollectionCode.error = getString(R.string.auto_rem_please_enter_your_otp_code)
                 return@setOnClickListener
             }
             binding.tilTrackingNumber.error = null

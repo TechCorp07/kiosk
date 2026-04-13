@@ -21,7 +21,7 @@
             android:layout_height="80dp"
             android:layout_margin="5dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Back"
+            android:contentDescription="@string/auto_rem_back"
             app:tint="@color/white" />
 
         <!-- ZIMPUDO Logo — 10x wide, 1.5x tall, centred -->
@@ -39,7 +39,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="WELCOME | MAUYA | SIYAKWAMUKELA"
+            android:text="@string/auto_welcome_mauya_siyakwamukela"
             android:textColor="@color/text_white"
             android:textSize="26sp"
             android:textStyle="bold"

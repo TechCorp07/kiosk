@@ -41,7 +41,7 @@
             android:src="@drawable/ic_arrow_back"
             android:scaleType="fitCenter"
             android:tint="@color/white"
-            android:contentDescription="Back" />
+            android:contentDescription="@string/auto_rem_back" />
     </FrameLayout>
 
     <!-- White panel — 5/7 of screen, cards fill it completely -->
@@ -81,7 +81,7 @@
                     android:layout_height="72dp"
                     android:layout_marginBottom="@dimen/spacing_sm"
                     android:src="@drawable/ic_customer"
-                    android:contentDescription="Customer Receive icon"
+                    android:contentDescription="@string/auto_rem_customer_receive_icon"
                     app:tint="@color/zimpudo_primary" />
 
                 <TextView
@@ -131,7 +131,7 @@
                     android:layout_height="72dp"
                     android:layout_marginBottom="@dimen/spacing_sm"
                     android:src="@drawable/ic_customer"
-                    android:contentDescription="Customer Send icon"
+                    android:contentDescription="@string/auto_rem_customer_send_icon"
                     app:tint="@color/zimpudo_primary" />
 
                 <TextView
@@ -180,7 +180,7 @@
                     android:layout_height="72dp"
                     android:layout_marginBottom="@dimen/spacing_sm"
                     android:src="@drawable/ic_courier"
-                    android:contentDescription="Courier icon"
+                    android:contentDescription="@string/auto_rem_courier_icon"
                     app:tint="@color/zimpudo_primary" />
 
                 <TextView

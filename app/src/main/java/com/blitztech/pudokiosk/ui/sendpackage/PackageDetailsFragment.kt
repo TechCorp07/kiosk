@@ -1,5 +1,7 @@
 package com.blitztech.pudokiosk.ui.sendpackage
 
+import com.blitztech.pudokiosk.R
+
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -235,7 +237,7 @@ class PackageDetailsFragment : Fragment() {
                     binding.tvCalculatedSize.visibility = View.VISIBLE
                     binding.btnNext.isEnabled = true
                 } else {
-                    binding.tvCalculatedSize.text = "Error: Package exceeds maximum locker size!"
+                    binding.tvCalculatedSize.text = getString(R.string.auto_kt_error_package_exceeds_maximum_)
                     binding.tvCalculatedSize.setTextColor(androidx.core.content.ContextCompat.getColor(requireContext(), com.blitztech.pudokiosk.R.color.error))
                     binding.tvCalculatedSize.visibility = View.VISIBLE
                     binding.btnNext.isEnabled = false
@@ -256,7 +258,7 @@ class PackageDetailsFragment : Fragment() {
 
         val length = binding.etLength.text.toString().toDoubleOrNull()
         if (length == null || length <= 0) {
-            binding.tilLength.error = "Enter valid length in mm"
+            binding.tilLength.error = getString(R.string.auto_rem_enter_valid_length_in_mm)
             isValid = false
         } else {
             binding.tilLength.error = null
@@ -264,7 +266,7 @@ class PackageDetailsFragment : Fragment() {
 
         val width = binding.etWidth.text.toString().toDoubleOrNull()
         if (width == null || width <= 0) {
-            binding.tilWidth.error = "Enter valid width in mm"
+            binding.tilWidth.error = getString(R.string.auto_rem_enter_valid_width_in_mm)
             isValid = false
         } else {
             binding.tilWidth.error = null
@@ -272,14 +274,14 @@ class PackageDetailsFragment : Fragment() {
 
         val height = binding.etHeight.text.toString().toDoubleOrNull()
         if (height == null || height <= 0) {
-            binding.tilHeight.error = "Enter valid height in mm"
+            binding.tilHeight.error = getString(R.string.auto_rem_enter_valid_height_in_mm)
             isValid = false
         } else {
             binding.tilHeight.error = null
         }
 
         if (binding.spinnerContents.selectedItemPosition == 0) {
-            Toast.makeText(requireContext(), "Please select package contents", Toast.LENGTH_SHORT)
+            Toast.makeText(requireContext(), getString(R.string.auto_rem_please_select_package_contents), Toast.LENGTH_SHORT)
                     .show()
             isValid = false
         }
@@ -290,7 +292,7 @@ class PackageDetailsFragment : Fragment() {
         val heightInMeters = (height ?: 0.0) / 1000.0
         if (lengthInMeters > 0 && widthInMeters > 0 && heightInMeters > 0) {
             if (PackageSize.fromDimensions(lengthInMeters, widthInMeters, heightInMeters) == null) {
-                Toast.makeText(requireContext(), "Your package is too large to fit in any of our lockers here. Please correct your dimensions.", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), getString(R.string.auto_rem_your_package_is_too_large_to_f), Toast.LENGTH_LONG).show()
                 isValid = false
             }
         }
@@ -360,7 +362,7 @@ class PackageDetailsFragment : Fragment() {
         if (accessToken.isNullOrBlank()) {
             Toast.makeText(
                             requireContext(),
-                            "Session expired. Please login again.",
+                            getString(R.string.auto_rem_session_expired_please_login_a),
                             Toast.LENGTH_LONG
                     )
                     .show()
