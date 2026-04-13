@@ -20,8 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 object BarcodeScanner {
     private const val TAG = "BarcodeScanner"
-    private const val VENDOR_ID = 1250  // 0x4E2
-    private const val PRODUCT_ID = 5140 // 0x1414
+    private const val VENDOR_ID = 3118  // 0x0C2E (Honeywell)
+    private const val PRODUCT_ID = 2314 // 0x090A (USB Serial COM Emulation)
     private const val BAUD_RATE = 115200
     private const val MAX_PERMISSION_RETRIES = 3
 

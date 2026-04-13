@@ -183,6 +183,14 @@ class Prefs(context: Context) {
         return prefs.getLong(key, defaultValue)
     }
 
+    fun putFloat(key: String, value: Float) {
+        prefs.edit().putFloat(key, value).apply()
+    }
+
+    fun getFloat(key: String, defaultValue: Float = 0f): Float {
+        return prefs.getFloat(key, defaultValue)
+    }
+
     // Kiosk-specific settings
     fun setKioskMode(enabled: Boolean) {
         putBoolean("kiosk_mode", enabled)

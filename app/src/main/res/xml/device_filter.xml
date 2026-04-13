@@ -2,4 +2,8 @@
 <resources>
     <!-- Custom TG2480HIII vendor -->
     <usb-device vendor-id="3540"/>
+    <!-- Exar XR21V1414 RS485 Converter (0x04E2 / 0x1414) -->
+    <usb-device vendor-id="1250" product-id="5140"/>
+    <!-- Honeywell Xenon 1900 Scanner (COM emulation) -->
+    <usb-device vendor-id="3118" product-id="2314"/>
 </resources>

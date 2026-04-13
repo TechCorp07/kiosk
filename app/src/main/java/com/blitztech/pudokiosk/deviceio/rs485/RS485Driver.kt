@@ -11,6 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import kotlin.coroutines.suspendCoroutine
+import kotlin.coroutines.resume
+import com.blitztech.pudokiosk.usb.UsbHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -269,6 +272,22 @@ class RS485Driver(private val ctx: Context) {
             if (targetDevice == null) {
                 log("❌ XR21V1414 device (VID:04E2, PID:1414) not found")
                 return@withContext false
+            }
+
+            if (!usbManager.hasPermission(targetDevice)) {
+                log("⚠️ Requesting USB permission dynamically...")
+                val granted = suspendCoroutine<Boolean> { cont ->
+                    val helper = UsbHelper(ctx)
+                    helper.register()
+                    helper.requestPermission(targetDevice) { _, isGranted ->
+                        helper.unregister()
+                        cont.resume(isGranted)
+                    }
+                }
+                if (!granted) {
+                    log("❌ USB Permission denied by system")
+                    return@withContext false
+                }
             }
 
             // Probe the device

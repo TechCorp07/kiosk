@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -12,8 +13,12 @@ import androidx.appcompat.app.AppCompatActivity
 import com.blitztech.pudokiosk.ui.main.MainActivity
 
 /**
- * Enhanced Base Activity for maintaining TRUE KIOSK MODE across all app activities
- * All activities in the kiosk flow should extend this class
+ * Enhanced Base Activity for maintaining TRUE KIOSK MODE across all app activities.
+ * All activities in the kiosk flow should extend this class.
+ *
+ * Includes automatic display density scaling so the UI designed for a reference
+ * 10.1" (1280×800) emulator fits correctly on physical kiosks whose usable
+ * display area is smaller than the nominal panel size.
  */
 abstract class BaseKioskActivity : AppCompatActivity() {
 
@@ -22,6 +27,27 @@ abstract class BaseKioskActivity : AppCompatActivity() {
         private const val UI_HIDE_DELAY = 3000L
         /** Inactivity timeout before auto‑reset to home screen (5 minutes). */
         private const val INACTIVITY_TIMEOUT_MS = 300_000L
+
+        /**
+         * Reference diagonal in inches — the emulator / design target.
+         * All layouts & dimens are tuned for this size.
+         */
+        private const val REFERENCE_DIAGONAL_INCHES = 10.1
+
+        /**
+         * Minimum scale we'll ever apply so the UI doesn't become unreadable.
+         * 0.75 = allow shrinking to 75% of design size at most.
+         */
+        private const val MIN_SCALE_FACTOR = 0.75f
+
+        /**
+         * Maximum scale — prevents accidental enlargement on bigger panels.
+         * 1.0 = never make the UI bigger than the reference design.
+         */
+        private const val MAX_SCALE_FACTOR = 1.0f
+
+        /** SharedPreferences key for an optional manual override (0.0 = auto). */
+        const val KEY_DISPLAY_SCALE_OVERRIDE = "display_scale_override"
     }
 
     private val uiHideHandler = Handler(Looper.getMainLooper())
@@ -39,10 +65,101 @@ abstract class BaseKioskActivity : AppCompatActivity() {
     private var parentActivityClass: Class<*>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        applyDisplayScaling()           // ← Scale density BEFORE setContentView
         super.onCreate(savedInstanceState)
         setupKioskMode()
         setupBackButtonHandling()
         cacheParentActivity()
+    }
+
+    // ---------------------------------------------------------------------------
+    // Display density auto-scaling
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Adjusts the display density so that layouts designed for [REFERENCE_DIAGONAL_INCHES]
+     * scale down proportionally on physical kiosks with smaller usable display areas.
+     *
+     * How it works:
+     *   1. Measure the actual screen diagonal in inches using real DPI values
+     *   2. Compute scale = actualDiagonal / referenceDiagonal
+     *   3. Apply the scale to the system density and scaledDensity (for sp)
+     *
+     * This means on a kiosk whose true viewable area is 8.5" instead of 10.1", all
+     * dp/sp values automatically shrink by ~16% so everything fits without overflow.
+     *
+     * A manual override via [KEY_DISPLAY_SCALE_OVERRIDE] in SharedPreferences allows
+     * field technicians to fine-tune if auto-detection isn't perfect.
+     */
+    private fun applyDisplayScaling() {
+        try {
+            val prefs = com.blitztech.pudokiosk.ZimpudoApp.prefs
+
+            // Check for manual override first (0.0 = auto)
+            val manualScale = prefs.getFloat(KEY_DISPLAY_SCALE_OVERRIDE, 0f)
+
+            val metrics = resources.displayMetrics
+
+            val scaleFactor: Float = if (manualScale > 0f) {
+                // Field tech set a manual override
+                manualScale.coerceIn(MIN_SCALE_FACTOR, MAX_SCALE_FACTOR)
+            } else {
+                // Auto-detect from actual screen measurements
+                computeAutoScaleFactor(metrics)
+            }
+
+            // Only apply if we need to scale DOWN (avoid enlarging)
+            if (scaleFactor < 1.0f) {
+                val sysMetrics = android.content.res.Resources.getSystem().displayMetrics
+                val originalDensity = sysMetrics.density
+                val originalScaledDensity = sysMetrics.scaledDensity
+                val fontScale = originalScaledDensity / originalDensity  // preserve user font prefs
+
+                val targetDensity = originalDensity * scaleFactor
+                val targetScaledDensity = targetDensity * fontScale
+                val targetDensityDpi = (targetDensity * 160).toInt()
+
+                // Apply to application-level metrics (affects all resource inflation)
+                val appMetrics = applicationContext.resources.displayMetrics
+                appMetrics.density = targetDensity
+                appMetrics.scaledDensity = targetScaledDensity
+                appMetrics.densityDpi = targetDensityDpi
+
+                // Apply to activity-level metrics
+                metrics.density = targetDensity
+                metrics.scaledDensity = targetScaledDensity
+                metrics.densityDpi = targetDensityDpi
+
+                Log.d(TAG, "Display scaling applied: factor=${"%.2f".format(scaleFactor)} " +
+                        "density=${originalDensity}→${targetDensity} " +
+                        "dpi=${(originalDensity * 160).toInt()}→${targetDensityDpi}")
+            } else {
+                Log.d(TAG, "Display scaling: no adjustment needed (factor=${"%.2f".format(scaleFactor)})")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Display scaling failed — using system defaults", e)
+        }
+    }
+
+    /**
+     * Computes the scale factor by comparing the actual physical diagonal of the
+     * display to the reference diagonal.
+     */
+    private fun computeAutoScaleFactor(metrics: DisplayMetrics): Float {
+        // Actual physical dimensions in inches
+        val widthInches = metrics.widthPixels.toDouble() / metrics.xdpi
+        val heightInches = metrics.heightPixels.toDouble() / metrics.ydpi
+        val actualDiagonal = Math.sqrt(widthInches * widthInches + heightInches * heightInches)
+
+        val scale = (actualDiagonal / REFERENCE_DIAGONAL_INCHES).toFloat()
+
+        Log.d(TAG, "Screen measurement: " +
+                "${metrics.widthPixels}x${metrics.heightPixels}px, " +
+                "xdpi=${metrics.xdpi}, ydpi=${metrics.ydpi}, " +
+                "diagonal=${"%.1f".format(actualDiagonal)}\" " +
+                "(reference=${REFERENCE_DIAGONAL_INCHES}\" → scale=${"%.2f".format(scale)})")
+
+        return scale.coerceIn(MIN_SCALE_FACTOR, MAX_SCALE_FACTOR)
     }
 
     // ---------------------------------------------------------------------------

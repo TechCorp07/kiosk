@@ -99,7 +99,7 @@ class ProcessingFragment : Fragment() {
                     val searchResult = apiRepository.searchOrderById(orderId, token)
                     if (searchResult is NetworkResult.Success) {
                         val order = searchResult.data.content.firstOrNull()
-                        if (order != null && (order.status == "AWAITING_COURIER" || order.status == "PAID")) {
+                        if (order != null && (order.status == "AWAITING_COURIER" || order.status == "PAID" || order.status == "AWAITING_DEPOSIT")) {
                             assignedCellId = order.cellId ?: ""
                             if (order.cellNumber != null && order.cellNumber > 0) {
                                 assignedCellNumber = order.cellNumber
@@ -132,7 +132,14 @@ class ProcessingFragment : Fragment() {
                 if (assignedCellId.isBlank() || assignedCellNumber == 0) {
                     try {
                         val lockerUuid = prefs.getPrimaryLockerUuid()
-                        val localCell = com.blitztech.pudokiosk.ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
+                        val localCell = if (assignedCellId.isNotBlank()) {
+                            // Already reserved, just resolve the physical door number
+                            com.blitztech.pudokiosk.ZimpudoApp.database.cells().getCellByUuid(assignedCellId)
+                        } else {
+                            // Walk-in, get next available
+                            com.blitztech.pudokiosk.ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
+                        }
+                        
                         if (localCell != null) {
                             assignedCellId = localCell.cellUuid
                             assignedCellNumber = localCell.physicalDoorNumber

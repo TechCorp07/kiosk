@@ -381,7 +381,7 @@
     <string name="auto_use_mock_gps_location_dev_only">Sebenzisa indawo ye-GPS mbumbulu (i-dev kuphela)</string>
     <string name="auto_skip_otp_verification_dev_only">Yeqa ukuqinisekiswa kwe-OTP (i-dev kuphela)</string>
     <string name="auto_environment">Imvelo</string>
-    <string name="auto_production_68_183_176_201_8222">Ukukhiqiza (68.183.176.201:8222)</string>
+    <string name="auto_production_68_183_176_201_8222">Ukukhiqiza (api.zimpudo.com)</string>
     <string name="auto_staging_staging_zimpudo_com_82">Ukudlala (staging.zimpudo.com:8222)</string>
     <string name="auto_local_192_168_1_x_8222">Indawo (192.168.1.x:8222)</string>
     <string name="auto_custom_base_url">I-URL yesisekelo sangokwezifiso</string>

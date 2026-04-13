@@ -32,7 +32,7 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
 
     // Test endpoints
     private val testEndpoints = listOf(
-        "68.183.176.201" to 8222, // Your backend server
+        "api.zimpudo.com" to 443, // Production backend (HTTPS)
         "8.8.8.8" to 53,          // Google DNS
         "1.1.1.1" to 53           // Cloudflare DNS
     )
@@ -197,7 +197,7 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
     private suspend fun runPingTests(): String = withContext(Dispatchers.IO) {
         val results = StringBuilder()
 
-        val hosts = listOf("68.183.176.201", "8.8.8.8", "google.com")
+        val hosts = listOf("api.zimpudo.com", "8.8.8.8", "google.com")
 
         for (host in hosts) {
             try {
@@ -222,7 +222,7 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
 
     private suspend fun testBackendConnectivity(): String = withContext(Dispatchers.IO) {
         return@withContext try {
-            val url = URL("http://68.183.176.201:8222/api/v1/health")
+            val url = URL("https://api.zimpudo.com/api/v1/health")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 10000

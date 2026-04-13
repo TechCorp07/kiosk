@@ -135,6 +135,13 @@ class TechnicianMenuActivity : BaseKioskActivity() {
             // Entering maintenance mode — unlock the kiosk
             KioskLockManager.setMaintenanceMode(this, true)
             Toast.makeText(this, getString(R.string.auto_rem_maintenance_mode_on_you_can_no), Toast.LENGTH_LONG).show()
+            
+            // Launch the Android Home screen so the technician can access the OS
+            val homeIntent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
+                addCategory(android.content.Intent.CATEGORY_HOME)
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(homeIntent)
         }
 
         updateMaintenanceButton()

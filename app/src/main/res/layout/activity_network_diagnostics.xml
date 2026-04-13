@@ -61,57 +61,67 @@
         android:padding="@dimen/spacing_lg">
 
         <!-- Test Buttons -->
-        <GridLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md"
-            android:columnCount="2"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btnRefresh"
-                style="@style/Button.Primary"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_columnWeight="1"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                android:drawableStart="@drawable/ic_refresh"
-                android:drawablePadding="8dp"
-                android:text="@string/auto_run_all_tests"
-                android:textSize="20sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
 
-            <Button
-                android:id="@+id/btnPingTest"
-                style="@style/Button.Secondary"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_columnWeight="1"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/auto_ping_test"
-                android:textSize="20sp" />
+                <Button
+                    android:id="@+id/btnRefresh"
+                    style="@style/Button.Primary"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:drawableStart="@drawable/ic_refresh"
+                    android:drawablePadding="8dp"
+                    android:text="@string/auto_run_all_tests"
+                    android:textSize="20sp" />
 
-            <Button
-                android:id="@+id/btnConnectivityTest"
-                style="@style/Button.Outlined"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_columnWeight="1"
-                android:layout_marginEnd="8dp"
-                android:text="@string/auto_connectivity"
-                android:textSize="20sp" />
+                <Button
+                    android:id="@+id/btnPingTest"
+                    style="@style/Button.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:text="@string/auto_ping_test"
+                    android:textSize="20sp" />
+            </LinearLayout>
 
-            <Button
-                android:id="@+id/btnSpeedTest"
-                style="@style/Button.Outlined"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_columnWeight="1"
-                android:layout_marginStart="8dp"
-                android:text="@string/auto_speed_info"
-                android:textSize="20sp" />
-        </GridLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnConnectivityTest"
+                    style="@style/Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/auto_connectivity"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/btnSpeedTest"
+                    style="@style/Button.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:text="@string/auto_speed_info"
+                    android:textSize="20sp" />
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Network Status Indicators -->
         <LinearLayout

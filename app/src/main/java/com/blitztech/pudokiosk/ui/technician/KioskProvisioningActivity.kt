@@ -16,6 +16,7 @@ import com.blitztech.pudokiosk.ZimpudoApp
 import com.blitztech.pudokiosk.data.api.NetworkResult
 import com.blitztech.pudokiosk.data.api.dto.kiosk.KioskProvisionRequest
 import com.blitztech.pudokiosk.ui.main.MainActivity
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.sync.SyncScheduler
 import kotlinx.coroutines.launch
 
@@ -77,6 +78,9 @@ class KioskProvisioningActivity : AppCompatActivity() {
     private lateinit var tvPermAllGranted: android.widget.TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Apply display scaling BEFORE super/setContentView (same as BaseKioskActivity)
+        applyDisplayScaling()
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_kiosk_provisioning)
 
@@ -114,6 +118,18 @@ class KioskProvisioningActivity : AppCompatActivity() {
         
         btnDeveloperOptions.setOnClickListener {
             val intent = Intent(this, DeveloperModeActivity::class.java)
+            startActivity(intent)
+        }
+
+        val btnWifiSettings = findViewById<android.widget.Button>(R.id.btnWifiSettings)
+        btnWifiSettings.setOnClickListener {
+            val intent = Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+            startActivity(intent)
+        }
+
+        val btnNetworkDiagnostics = findViewById<android.widget.Button>(R.id.btnNetworkDiagnostics)
+        btnNetworkDiagnostics.setOnClickListener {
+            val intent = Intent(this, NetworkDiagnosticsActivity::class.java)
             startActivity(intent)
         }
 
@@ -329,6 +345,50 @@ class KioskProvisioningActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "⚠️ Still denied: ${denied.joinToString()}", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    // ── Display Scaling ─────────────────────────────────────────
+
+    /**
+     * Same density scaling as [BaseKioskActivity] so provisioning UI matches.
+     */
+    private fun applyDisplayScaling() {
+        try {
+            val manualScale = prefs.getFloat(BaseKioskActivity.KEY_DISPLAY_SCALE_OVERRIDE, 0f)
+            val metrics = resources.displayMetrics
+
+            val scaleFactor: Float = if (manualScale > 0f) {
+                manualScale.coerceIn(0.75f, 1.0f)
+            } else {
+                val widthInches = metrics.widthPixels.toDouble() / metrics.xdpi
+                val heightInches = metrics.heightPixels.toDouble() / metrics.ydpi
+                val actualDiagonal = Math.sqrt(widthInches * widthInches + heightInches * heightInches)
+                (actualDiagonal / 10.1).toFloat().coerceIn(0.75f, 1.0f)
+            }
+
+            if (scaleFactor < 1.0f) {
+                val sysMetrics = android.content.res.Resources.getSystem().displayMetrics
+                val originalDensity = sysMetrics.density
+                val fontScale = sysMetrics.scaledDensity / originalDensity
+
+                val targetDensity = originalDensity * scaleFactor
+                val targetScaledDensity = targetDensity * fontScale
+                val targetDensityDpi = (targetDensity * 160).toInt()
+
+                applicationContext.resources.displayMetrics.apply {
+                    density = targetDensity
+                    scaledDensity = targetScaledDensity
+                    densityDpi = targetDensityDpi
+                }
+                metrics.density = targetDensity
+                metrics.scaledDensity = targetScaledDensity
+                metrics.densityDpi = targetDensityDpi
+
+                android.util.Log.d(TAG, "Display scaling applied: factor=${"%.2f".format(scaleFactor)}")
+            }
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "Display scaling failed — using system defaults", e)
         }
     }
 }

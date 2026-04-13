@@ -20,6 +20,7 @@ import com.blitztech.pudokiosk.service.KioskLockManager
 import com.blitztech.pudokiosk.service.KioskModeService
 import com.blitztech.pudokiosk.ui.technician.KioskProvisioningActivity
 import com.blitztech.pudokiosk.ui.technician.TechnicianAccessActivity
+import com.blitztech.pudokiosk.ui.base.BaseKioskActivity
 import com.blitztech.pudokiosk.ui.onboarding.LanguageSelectionActivity
 
 
@@ -65,6 +66,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "MainActivity.onCreate() called")
+
+        // Apply display scaling BEFORE super/setContentView (same logic as BaseKioskActivity)
+        applyDisplayScaling()
+
         super.onCreate(savedInstanceState)
 
         try {
@@ -473,6 +478,54 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Log.w(TAG, "Some permissions denied (can be granted later in provisioning): $denied")
             }
+        }
+    }
+
+    // ── Display Scaling ─────────────────────────────────────────
+
+    /**
+     * Applies the same density scaling as [BaseKioskActivity] so the splash screen
+     * matches the scaling applied to all other activities.
+     */
+    private fun applyDisplayScaling() {
+        try {
+            val prefs = ZimpudoApp.prefs
+
+            val manualScale = prefs.getFloat(BaseKioskActivity.KEY_DISPLAY_SCALE_OVERRIDE, 0f)
+            val metrics = resources.displayMetrics
+
+            val scaleFactor: Float = if (manualScale > 0f) {
+                manualScale.coerceIn(0.75f, 1.0f)
+            } else {
+                // Auto-detect from actual screen measurements
+                val widthInches = metrics.widthPixels.toDouble() / metrics.xdpi
+                val heightInches = metrics.heightPixels.toDouble() / metrics.ydpi
+                val actualDiagonal = Math.sqrt(widthInches * widthInches + heightInches * heightInches)
+                (actualDiagonal / 10.1).toFloat().coerceIn(0.75f, 1.0f)
+            }
+
+            if (scaleFactor < 1.0f) {
+                val sysMetrics = android.content.res.Resources.getSystem().displayMetrics
+                val originalDensity = sysMetrics.density
+                val fontScale = sysMetrics.scaledDensity / originalDensity
+
+                val targetDensity = originalDensity * scaleFactor
+                val targetScaledDensity = targetDensity * fontScale
+                val targetDensityDpi = (targetDensity * 160).toInt()
+
+                applicationContext.resources.displayMetrics.apply {
+                    density = targetDensity
+                    scaledDensity = targetScaledDensity
+                    densityDpi = targetDensityDpi
+                }
+                metrics.density = targetDensity
+                metrics.scaledDensity = targetScaledDensity
+                metrics.densityDpi = targetDensityDpi
+
+                Log.d(TAG, "Display scaling applied: factor=${"%.2f".format(scaleFactor)}")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Display scaling failed — using system defaults", e)
         }
     }
 }

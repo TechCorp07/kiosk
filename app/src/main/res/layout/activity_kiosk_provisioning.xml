@@ -195,6 +195,35 @@
                     android:backgroundTint="@color/zimpudo_primary"
                     android:textColor="@color/white" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnWifiSettings"
+                        style="@style/Button.Outlined"
+                        android:layout_width="0dp"
+                        android:layout_height="80dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:text="Wi-Fi Settings"
+                        android:textSize="22sp"
+                        android:textColor="@color/zimpudo_primary" />
+
+                    <Button
+                        android:id="@+id/btnNetworkDiagnostics"
+                        style="@style/Button.Outlined"
+                        android:layout_width="0dp"
+                        android:layout_height="80dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="Network Test"
+                        android:textSize="22sp"
+                        android:textColor="@color/zimpudo_primary" />
+                </LinearLayout>
+
             </LinearLayout>
 
             <!-- ── STEP 2: Locker Configuration ── -->
