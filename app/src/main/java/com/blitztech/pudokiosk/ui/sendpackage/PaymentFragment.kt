@@ -149,9 +149,11 @@ class PaymentFragment : Fragment() {
                         // Populate full data for receipts/labels
                         data.cellId = order.cellId ?: ""
                         data.assignedLockNumber = order.cellNumber ?: 0
-                        if (data.assignedLockNumber == 0) {
-                            // Backend did not provide a physical cell number, resolve locally per Kiosk protocol
-                            data.assignedLockNumber = (1..20).random()
+                        if (data.assignedLockNumber == 0 && data.cellId.isNotBlank()) {
+                            // Backend did not provide a physical cell number — resolve from local cells DB
+                            val localCell = com.blitztech.pudokiosk.ZimpudoApp.database
+                                .cells().getCellByUuid(data.cellId)
+                            data.assignedLockNumber = localCell?.physicalDoorNumber ?: 0
                         }
                         data.orderPrice = order.price ?: 0.0
                         data.currency = com.blitztech.pudokiosk.data.api.dto.order.Currency.fromCode(order.currency ?: "USD")

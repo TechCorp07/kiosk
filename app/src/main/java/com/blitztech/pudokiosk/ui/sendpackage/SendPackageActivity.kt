@@ -308,31 +308,19 @@ class SendPackageActivity : BaseKioskActivity() {
                     sendPackageData.senderLatitude = it.latitude
                     sendPackageData.senderLongitude = it.longitude
                 } ?: run {
-                    val mockLocation = prefs.getBoolean("dev_mock_location", false)
-                    if (mockLocation) {
-                        sendPackageData.senderLatitude = -17.8252
-                        sendPackageData.senderLongitude = 31.0335
-                    } else {
-                        sendPackageData.senderLatitude = prefs.getKioskLatitude()
-                        sendPackageData.senderLongitude = prefs.getKioskLongitude()
-                    }
+                    sendPackageData.senderLatitude = prefs.getKioskLatitude()
+                    sendPackageData.senderLongitude = prefs.getKioskLongitude()
                     Toast.makeText(
                         this,
-                        if (mockLocation) "Using Dev Mock Location." else "Using Provisioned Kiosk Location.",
+                        "Using Provisioned Kiosk Location.",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             }
         } catch (e: Exception) {
-            val mockLocation = prefs.getBoolean("dev_mock_location", false)
-            if (mockLocation) {
-                sendPackageData.senderLatitude = -17.8252
-                sendPackageData.senderLongitude = 31.0335
-            } else {
-                sendPackageData.senderLatitude = prefs.getKioskLatitude()
-                sendPackageData.senderLongitude = prefs.getKioskLongitude()
-            }
-            Toast.makeText(this, "Location error. Using fallback location.", Toast.LENGTH_SHORT).show()
+            sendPackageData.senderLatitude = prefs.getKioskLatitude()
+            sendPackageData.senderLongitude = prefs.getKioskLongitude()
+            Toast.makeText(this, "Location error. Using provisioned kiosk location.", Toast.LENGTH_SHORT).show()
         }
     }
 

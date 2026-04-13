@@ -120,9 +120,6 @@ class ZimpudoApp : Application() {
         Log.d(TAG, "Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
 
         try {
-            // Configure network logging level before API client init
-            NetworkModule.isDebug = (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
-
             // Initialize in safe order with timeouts
             initializeErrorHandling()
             initializeGlobalSettings()

@@ -22,7 +22,7 @@ import androidx.room.PrimaryKey
 data class OfflineCollectionEntity(
     @PrimaryKey val trackingNumber: String,
     val hashedOtp: String,       // bcrypt hash of the OTP — used for offline validation
-    val cellNumber: Int,         // Physical door number (1-20) for RS485 unlock
+    val cellNumber: Int,         // Physical door number for RS485 unlock (1-based, varies per locker)
     val lockerUuid: String,      // Parent locker UUID
     val recipientName: String? = null,
     val collected: Boolean = false,

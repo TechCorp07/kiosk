@@ -67,7 +67,7 @@ object STM32LockerConfig {
 
     // === SYSTEM MONITORING ===
     object Monitoring {
-        const val DEBUG_COUNTER_ENABLED = true
+        const val DEBUG_COUNTER_ENABLED = false
         const val HEARTBEAT_LED_PIN = "PB12" // Using Lock 1 pin as status LED
         const val SYSTEM_READY_FLASH_COUNT = 3
         const val SYSTEM_READY_FLASH_DELAY_MS = 200L

@@ -8,7 +8,7 @@ import com.squareup.moshi.JsonClass
  * Used to sync the locker's physical cell inventory into the local Room DB.
  *
  * The backend [Cell] entity contains:
- *   id (UUID), lockerId (UUID), number (Int, 1-20), size (CellSize), status (CellStatus)
+ *   id (UUID), lockerId (UUID), number (Int, 1-based), size (CellSize), status (CellStatus)
  *
  * Option A: server also returns cellNumber (physical door number) in collection responses.
  */
@@ -16,7 +16,7 @@ import com.squareup.moshi.JsonClass
 data class CellDto(
     @Json(name = "id") val id: String,                  // UUID — backend primary key
     @Json(name = "lockerId") val lockerId: String,       // UUID of parent locker
-    @Json(name = "cellNumber") val cellNumber: Int,              // Physical door number (1-20 per board)
+    @Json(name = "cellNumber") val cellNumber: Int,              // Physical door number (1-based, varies per locker)
     @Json(name = "size") val size: String,               // XS / S / M / L / XL
     @Json(name = "status") val status: String,           // AVAILABLE / OCCUPIED / RESERVED / MAINTENANCE
     @Json(name = "cabinetId") val cabinetId: String? = null  // Board identifier e.g. "CAB-001"

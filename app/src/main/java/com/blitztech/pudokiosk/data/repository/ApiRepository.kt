@@ -26,6 +26,7 @@ import com.blitztech.pudokiosk.data.api.dto.order.PageOrder
 import com.blitztech.pudokiosk.data.api.dto.collection.*
 import com.blitztech.pudokiosk.data.api.dto.courier.TransactionRequest
 import com.blitztech.pudokiosk.data.api.dto.courier.TransactionResponse
+import com.blitztech.pudokiosk.data.api.dto.courier.VerifyReservationBody
 import com.blitztech.pudokiosk.data.api.dto.courier.CourierOpsResponse
 import com.blitztech.pudokiosk.data.api.dto.courier.OrderSearchPage
 import com.blitztech.pudokiosk.data.api.dto.locker.CellDto
@@ -478,7 +479,7 @@ class ApiRepository(
     suspend fun verifyReservation(
         request: VerifyReservationRequest,
         token: String
-    ): NetworkResult<TransactionResponse> {
+    ): NetworkResult<VerifyReservationBody> {
         return when (val result = safeApiCall { apiService.verifyReservation(request, "Bearer $token") }) {
             is NetworkResult.Success -> {
                 result.data.body?.let { NetworkResult.Success(it) } 

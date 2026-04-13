@@ -29,6 +29,7 @@ class Prefs(context: Context) {
         private const val KEY_PROVISIONED = "kiosk_provisioned"
         private const val KEY_SITE_NAME = "kiosk_site_name"
         private const val KEY_LOCKER_COUNT = "kiosk_locker_count"
+        private const val KEY_ALL_LOCKER_UUIDS = "all_locker_uuids"
         private const val KEY_API_BASE_URL_OVERRIDE = "api_base_url_override"
     }
 
@@ -226,7 +227,7 @@ class Prefs(context: Context) {
      * Set to TRUE to bypass RS485 and RS232 hardware requirements for Emulator testing.
      * To turn it off, set the defaultValue to false.
      */
-    fun isHardwareBypassEnabled(): Boolean = getBoolean("hardware_bypass_enabled", true)
+    fun isHardwareBypassEnabled(): Boolean = getBoolean("hardware_bypass_enabled", false)
     fun setHardwareBypassEnabled(enabled: Boolean) = putBoolean("hardware_bypass_enabled", enabled)
 
     // OTA update settings
@@ -241,6 +242,24 @@ class Prefs(context: Context) {
      */
     fun getPrimaryLockerUuid(): String = getString(KEY_PRIMARY_LOCKER_UUID, "")
     fun savePrimaryLockerUuid(uuid: String) = putString(KEY_PRIMARY_LOCKER_UUID, uuid)
+
+    /**
+     * All locker UUIDs assigned to this kiosk (comma-separated).
+     * Set during provisioning. Used by LockerSyncWorker to sync
+     * cell inventory for ALL lockers, not just the primary.
+     */
+    fun getAllLockerUuids(): List<String> {
+        val raw = getString(KEY_ALL_LOCKER_UUIDS, "")
+        return if (raw.isBlank()) {
+            // Backward-compat: fall back to primary-only if not set
+            val primary = getPrimaryLockerUuid()
+            if (primary.isNotBlank()) listOf(primary) else emptyList()
+        } else {
+            raw.split(",").filter { it.isNotBlank() }
+        }
+    }
+    fun saveAllLockerUuids(uuids: List<String>) =
+        putString(KEY_ALL_LOCKER_UUIDS, uuids.joinToString(","))
 
     /**
      * Unique device ID for this kiosk (generated once, stored permanently).

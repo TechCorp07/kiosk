@@ -129,14 +129,25 @@ data class ParcelLookupRequest(
 )
 
 /**
+ * Backend response body for verify-reservation.
+ * Matches backend VerifyReservationResponse { orderId, cellId, cellNumber }.
+ */
+@JsonClass(generateAdapter = true)
+data class VerifyReservationBody(
+    @Json(name = "orderId") val orderId: String? = null,
+    @Json(name = "cellId") val cellId: String? = null,
+    @Json(name = "cellNumber") val cellNumber: Int = 0    // Physical door number for RS485 unlock (1-based, varies per locker)
+)
+
+/**
  * Backend wraps all responses in ApiResponseWrapper { success, message, body }.
- * This typed wrapper extracts the transaction response from the body field.
+ * This typed wrapper extracts the verify-reservation response from the body field.
  */
 @JsonClass(generateAdapter = true)
 data class TransactionApiResponse(
     @Json(name = "success") val success: Boolean,
     @Json(name = "message") val message: String,
-    @Json(name = "body") val body: TransactionResponse? = null
+    @Json(name = "body") val body: VerifyReservationBody? = null
 )
 
 /**

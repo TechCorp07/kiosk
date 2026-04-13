@@ -27,7 +27,7 @@ data class RecipientAuthRequest(
 /**
  * Response from kiosk recipient authentication.
  * Backend returns: CollectionValidationResponse (success, message, trackingNumber, cabinetId, cellId)
- * Option A: backend also includes cellNumber (physical door number 1-20).
+ * Option A: backend also includes cellNumber (physical door number, 1-based).
  */
 @JsonClass(generateAdapter = true)
 data class RecipientAuthResponse(

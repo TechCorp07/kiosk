@@ -5,7 +5,6 @@ import com.blitztech.pudokiosk.auth.AuthInterceptor
 import com.blitztech.pudokiosk.data.api.config.ApiConfig
 import com.blitztech.pudokiosk.data.repository.ApiRepository
 import com.blitztech.pudokiosk.prefs.Prefs
-import com.blitztech.pudokiosk.ui.technician.DeveloperModeActivity
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -16,15 +15,9 @@ import java.util.concurrent.TimeUnit
 
 object NetworkModule {
 
-    /** Set from ZimpudoApp.onCreate(). Controls HTTP logging verbosity. */
-    var isDebug: Boolean = false
-
     fun provideOkHttpClient(prefs: Prefs): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = if (isDebug)
-                HttpLoggingInterceptor.Level.BODY
-            else
-                HttpLoggingInterceptor.Level.HEADERS
+            level = HttpLoggingInterceptor.Level.BASIC
         }
 
         return OkHttpClient.Builder()
@@ -43,12 +36,10 @@ object NetworkModule {
     }
 
     fun provideRetrofit(okHttpClient: OkHttpClient, moshi: Moshi, prefs: Prefs): Retrofit {
-        val baseUrl = when (prefs.getString(DeveloperModeActivity.KEY_ENVIRONMENT, DeveloperModeActivity.ENV_PRODUCTION)) {
-            DeveloperModeActivity.ENV_STAGING -> "https://staging.zimpudo.com:8222/"
-            DeveloperModeActivity.ENV_LOCAL -> "http://10.0.2.2:8222/" // Emulator localhost
-            DeveloperModeActivity.ENV_CUSTOM -> prefs.getString(DeveloperModeActivity.KEY_CUSTOM_URL, ApiConfig.BASE_URL).ifBlank { ApiConfig.BASE_URL }
-            else -> ApiConfig.BASE_URL
-        }
+        // Production: always use the configured base URL
+        // API URL override is supported for staging kiosks via provisioning screen
+        val overrideUrl = prefs.getApiBaseUrlOverride()
+        val baseUrl = if (overrideUrl.isNotBlank()) overrideUrl else ApiConfig.BASE_URL
 
         return Retrofit.Builder()
             .baseUrl(baseUrl)

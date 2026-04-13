@@ -212,6 +212,10 @@ class KioskProvisioningActivity : AppCompatActivity() {
                         prefs.savePrimaryLockerUuid(
                             body.lockers.firstOrNull()?.lockerId ?: ""
                         )
+                        // Save ALL locker UUIDs for multi-locker cell sync
+                        prefs.saveAllLockerUuids(
+                            body.lockers.map { it.lockerId }
+                        )
                         prefs.setSiteName(body.siteName)
                         prefs.setLockerCount(body.lockerCount)
                         prefs.setApiBaseUrlOverride(apiOverride)

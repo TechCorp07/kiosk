@@ -47,18 +47,17 @@ class LockerSyncWorker(
         // We keep the signature the same for backward compatibility in the repository method.
         val token = prefs.getAccessToken().orEmpty().ifBlank { "background-sync" }
 
-        val primaryLockerUuid = prefs.getPrimaryLockerUuid()
-        if (primaryLockerUuid.isBlank()) {
-            Log.w(TAG, "No primary locker UUID configured — kiosk not provisioned")
-            return Result.failure() // Don't retry — provisioning needed
+        // ── 1. Sync cells for each configured locker ──────────────────────
+        // Syncs ALL lockers assigned during provisioning (up to 4)
+        val lockerUuids = prefs.getAllLockerUuids()
+            .filter { it.isNotBlank() }
+
+        if (lockerUuids.isEmpty()) {
+            Log.w(TAG, "No locker UUIDs configured — kiosk not provisioned")
+            return Result.failure()
         }
 
         var overallSuccess = true
-
-        // ── 1. Sync cells for each configured locker ──────────────────────
-        // Currently supports primary locker; extend when multi-locker is needed
-        val lockerUuids = listOf(primaryLockerUuid)
-            .filter { it.isNotBlank() }
 
         for (lockerUuid in lockerUuids) {
             val cellResult = ZimpudoApp.apiRepository.getLockerCells(lockerUuid, token)

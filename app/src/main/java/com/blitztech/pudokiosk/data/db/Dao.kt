@@ -75,6 +75,9 @@ interface CellsDao {
     @Query("SELECT * FROM cells WHERE physicalDoorNumber = :doorNumber LIMIT 1")
     suspend fun getCellByDoorNumber(doorNumber: Int): CellEntity?
 
+    @Query("SELECT * FROM cells WHERE cellUuid = :cellUuid LIMIT 1")
+    suspend fun getCellByUuid(cellUuid: String): CellEntity?
+
     @Query("UPDATE cells SET status = 'OCCUPIED' WHERE cellUuid = :cellUuid")
     suspend fun markCellOccupied(cellUuid: String)
 
