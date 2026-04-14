@@ -35,7 +35,9 @@ data class LockerDetail(
     @Json(name = "lockerId") val lockerId: String,
     @Json(name = "shortCode") val shortCode: String,
     @Json(name = "name") val name: String,
-    @Json(name = "cellCount") val cellCount: Int
+    @Json(name = "cellCount") val cellCount: Int,
+    @Json(name = "latitude") val latitude: Double? = null,
+    @Json(name = "longitude") val longitude: Double? = null
 )
 
 /**

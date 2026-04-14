@@ -167,7 +167,9 @@ interface ApiService {
     @POST(ApiEndpoints.ORDER_SEARCH)
     suspend fun searchOrder(
         @Body request: Map<String, String>,
-        @Header("Authorization") token: String
+        @Header("Authorization") token: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
     ): Response<OrderSearchPage>
 
     /**
@@ -215,6 +217,16 @@ interface ApiService {
     suspend fun reportCourierIssue(
         @Url url: String,
         @Body request: Map<String, Any>,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse>
+
+    /**
+     * Accept/bind an order to this courier.
+     * PATCH /api/v1/orders/{orderId}/bind
+     */
+    @PATCH
+    suspend fun courierBindOrder(
+        @Url url: String,
         @Header("Authorization") token: String
     ): Response<ApiResponse>
 

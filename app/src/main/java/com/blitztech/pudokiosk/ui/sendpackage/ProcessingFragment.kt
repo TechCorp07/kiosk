@@ -5,7 +5,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.blitztech.pudokiosk.ZimpudoApp
@@ -22,15 +21,16 @@ import com.blitztech.pudokiosk.deviceio.rs485.LockerController
 import com.blitztech.pudokiosk.deviceio.rs485.WinnsenProtocol
 import com.blitztech.pudokiosk.prefs.Prefs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class ProcessingFragment : Fragment() {
 
     private var _binding: FragmentProcessingBinding? = null
-    private val binding get() = _binding!!
+    private val binding
+        get() = _binding!!
 
     private lateinit var apiRepository: ApiRepository
     private lateinit var sendPackageActivity: SendPackageActivity
@@ -43,8 +43,9 @@ class ProcessingFragment : Fragment() {
     private var hasStartedProcessing = false
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         _binding = FragmentProcessingBinding.inflate(inflater, container, false)
         return binding.root
@@ -99,7 +100,11 @@ class ProcessingFragment : Fragment() {
                     val searchResult = apiRepository.searchOrderById(orderId, token)
                     if (searchResult is NetworkResult.Success) {
                         val order = searchResult.data.content.firstOrNull()
-                        if (order != null && (order.status == "AWAITING_COURIER" || order.status == "PAID" || order.status == "AWAITING_DEPOSIT")) {
+                        if (order != null &&
+                                        (order.status == "AWAITING_COURIER" ||
+                                                order.status == "PAID" ||
+                                                order.status == "AWAITING_DEPOSIT")
+                        ) {
                             assignedCellId = order.cellId ?: ""
                             if (order.cellNumber != null && order.cellNumber > 0) {
                                 assignedCellNumber = order.cellNumber
@@ -126,28 +131,41 @@ class ProcessingFragment : Fragment() {
 
             if (isApproved) {
                 val data = sendPackageActivity.sendPackageData
-                
+
                 // If it's a walk-in, the backend might not have assigned a cellId yet.
                 // We must query the local Room DB to find an available cell and assign it.
                 if (assignedCellId.isBlank() || assignedCellNumber == 0) {
                     try {
                         val lockerUuid = prefs.getPrimaryLockerUuid()
-                        val localCell = if (assignedCellId.isNotBlank()) {
-                            // Already reserved, just resolve the physical door number
-                            com.blitztech.pudokiosk.ZimpudoApp.database.cells().getCellByUuid(assignedCellId)
-                        } else {
-                            // Walk-in, get next available
-                            com.blitztech.pudokiosk.ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
-                        }
-                        
+                        val localCell =
+                                if (assignedCellId.isNotBlank()) {
+                                    // Already reserved, just resolve the physical door number
+                                    com.blitztech.pudokiosk.ZimpudoApp.database
+                                            .cells()
+                                            .getCellByUuid(assignedCellId)
+                                } else {
+                                    // Walk-in, get next available
+                                    com.blitztech.pudokiosk.ZimpudoApp.database
+                                            .cells()
+                                            .getNextAvailableCell(lockerUuid)
+                                }
+
                         if (localCell != null) {
                             assignedCellId = localCell.cellUuid
                             assignedCellNumber = localCell.physicalDoorNumber
                             // Mark cell as occupied locally to prevent double assignment
-                            com.blitztech.pudokiosk.ZimpudoApp.database.cells().markCellOccupied(localCell.cellUuid)
-                            android.util.Log.i("ProcessingFragment", "Walk-in locally assigned cellId: $assignedCellId (door $assignedCellNumber)")
+                            com.blitztech.pudokiosk.ZimpudoApp.database
+                                    .cells()
+                                    .markCellOccupied(localCell.cellUuid)
+                            android.util.Log.i(
+                                    "ProcessingFragment",
+                                    "Walk-in locally assigned cellId: $assignedCellId (door $assignedCellNumber)"
+                            )
                         } else {
-                            android.util.Log.e("ProcessingFragment", "No available cells found in local DB!")
+                            android.util.Log.e(
+                                    "ProcessingFragment",
+                                    "No available cells found in local DB!"
+                            )
                         }
                     } catch (e: Exception) {
                         android.util.Log.e("ProcessingFragment", "Error fetching local cell", e)
@@ -162,11 +180,15 @@ class ProcessingFragment : Fragment() {
             } else {
                 setStepState(1, StepState.ERROR, "Payment timed out")
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Payment Timeout")
-                    .setMessage("Payment confirmation timed out. If you were charged and no locker opened, please contact support with tracking number: $orderId")
-                    .setPositiveButton("OK") { _, _ -> (requireActivity() as SendPackageActivity).exitToHome() }
-                    .setCancelable(false)
-                    .show()
+                        .setTitle("Payment Timeout")
+                        .setMessage(
+                                "Payment confirmation timed out. If you were charged and no locker opened, please contact support with tracking number: $orderId"
+                        )
+                        .setPositiveButton("OK") { _, _ ->
+                            (requireActivity() as SendPackageActivity).exitToHome()
+                        }
+                        .setCancelable(false)
+                        .show()
             }
         }
     }
@@ -186,6 +208,9 @@ class ProcessingFragment : Fragment() {
                 delay(3000)
                 setStepState(2, StepState.DONE, "Receipt printed")
 
+                // Wait for printer to finish feed/cut cycle before starting next job
+                delay(3000)
+
                 // Step 3: Print label
                 setStepState(3, StepState.IN_PROGRESS, "Printing waybill label...")
                 printBarcodeLabel()
@@ -194,11 +219,12 @@ class ProcessingFragment : Fragment() {
 
                 // Security photo
                 try {
-                    SecurityCameraManager.getInstance(requireContext()).captureSecurityPhoto(
-                        reason = PhotoReason.CLIENT_DEPOSIT,
-                        referenceId = sendPackageActivity.sendPackageData.orderId,
-                        userId = prefs.getUserMobile() ?: ""
-                    )
+                    SecurityCameraManager.getInstance(requireContext())
+                            .captureSecurityPhoto(
+                                    reason = PhotoReason.CLIENT_DEPOSIT,
+                                    referenceId = sendPackageActivity.sendPackageData.orderId,
+                                    userId = prefs.getUserMobile() ?: ""
+                            )
                 } catch (e: Exception) {
                     Log.e("ProcessingFragment", "Camera error: ${e.message}")
                 }
@@ -206,39 +232,43 @@ class ProcessingFragment : Fragment() {
                 // Step 4: Open Locker
                 val lockNumber = sendPackageActivity.sendPackageData.assignedLockNumber
                 setStepState(4, StepState.IN_PROGRESS, "Opening locker $lockNumber...")
-                
+
                 try {
                     openLocker(lockNumber)
                     delay(500)
-                    
+
                     binding.cardLockerAssigned.visibility = View.VISIBLE
                     binding.tvLockerNumber.text = lockNumber.toString()
                     setStepState(4, StepState.DONE, "Locker $lockNumber is open")
-    
+
                     startDoorMonitoring(lockNumber)
                 } catch (e: Exception) {
                     Log.e("ProcessingFragment", "Locker hardware error", e)
                     setStepState(4, StepState.ERROR, "Hardware Emulator Bypass")
-                    
+
                     MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("Hardware Disconnected")
-                        .setMessage("Locker hardware is offline (${e.message}).\n\nSince your payment was already approved, click below to simulate the physical door bypass and complete the test flow.")
-                        .setPositiveButton("Simulate Drop-off") { _, _ ->
-                            confirmSenderDropoff()
-                            showCompletion()
-                        }
-                        .setCancelable(false)
-                        .show()
+                            .setTitle("Hardware Disconnected")
+                            .setMessage(
+                                    "Locker hardware is offline (${e.message}).\n\nSince your payment was already approved, click below to simulate the physical door bypass and complete the test flow."
+                            )
+                            .setPositiveButton("Simulate Drop-off") { _, _ ->
+                                confirmSenderDropoff()
+                                showCompletion()
+                            }
+                            .setCancelable(false)
+                            .show()
                 }
             } catch (e: Exception) {
                 setStepState(4, StepState.ERROR, "System Error")
                 Log.e("ProcessingFragment", "Unexpected system error", e)
                 MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Unexpected Error")
-                    .setMessage("An unexpected error occurred: ${e.message}")
-                    .setPositiveButton("Finish") { _, _ -> (requireActivity() as SendPackageActivity).exitToHome() }
-                    .setCancelable(false)
-                    .show()
+                        .setTitle("Unexpected Error")
+                        .setMessage("An unexpected error occurred: ${e.message}")
+                        .setPositiveButton("Finish") { _, _ ->
+                            (requireActivity() as SendPackageActivity).exitToHome()
+                        }
+                        .setCancelable(false)
+                        .show()
             }
         }
     }
@@ -246,16 +276,24 @@ class ProcessingFragment : Fragment() {
     private suspend fun printCustomerReceipt() {
         try {
             val data = sendPackageActivity.sendPackageData
-            val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            val timestamp =
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
-            printerDriver.printText("CUSTOMER RECEIPT\n", fontSize = 2, bold = true, centered = true)
+            printerDriver.printText(
+                    "CUSTOMER RECEIPT\n",
+                    fontSize = 2,
+                    bold = true,
+                    centered = true
+            )
             printerDriver.printText("--------------------------------\n")
             printerDriver.printText("Date: $timestamp\n")
             printerDriver.printText("Tracking: ${data.trackingNumber}\n")
             printerDriver.printText("Recipient: ${data.recipientName} ${data.recipientSurname}\n")
             printerDriver.printText("Mobile: ${data.recipientMobile}\n")
             printerDriver.printText("Size: ${data.packageSize?.displayName ?: "-"}\n")
-            printerDriver.printText("Amount Paid: ${data.currency?.symbol ?: "$"}${String.format("%.2f", data.orderPrice)}\n")
+            printerDriver.printText(
+                    "Amount Paid: ${data.currency?.symbol ?: "$"}${String.format("%.2f", data.orderPrice)}\n"
+            )
             printerDriver.printText("Payment: ${data.paymentMethod?.displayName ?: "PRE-PAID"}\n")
             printerDriver.printText("--------------------------------\n")
             printerDriver.printText("Thank you for using ZimPudo!\n", bold = true, centered = true)
@@ -269,7 +307,12 @@ class ProcessingFragment : Fragment() {
     private suspend fun printBarcodeLabel() {
         try {
             val data = sendPackageActivity.sendPackageData
-            printerDriver.printText("ZimPudo Waybill Label\n", fontSize = 2, bold = true, centered = true)
+            printerDriver.printText(
+                    "ZimPudo Waybill Label\n",
+                    fontSize = 2,
+                    bold = true,
+                    centered = true
+            )
             printerDriver.printText("Tracking: ${data.trackingNumber}\n")
             printerDriver.printText("To: ${data.recipientName} ${data.recipientSurname}\n")
             printerDriver.printText("Size: ${data.packageSize?.displayName ?: "-"}\n")
@@ -298,20 +341,18 @@ class ProcessingFragment : Fragment() {
         val hw = HardwareManager.getInstance(requireContext())
         activeDoorMonitor = DoorMonitor(lockerController, lockNumber, lifecycleScope)
         activeDoorMonitor?.start(
-            onDoorOpenTooLong = {
-                hw.speaker.startDoorCloseReminder()
-            },
-            onDoorTimeout = {
-                hw.speaker.stopDoorCloseReminder()
-            },
-            onDoorClosed = {
-                hw.speaker.stopDoorCloseReminder()
-                lifecycleScope.launch {
-                    try { lockerController.disconnect() } catch (_: Exception) {}
-                    confirmSenderDropoff()
-                    showCompletion()
+                onDoorOpenTooLong = { hw.speaker.startDoorCloseReminder() },
+                onDoorTimeout = { hw.speaker.stopDoorCloseReminder() },
+                onDoorClosed = {
+                    hw.speaker.stopDoorCloseReminder()
+                    lifecycleScope.launch {
+                        try {
+                            lockerController.disconnect()
+                        } catch (_: Exception) {}
+                        confirmSenderDropoff()
+                        showCompletion()
+                    }
                 }
-            }
         )
     }
 
@@ -323,63 +364,127 @@ class ProcessingFragment : Fragment() {
                 if (token.isBlank() || data.orderId.isBlank()) return@launch
 
                 if (data.cellId.isBlank()) {
-                    Log.w("ProcessingFragment", "Skipping sender dropoff API — no cellId assigned (Emulator bypass?)")
+                    Log.w(
+                            "ProcessingFragment",
+                            "Skipping sender dropoff API — no cellId assigned (Emulator bypass?)"
+                    )
                     return@launch
                 }
 
-                apiRepository.senderDropoff(data.orderId, data.cellId, token)
+                Log.i(
+                        "ProcessingFragment",
+                        "📤 Calling sender/dropoff: orderId=${data.orderId}, cellId=${data.cellId}"
+                )
+                val result = apiRepository.senderDropoff(data.orderId, data.cellId, token)
+
+                when (result) {
+                    is NetworkResult.Success -> {
+                        Log.i(
+                                "ProcessingFragment",
+                                "✅ Sender dropoff confirmed for order ${data.orderId}"
+                        )
+                    }
+                    is NetworkResult.Error -> {
+                        Log.e(
+                                "ProcessingFragment",
+                                "❌ Sender dropoff API failed: code=${result.code}, msg=${result.message}"
+                        )
+                        // Queue in outbox for retry by SyncWorker
+                        writeDropoffToOutbox(data.orderId, data.cellId)
+                    }
+                    is NetworkResult.Loading -> {
+                        /* no-op */
+                    }
+                }
             } catch (e: Exception) {
-                Log.w("ProcessingFragment", "Sender dropoff error: ${e.message}")
+                Log.e("ProcessingFragment", "❌ Sender dropoff exception: ${e.message}", e)
+                // Queue in outbox for retry
+                try {
+                    val data = sendPackageActivity.sendPackageData
+                    writeDropoffToOutbox(data.orderId, data.cellId)
+                } catch (outboxErr: Exception) {
+                    Log.e("ProcessingFragment", "Failed to write dropoff to outbox", outboxErr)
+                }
             }
+        }
+    }
+
+    private suspend fun writeDropoffToOutbox(orderId: String, cellId: String) {
+        try {
+            val outboxEvent =
+                    com.blitztech.pudokiosk.data.db.OutboxEventEntity(
+                            idempotencyKey =
+                                    "sender_dropoff_${orderId}_${System.currentTimeMillis()}",
+                            type = "sender_dropoff",
+                            payloadJson = """{"orderId":"$orderId","cellId":"$cellId"}""",
+                            createdAt = System.currentTimeMillis()
+                    )
+            com.blitztech.pudokiosk.ZimpudoApp.database.outbox().insert(outboxEvent)
+            Log.i(
+                    "ProcessingFragment",
+                    "📝 Sender dropoff queued in outbox for retry — order $orderId"
+            )
+        } catch (e: Exception) {
+            Log.e("ProcessingFragment", "Failed to write dropoff to outbox", e)
         }
     }
 
     private fun showCompletion() {
         binding.tvThankYouCountdown.visibility = View.VISIBLE
-        
+
         lifecycleScope.launch {
             for (i in 5 downTo 1) {
-                binding.tvThankYouCountdown.text = "Thank you! Your package is secure.\nReturning to main menu in ${i}s..."
+                binding.tvThankYouCountdown.text =
+                        "Thank you! Your package is secure.\nReturning to main menu in ${i}s..."
                 delay(1000)
             }
             (requireActivity() as SendPackageActivity).exitToHome()
         }
     }
 
-    private enum class StepState { INACTIVE, IN_PROGRESS, DONE, ERROR }
+    private enum class StepState {
+        INACTIVE,
+        IN_PROGRESS,
+        DONE,
+        ERROR
+    }
 
     private fun setStepState(stepNumber: Int, state: StepState, text: String) {
-        val layout = when (stepNumber) {
-            1 -> binding.stepPayment
-            2 -> binding.stepReceipt
-            3 -> binding.stepLabel
-            4 -> binding.stepLocker
-            else -> return
-        }
+        val layout =
+                when (stepNumber) {
+                    1 -> binding.stepPayment
+                    2 -> binding.stepReceipt
+                    3 -> binding.stepLabel
+                    4 -> binding.stepLocker
+                    else -> return
+                }
 
-        val progress = when (stepNumber) {
-            1 -> binding.progressPayment
-            2 -> binding.progressReceipt
-            3 -> binding.progressLabel
-            4 -> binding.progressLocker
-            else -> return
-        }
+        val progress =
+                when (stepNumber) {
+                    1 -> binding.progressPayment
+                    2 -> binding.progressReceipt
+                    3 -> binding.progressLabel
+                    4 -> binding.progressLocker
+                    else -> return
+                }
 
-        val checked = when (stepNumber) {
-            1 -> binding.ivPaymentDone
-            2 -> binding.ivReceiptDone
-            3 -> binding.ivLabelDone
-            4 -> binding.ivLockerDone
-            else -> return
-        }
+        val checked =
+                when (stepNumber) {
+                    1 -> binding.ivPaymentDone
+                    2 -> binding.ivReceiptDone
+                    3 -> binding.ivLabelDone
+                    4 -> binding.ivLockerDone
+                    else -> return
+                }
 
-        val textView = when (stepNumber) {
-            1 -> binding.tvPaymentText
-            2 -> binding.tvReceiptText
-            3 -> binding.tvLabelText
-            4 -> binding.tvLockerText
-            else -> return
-        }
+        val textView =
+                when (stepNumber) {
+                    1 -> binding.tvPaymentText
+                    2 -> binding.tvReceiptText
+                    3 -> binding.tvLabelText
+                    4 -> binding.tvLockerText
+                    else -> return
+                }
 
         // Set opacity
         layout?.alpha = if (state == StepState.INACTIVE) 0.4f else 1.0f
@@ -397,17 +502,23 @@ class ProcessingFragment : Fragment() {
             StepState.IN_PROGRESS -> {
                 progress?.visibility = View.VISIBLE
                 checked?.visibility = View.GONE
-                textView?.setTextColor(resources.getColor(com.blitztech.pudokiosk.R.color.zimpudo_primary, null))
+                textView?.setTextColor(
+                        resources.getColor(com.blitztech.pudokiosk.R.color.zimpudo_primary, null)
+                )
             }
             StepState.DONE -> {
                 progress?.visibility = View.GONE
                 checked?.visibility = View.VISIBLE
-                textView?.setTextColor(resources.getColor(com.blitztech.pudokiosk.R.color.success, null))
+                textView?.setTextColor(
+                        resources.getColor(com.blitztech.pudokiosk.R.color.success, null)
+                )
             }
             StepState.ERROR -> {
                 progress?.visibility = View.GONE
                 checked?.visibility = View.GONE
-                textView?.setTextColor(resources.getColor(com.blitztech.pudokiosk.R.color.error, null))
+                textView?.setTextColor(
+                        resources.getColor(com.blitztech.pudokiosk.R.color.error, null)
+                )
             }
         }
     }
@@ -416,7 +527,9 @@ class ProcessingFragment : Fragment() {
         activeDoorMonitor?.stop()
         activeDoorMonitor = null
         lifecycleScope.launch {
-            try { lockerController.disconnect() } catch (_: Exception) {}
+            try {
+                lockerController.disconnect()
+            } catch (_: Exception) {}
         }
         super.onDestroyView()
         _binding = null

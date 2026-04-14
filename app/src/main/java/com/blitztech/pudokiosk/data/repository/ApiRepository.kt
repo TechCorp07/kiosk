@@ -473,6 +473,39 @@ class ApiRepository(
         }
     }
 
+    /**
+     * Search for available orders that need a courier (AWAITING_COURIER).
+     * POST /api/v1/orders/and-search { "status": "AWAITING_COURIER" }
+     */
+    suspend fun searchAvailableOrders(
+        token: String,
+        page: Int = 0,
+        size: Int = 20
+    ): NetworkResult<OrderSearchPage> {
+        return safeApiCall {
+            apiService.searchOrder(
+                request = mapOf("status" to "AWAITING_COURIER"),
+                token = "Bearer $token",
+                page = page,
+                size = size
+            )
+        }
+    }
+
+    /**
+     * Accept/bind an order to this courier.
+     * PATCH /api/v1/orders/{orderId}/bind
+     */
+    suspend fun acceptOrder(
+        orderId: String,
+        token: String
+    ): NetworkResult<ApiResponse> {
+        return safeApiCall {
+            val url = ApiEndpoints.getCourierBindOrderUrl(orderId)
+            apiService.courierBindOrder(url, "Bearer $token")
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────
     //  Locker Transactions – Sender
     // ─────────────────────────────────────────────────────────────

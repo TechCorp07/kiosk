@@ -81,9 +81,9 @@ class SignUpActivity : BaseKioskActivity() {
         binding.tvAlreadyHaveAccount.text = getString(R.string.already_have_account)
         binding.tvSignIn.text = getString(R.string.sign_in)
 
-        // Initially disable next button
-        binding.btnNext.isEnabled = false
-        binding.btnNext.alpha = 0.5f
+        // Next button initially enabled to show all validations on click if empty
+        binding.btnNext.isEnabled = true
+        binding.btnNext.alpha = 1.0f
     }
 
     private fun setupValidation() {
@@ -270,14 +270,55 @@ class SignUpActivity : BaseKioskActivity() {
     }
 
     private fun updateButtonState() {
-        val isValid = validateForm()
-        binding.btnNext.isEnabled = isValid && !isLoading
-        binding.btnNext.alpha = if (isValid && !isLoading) 1.0f else 0.5f
+        binding.btnNext.isEnabled = !isLoading
+        binding.btnNext.alpha = if (!isLoading) 1.0f else 0.5f
+    }
+
+    private fun showAllFieldErrors() {
+        if (binding.etName.text.toString().trim().isEmpty()) {
+            showFieldError(binding.tilName, "Name is required")
+        }
+        if (binding.etSurname.text.toString().trim().isEmpty()) {
+            showFieldError(binding.tilSurname, "Surname is required")
+        }
+        
+        val mobile = binding.etMobileNumber.text.toString().trim()
+        if (mobile.isEmpty()) {
+            showFieldError(binding.tilMobileNumber, "Mobile number is required")
+        } else if (!ValidationUtils.isValidPhoneNumber(mobile)) {
+            showFieldError(binding.tilMobileNumber, ValidationUtils.getPhoneErrorMessage())
+        }
+
+        val nationalId = binding.etNationalId.text.toString().trim()
+        if (nationalId.isEmpty()) {
+            showFieldError(binding.tilNationalId, "National ID is required")
+        } else if (!ValidationUtils.isValidNationalId(nationalId)) {
+            showFieldError(binding.tilNationalId, ValidationUtils.getNationalIdErrorMessage())
+        }
+
+        val email = binding.etEmail.text.toString().trim()
+        if (email.isNotEmpty() && !ValidationUtils.isValidEmail(email)) {
+             showFieldError(binding.tilEmail, ValidationUtils.getEmailErrorMessage())
+        }
+
+        if (binding.etHouseNumber.text.toString().trim().isEmpty()) {
+             showFieldError(binding.tilHouseNumber, "House number is required")
+        }
+        if (binding.etStreet.text.toString().trim().isEmpty()) {
+             showFieldError(binding.tilStreet, "Street is required")
+        }
+        if (binding.etSuburb.text.toString().trim().isEmpty()) {
+             showFieldError(binding.tilSuburb, "Suburb is required")
+        }
+        if (binding.etCity.text.toString().trim().isEmpty()) {
+             showFieldError(binding.tilCity, "City is required")
+        }
     }
 
     private fun navigateToPrivacyPolicy() {
         if (!validateForm()) {
-            showError(getString(R.string.error_required_field))
+            showAllFieldErrors()
+            showError("Please fill in all required fields correctly")
             return
         }
 

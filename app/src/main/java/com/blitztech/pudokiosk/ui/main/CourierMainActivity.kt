@@ -13,6 +13,7 @@ import com.blitztech.pudokiosk.ui.courier.CourierDeliverActivity
 import com.blitztech.pudokiosk.ui.courier.CourierProfileActivity
 import com.blitztech.pudokiosk.ui.courier.CourierRouteActivity
 import com.blitztech.pudokiosk.ui.courier.CourierStatusUpdateActivity
+import com.blitztech.pudokiosk.ui.courier.CourierAcceptOrdersActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
@@ -83,6 +84,10 @@ class CourierMainActivity : BaseKioskActivity() {
     private fun setupClickListeners() {
         binding.btnLogout.setOnClickListener {
             showLogoutDialog()
+        }
+
+        binding.cardAcceptOrders.setOnClickListener {
+            startActivity(Intent(this, CourierAcceptOrdersActivity::class.java))
         }
 
         binding.cardPickupPackages.setOnClickListener {

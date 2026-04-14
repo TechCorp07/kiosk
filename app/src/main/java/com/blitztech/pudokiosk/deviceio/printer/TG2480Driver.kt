@@ -604,14 +604,29 @@ class CustomTG2480HIIIDriver(
             printerMutex.withLock {
                 val device = customPrnDevice ?: throw Exception("Printer not initialized")
 
-                // Feed paper
-                device.javaClass.getMethod("feed", Int::class.java).invoke(device, 6)
+                // Feed paper — advance enough to clear the cutter
+                try {
+                    device.javaClass.getMethod("feed", Int::class.java).invoke(device, 6)
+                    Log.d(TAG, "Feed completed")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Feed not supported or failed: ${e.cause?.message ?: e.message}")
+                }
 
-                // Cut paper
-                device.javaClass.getMethod("cut", Int::class.java).invoke(device, 0)
+                // Cut paper (partial cut = 0)
+                try {
+                    device.javaClass.getMethod("cut", Int::class.java).invoke(device, 0)
+                    Log.d(TAG, "Cut completed")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Cut not supported or failed: ${e.cause?.message ?: e.message}")
+                }
 
-                // Present ticket
-                device.javaClass.getMethod("present", Int::class.java).invoke(device, 80)
+                // Present ticket — some TG2480 firmware versions don't support this
+                try {
+                    device.javaClass.getMethod("present", Int::class.java).invoke(device, 80)
+                    Log.d(TAG, "Present completed")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Present not supported by this printer firmware — skipping (Error: ${e.cause?.message ?: e.message})")
+                }
 
                 Log.d(TAG, "Feed and cut completed")
                 return@withContext Result.success(true)

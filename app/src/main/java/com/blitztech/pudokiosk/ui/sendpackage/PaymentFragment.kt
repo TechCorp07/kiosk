@@ -37,6 +37,10 @@ import java.util.*
  */
 class PaymentFragment : Fragment() {
 
+    companion object {
+        private const val TAG = "PaymentFragment"
+    }
+
     private var _binding: FragmentPaymentBinding? = null
     private val binding get() = _binding!!
 
@@ -144,19 +148,15 @@ class PaymentFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 // Fetch order directly to confirm reservation state and get the locked cell number
+                Log.i(TAG, "🔍 Verifying reservation for orderId=${data.orderId}")
                 val searchResult = apiRepository.searchOrderById(data.orderId, token)
                 if (searchResult is NetworkResult.Success) {
                     val order = searchResult.data.content.firstOrNull()
+                    Log.i(TAG, "📦 Order found: id=${order?.orderId}, status=${order?.status}, cellId=${order?.cellId}, cellNumber=${order?.cellNumber}")
                     if (order != null) {
                         // Populate full data for receipts/labels
                         data.cellId = order.cellId ?: ""
                         data.assignedLockNumber = order.cellNumber ?: 0
-                        if (data.assignedLockNumber == 0 && data.cellId.isNotBlank()) {
-                            // Backend did not provide a physical cell number — resolve from local cells DB
-                            val localCell = com.blitztech.pudokiosk.ZimpudoApp.database
-                                .cells().getCellByUuid(data.cellId)
-                            data.assignedLockNumber = localCell?.physicalDoorNumber ?: 0
-                        }
                         data.orderPrice = order.price ?: 0.0
                         data.currency = com.blitztech.pudokiosk.data.api.dto.order.Currency.fromCode(order.currency ?: "USD")
                         data.recipientMobile = order.recipientId ?: ""
@@ -165,23 +165,60 @@ class PaymentFragment : Fragment() {
                                 data.packageSize = com.blitztech.pudokiosk.data.api.dto.order.PackageSize.valueOf(order.packageDetails.packageSize)
                             } catch (e: Exception) {}
                         }
+
+                        // Step 1: If backend gave us a cellId but no physical door number, resolve from local DB
+                        if (data.assignedLockNumber == 0 && data.cellId.isNotBlank()) {
+                            Log.i(TAG, "🔎 Backend provided cellId=${data.cellId} but no cellNumber, resolving from local DB...")
+                            val localCell = ZimpudoApp.database.cells().getCellByUuid(data.cellId)
+                            if (localCell != null) {
+                                data.assignedLockNumber = localCell.physicalDoorNumber
+                                Log.i(TAG, "✅ Resolved cellId=${data.cellId} to physical door ${data.assignedLockNumber}")
+                            } else {
+                                Log.w(TAG, "⚠️ cellId=${data.cellId} not found in local cells DB")
+                            }
+                        }
+
+                        // Step 2: If still no cell assigned (backend didn't assign one at reservation time),
+                        // allocate the next available cell from local inventory
+                        if (data.assignedLockNumber == 0) {
+                            Log.i(TAG, "📭 No cell pre-assigned by backend, allocating from local inventory...")
+                            val lockerUuid = prefs.getPrimaryLockerUuid()
+                            val availableCell = ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
+                            if (availableCell != null) {
+                                data.cellId = availableCell.cellUuid
+                                data.assignedLockNumber = availableCell.physicalDoorNumber
+                                ZimpudoApp.database.cells().markCellOccupied(availableCell.cellUuid)
+                                Log.i(TAG, "✅ Locally assigned cellId=${data.cellId} door=${data.assignedLockNumber} from locker $lockerUuid")
+                            } else {
+                                // Check how many cells are in local DB at all
+                                val totalCells = ZimpudoApp.database.cells().getAllForLocker(lockerUuid)
+                                Log.e(TAG, "❌ No available cells in local DB for locker $lockerUuid (total cells in DB: ${totalCells.size})")
+                                totalCells.forEach { c ->
+                                    Log.d(TAG, "  Cell: uuid=${c.cellUuid}, door=${c.physicalDoorNumber}, status=${c.status}")
+                                }
+                            }
+                        }
                         
                         if (data.assignedLockNumber > 0) {
+                            Log.i(TAG, "🚀 Proceeding to ProcessingFragment with door=${data.assignedLockNumber}, cellId=${data.cellId}")
                             binding.progressBar.visibility = View.GONE
                             sendPackageActivity.goToNextPage() // Proceed to ProcessingFragment
                             return@launch
                         }
                     }
                     
+                    Log.e(TAG, "❌ Failed to locate locker cell for reserved order (orderId=${data.orderId}, cellId=${data.cellId}, lockNumber=${data.assignedLockNumber})")
                     binding.progressBar.visibility = View.GONE
                     binding.tvStatus.text = getString(R.string.auto_kt_failed_to_locate_locker_cell_p)
                 } else {
                     binding.progressBar.visibility = View.GONE
                     val errorMsg = (searchResult as? com.blitztech.pudokiosk.data.api.NetworkResult.Error)?.message ?: "Unknown error"
+                    Log.e(TAG, "❌ Reservation search failed: $errorMsg")
                     binding.tvStatus.text = "Reservation verification failed: $errorMsg"
                     Toast.makeText(requireContext(), "Verification failed: $errorMsg", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "❌ Exception during reservation verification", e)
                 binding.progressBar.visibility = View.GONE
                 binding.tvStatus.text = getString(R.string.auto_kt_system_error_during_verificati)
             }

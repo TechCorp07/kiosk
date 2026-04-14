@@ -180,7 +180,7 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
             try {
                 val startTime = System.currentTimeMillis()
                 val socket = Socket()
-                socket.connect(InetSocketAddress(host, port), 5000)
+                socket.connect(InetSocketAddress(host, port), 2000)
                 val endTime = System.currentTimeMillis()
 
                 results.append("✅ $host:$port - Connected (${endTime - startTime}ms)\n")
@@ -203,7 +203,7 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
             try {
                 val startTime = System.currentTimeMillis()
                 val address = InetAddress.getByName(host)
-                val reachable = address.isReachable(5000)
+                val reachable = address.isReachable(2000)
                 val endTime = System.currentTimeMillis()
 
                 if (reachable) {
@@ -225,8 +225,8 @@ class NetworkDiagnosticsActivity : BaseKioskActivity() {
             val url = URL("https://api.zimpudo.com/api/v1/health")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
-            connection.connectTimeout = 10000
-            connection.readTimeout = 10000
+            connection.connectTimeout = 2000
+            connection.readTimeout = 2000
 
             val responseCode = connection.responseCode
             val responseMessage = connection.responseMessage

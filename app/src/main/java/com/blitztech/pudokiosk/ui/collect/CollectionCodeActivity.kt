@@ -124,6 +124,19 @@ class CollectionCodeActivity : BaseKioskActivity() {
                     return
                 }
                 assignedCellNumber = resp.cellNumber ?: 0
+
+                // If backend couldn't resolve the physical door number (cellId is a UUID),
+                // resolve it locally from the kiosk's Room DB
+                if (assignedCellNumber <= 0 && !resp.cellId.isNullOrBlank()) {
+                    val localCell = try {
+                        ZimpudoApp.database.cells().getCellByUuid(resp.cellId)
+                    } catch (_: Exception) { null }
+                    if (localCell != null) {
+                        assignedCellNumber = localCell.physicalDoorNumber
+                        android.util.Log.d("CollectionCode", "Resolved cellId ${resp.cellId} → door $assignedCellNumber from local DB")
+                    }
+                }
+
                 if (assignedCellNumber <= 0) {
                     showError("No locker cell assigned — contact support.")
                     return

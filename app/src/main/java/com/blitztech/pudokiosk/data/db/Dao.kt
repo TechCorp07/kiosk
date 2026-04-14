@@ -69,6 +69,9 @@ interface CellsDao {
     @Query("SELECT * FROM cells WHERE lockerUuid = :lockerUuid AND status = 'AVAILABLE' ORDER BY physicalDoorNumber ASC LIMIT 1")
     suspend fun getNextAvailableCell(lockerUuid: String): CellEntity?
 
+    @Query("SELECT * FROM cells WHERE lockerUuid = :lockerUuid AND cellSize = :size AND status = 'AVAILABLE' ORDER BY physicalDoorNumber ASC LIMIT 1")
+    suspend fun getNextAvailableCellBySize(lockerUuid: String, size: String): CellEntity?
+
     @Query("SELECT * FROM cells WHERE lockerUuid = :lockerUuid AND status = 'AVAILABLE' ORDER BY physicalDoorNumber ASC")
     suspend fun getAvailableCells(lockerUuid: String): List<CellEntity>
 

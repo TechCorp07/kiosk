@@ -29,8 +29,6 @@ class RegistrationProcessActivity : BaseKioskActivity() {
 
     private lateinit var formData: SignUpFormData
     private var userType: UserType = UserType.CUSTOMER
-    private var isLoading = false
-    private var registrationStep = 1 // 1 = Register User, 2 = Upload KYC
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,49 +42,32 @@ class RegistrationProcessActivity : BaseKioskActivity() {
 
         setupDependencies()
         setupViews()
-        setupClickListeners()
-        startRegistrationProcess()
+        registerUser()
     }
 
     private fun setupDependencies() {
         prefs = ZimpudoApp.prefs
-
-        // Use app-wide singleton API repository
         apiRepository = ZimpudoApp.apiRepository
     }
 
     private fun setupViews() {
-        binding.tvTitle.text = getString(R.string.kyc_upload)
-        binding.tvSubtitle.text = getString(R.string.kyc_subtitle)
-        binding.tvDocumentType.text = getString(R.string.kyc_national_id)
-        binding.btnUploadDocument.text = getString(R.string.upload_document)
-
-        // Show step 1 initially
-        updateStepUI(1)
-    }
-
-    private fun setupClickListeners() {
+        binding.tvTitle.text = getString(R.string.creating_account)
+        binding.tvLoadingMessage.text = getString(R.string.creating_account)
         binding.btnBack.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
-
-        binding.btnUploadDocument.setOnClickListener {
-            if (!isLoading && registrationStep == 2) {
-                uploadKycDocument()
-            }
+        binding.btnRetry.setOnClickListener {
+            binding.llErrorState.visibility = View.GONE
+            registerUser()
         }
     }
 
-    private fun startRegistrationProcess() {
-        registerUser()
-    }
-
     private fun registerUser() {
-        setLoading(true, getString(R.string.creating_account))
-        updateStepUI(1)
+        binding.progressBar.visibility = View.VISIBLE
+        binding.tvLoadingMessage.visibility = View.VISIBLE
 
         lifecycleScope.launch {
-            // Walk-in kiosk registration uses /users/partial (no auth required)
+            // Walk-in kiosk registration uses /users/partial (no KYC required)
             val result = apiRepository.partialRegisterUser(
                 name = formData.name,
                 surname = formData.surname,
@@ -102,57 +83,19 @@ class RegistrationProcessActivity : BaseKioskActivity() {
             when (result) {
                 is NetworkResult.Success -> {
                     showSuccess(result.data.message)
-                    // Move to KYC step
-                    registrationStep = 2
-                    updateStepUI(2)
-                }
-                is NetworkResult.Error -> {
-                    showError(result.message)
-                }
-                is NetworkResult.Loading -> {
-                    // Handle loading state if needed
-                }
-            }
-            setLoading(false)
-        }
-    }
-
-    private fun uploadKycDocument() {
-        setLoading(true, getString(R.string.uploading_document))
-
-        lifecycleScope.launch {
-            val result = apiRepository.uploadKyc(formData.mobileNumber)
-
-            when (result) {
-                is NetworkResult.Success -> {
-                    showSuccess(getString(R.string.kyc_upload_success))
-                    // Registration complete, navigate to sign in
                     navigateToSignIn()
                 }
                 is NetworkResult.Error -> {
                     showError(result.message)
+                    binding.progressBar.visibility = View.GONE
+                    binding.tvLoadingMessage.visibility = View.GONE
+                    
+                    binding.llErrorState.visibility = View.VISIBLE
+                    binding.tvErrorMessage.text = result.message
                 }
                 is NetworkResult.Loading -> {
                     // Handle loading state if needed
                 }
-            }
-            setLoading(false)
-        }
-    }
-
-    private fun updateStepUI(step: Int) {
-        when (step) {
-            1 -> {
-                binding.tvStepIndicator.text = getString(R.string.auto_kt_step_1_of_2_creating_account)
-                binding.cardKyc.visibility = View.GONE
-                binding.btnUploadDocument.visibility = View.GONE
-                binding.progressBar.visibility = View.VISIBLE
-            }
-            2 -> {
-                binding.tvStepIndicator.text = getString(R.string.auto_kt_step_2_of_2_document_verificat)
-                binding.cardKyc.visibility = View.VISIBLE
-                binding.btnUploadDocument.visibility = View.VISIBLE
-                binding.progressBar.visibility = View.GONE
             }
         }
     }
@@ -168,17 +111,6 @@ class RegistrationProcessActivity : BaseKioskActivity() {
         }
         startActivity(intent)
         finish()
-    }
-
-    private fun setLoading(loading: Boolean, message: String = "") {
-        isLoading = loading
-        binding.btnUploadDocument.isEnabled = !loading
-        if (loading) {
-            binding.tvLoadingMessage.text = message
-            binding.tvLoadingMessage.visibility = View.VISIBLE
-        } else {
-            binding.tvLoadingMessage.visibility = View.GONE
-        }
     }
 
     private fun showError(message: String) {

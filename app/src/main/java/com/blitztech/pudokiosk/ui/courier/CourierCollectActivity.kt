@@ -101,17 +101,19 @@ class CourierCollectActivity : BaseKioskActivity() {
                     is NetworkResult.Success -> {
                         val packages = response.data.pickedUpPackages ?: emptyList()
                         // Upsert into local database
+                        // waybillNumber = actual tracking number (e.g. CB2440353187ZW)
+                        // orderId = backend UUID — stored in senderId field for courier reference
                         packages.forEach { pkg ->
                             if (!pkg.orderId.isNullOrBlank()) {
                                 db.parcels().upsert(
                                     com.blitztech.pudokiosk.data.db.ParcelEntity(
                                         id = pkg.cellId ?: java.util.UUID.randomUUID().toString(),
-                                        trackingCode = pkg.orderId,
+                                        trackingCode = pkg.waybillNumber ?: pkg.orderId,
                                         lockNumber = pkg.cellNumber ?: 0,
                                         status = "IN_LOCKER",
                                         size = "M",
-                                        recipientId = "PUDO Recipient", // generic fallback
-                                        senderId = "PUDO Sender",
+                                        recipientId = "PUDO Recipient",
+                                        senderId = pkg.orderId,  // orderId stored here for pickup-scan call
                                         lockerId = lockerId,
                                         createdAt = System.currentTimeMillis()
                                     )
@@ -138,9 +140,9 @@ class CourierCollectActivity : BaseKioskActivity() {
                 val courierParcels = parcels.map {
                     com.blitztech.pudokiosk.data.api.dto.courier.CourierParcel(
                         parcelId = it.id,
-                        orderId = it.trackingCode, // DB currently maps backend orderId to trackingCode
+                        orderId = it.senderId,        // backend UUID stored in senderId
                         lockNumber = it.lockNumber,
-                        tracking = it.trackingCode,
+                        tracking = it.trackingCode,   // actual tracking number (e.g. CB2440353187ZW)
                         size = it.size,
                         recipientName = it.recipientId,
                         status = it.status

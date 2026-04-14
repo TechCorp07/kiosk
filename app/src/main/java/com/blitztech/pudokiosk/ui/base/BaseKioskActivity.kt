@@ -72,6 +72,16 @@ abstract class BaseKioskActivity : AppCompatActivity() {
         cacheParentActivity()
     }
 
+    override fun setContentView(layoutResID: Int) {
+        super.setContentView(layoutResID)
+        com.blitztech.pudokiosk.utils.KeyboardResizer.assistActivity(this)
+    }
+
+    override fun setContentView(view: View) {
+        super.setContentView(view)
+        com.blitztech.pudokiosk.utils.KeyboardResizer.assistActivity(this)
+    }
+
     // ---------------------------------------------------------------------------
     // Display density auto-scaling
     // ---------------------------------------------------------------------------

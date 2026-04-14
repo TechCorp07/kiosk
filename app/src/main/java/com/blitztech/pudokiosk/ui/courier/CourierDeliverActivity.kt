@@ -173,13 +173,14 @@ class CourierDeliverActivity : BaseKioskActivity() {
         lifecycleScope.launch {
             val token = prefs.getAccessToken() ?: ""
 
-            // Search order to resolve orderId
+            // Search order to resolve orderId + package size
             showStatus("🔍 Looking up order for: $barcode…")
             val orderResult = api.searchOrder(barcode, token)
-            val orderId = when (orderResult) {
-                is NetworkResult.Success -> orderResult.data.content.firstOrNull()?.orderId
+            val orderInfo = when (orderResult) {
+                is NetworkResult.Success -> orderResult.data.content.firstOrNull()
                 else -> null
             }
+            val orderId = orderInfo?.orderId
 
             if (orderId == null) {
                 showToast("⚠️ Parcel not found: $barcode")
@@ -187,16 +188,28 @@ class CourierDeliverActivity : BaseKioskActivity() {
                 return@launch
             }
 
-            // Assign a cell locally from Room DB
+            // Assign a cell locally matching the package size from the order
             val lockerUuid = prefs.getPrimaryLockerUuid()
+            val packageSize = orderInfo.packageDetails?.packageSize  // e.g. "M", "L", "XL"
             val cell = try {
-                ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
+                // Try to assign a cell of the same size as the source locker
+                if (!packageSize.isNullOrBlank()) {
+                    ZimpudoApp.database.cells().getNextAvailableCellBySize(lockerUuid, packageSize)
+                        ?: ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid) // fallback: any size
+                } else {
+                    ZimpudoApp.database.cells().getNextAvailableCell(lockerUuid)
+                }
             } catch (_: Exception) { null }
 
             if (cell == null) {
                 showToast("⛔ No available cells — kiosk may be full.")
                 enterScanMode()
                 return@launch
+            }
+
+            if (!packageSize.isNullOrBlank() && cell.cellSize != packageSize) {
+                showStatus("⚠ No '$packageSize' cell available. Using ${cell.cellSize} cell ${cell.physicalDoorNumber} instead…")
+                kotlinx.coroutines.delay(1500) // brief pause so courier sees the warning
             }
 
             lastTxnTracking = barcode

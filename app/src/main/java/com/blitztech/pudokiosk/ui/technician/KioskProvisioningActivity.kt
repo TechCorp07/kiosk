@@ -91,6 +91,10 @@ class KioskProvisioningActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Ensure Kiosk lock resumes after returning from Android Settings if provisioned as DeviceOwner
+        com.blitztech.pudokiosk.service.KioskLockManager.setMaintenanceMode(this, false)
+        com.blitztech.pudokiosk.service.KioskLockManager.ensureLockTaskOnStartup(this)
+
         // Refresh permission status when returning from system settings
         if (::tvPermCamera.isInitialized) {
             refreshPermissionStatus()
@@ -123,6 +127,7 @@ class KioskProvisioningActivity : AppCompatActivity() {
 
         val btnWifiSettings = findViewById<android.widget.Button>(R.id.btnWifiSettings)
         btnWifiSettings.setOnClickListener {
+            com.blitztech.pudokiosk.service.KioskLockManager.setMaintenanceMode(this, true)
             val intent = Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
             startActivity(intent)
         }
@@ -232,6 +237,19 @@ class KioskProvisioningActivity : AppCompatActivity() {
                         prefs.saveAllLockerUuids(
                             body.lockers.map { it.lockerId }
                         )
+
+                        // Sync locker coordinates from backend (eliminates hardcoded default)
+                        val primaryLocker = body.lockers.firstOrNull()
+                        if (primaryLocker?.latitude != null && primaryLocker.longitude != null) {
+                            prefs.setKioskLatitude(primaryLocker.latitude)
+                            prefs.setKioskLongitude(primaryLocker.longitude)
+                            android.util.Log.d(TAG, "Kiosk location synced from backend: " +
+                                "${primaryLocker.latitude}, ${primaryLocker.longitude}")
+                        } else {
+                            android.util.Log.w(TAG, "⚠️ Backend locker has no coordinates — " +
+                                "fare calculations will use fallback defaults until admin sets location")
+                        }
+
                         prefs.setSiteName(body.siteName)
                         prefs.setLockerCount(body.lockerCount)
                         prefs.setApiBaseUrlOverride(apiOverride)

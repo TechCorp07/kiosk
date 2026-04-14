@@ -172,6 +172,7 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".ui.onboarding.UserTypeSelectionActivity" />
 
@@ -322,6 +323,13 @@
         <activity android:name=".ui.courier.CourierStatusUpdateActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+
+        <activity android:name=".ui.courier.CourierAcceptOrdersActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.ZimpudoKiosk.Fullscreen"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:parentActivityName=".ui.main.CourierMainActivity" />
 
         <!-- Legacy Activities (for reference/reuse) -->
         <activity android:name=".ui.technician.DevSettingsActivity"

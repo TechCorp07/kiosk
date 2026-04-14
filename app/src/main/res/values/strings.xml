@@ -74,8 +74,8 @@
     <string name="email">Email</string>
     <string name="email_optional">Email (Optional)</string>
     <string name="national_id">National ID Number</string>
-    <string name="national_id_format">Format: XX-XXXXXXX-X-XX</string>
-    <string name="mobile_number_format">Format: +2637XXXXXXXX</string>
+    <string name="national_id_format">National ID (e.g. 12-1234567-A-12)</string>
+    <string name="mobile_number_format">Mobile (e.g. +263712345678)</string>
 
     <!-- Address Information -->
     <string name="address_information">Address Information</string>

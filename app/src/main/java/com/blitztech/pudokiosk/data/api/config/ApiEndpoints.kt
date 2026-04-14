@@ -61,6 +61,8 @@ object ApiEndpoints {
     const val COURIER_ORDERS = "api/v1/orders/couriers"
     // POST /api/v1/orders/{orderId}/issue → Report issue with a parcel
     const val COURIER_ISSUE = "api/v1/orders/{orderId}/issue"
+    // PATCH /api/v1/orders/{orderId}/bind → Accept/bind order to courier
+    const val COURIER_BIND_ORDER = "api/v1/orders/{orderId}/bind"
 
     // ── Locker Cell Management (kiosk heartbeat + status reporting) ─
     const val LOCKER_STATUS = "api/v1/lockers/{lockerId}/status"   // PATCH ?status=ONLINE (API role)
@@ -91,6 +93,9 @@ object ApiEndpoints {
 
     fun getCourierIssueUrl(orderId: String): String =
         COURIER_ISSUE.replace("{orderId}", orderId)
+
+    fun getCourierBindOrderUrl(orderId: String): String =
+        COURIER_BIND_ORDER.replace("{orderId}", orderId)
 
     fun getLockerStatusUrl(lockerId: String): String =
         LOCKER_STATUS.replace("{lockerId}", lockerId)

@@ -131,6 +131,18 @@ class SyncWorker(
                 result is NetworkResult.Success
             }
 
+            // ── Sender dropoff at source locker (transactions) ──────────────────
+            "sender_dropoff" -> {
+                val map = moshi.adapter(Map::class.java).fromJson(event.payloadJson)
+                    ?: return false
+                @Suppress("UNCHECKED_CAST")
+                val m = map as Map<String, Any?>
+                val orderId = m["orderId"] as? String ?: return false
+                val cellId = m["cellId"] as? String ?: return false
+                val result = api.senderDropoff(orderId, cellId, token)
+                result is NetworkResult.Success
+            }
+
             // ── Issue report (pending backend endpoint) ─────────────────────────
             "courier_issue_report" -> {
                 val map = moshi.adapter(Map::class.java).fromJson(event.payloadJson)

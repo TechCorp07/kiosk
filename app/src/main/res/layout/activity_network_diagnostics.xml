@@ -103,22 +103,26 @@
 
                 <Button
                     android:id="@+id/btnConnectivityTest"
-                    style="@style/Button.Outlined"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="4dp"
                     android:text="@string/auto_connectivity"
+                    android:textColor="@color/zimpudo_primary"
+                    app:strokeColor="@color/zimpudo_primary"
                     android:textSize="20sp" />
 
                 <Button
                     android:id="@+id/btnSpeedTest"
-                    style="@style/Button.Outlined"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     android:layout_marginStart="4dp"
                     android:text="@string/auto_speed_info"
+                    android:textColor="@color/zimpudo_primary"
+                    app:strokeColor="@color/zimpudo_primary"
                     android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>

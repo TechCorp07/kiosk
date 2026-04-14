@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@drawable/bg_gradient_primary"
     android:fillViewport="true">
 
@@ -71,7 +72,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="@string/personal_information"
                 android:textColor="@color/zimpudo_primary"
-                android:textSize="22sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
             <!-- Name Input -->
@@ -86,6 +87,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -107,6 +109,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etSurname"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -128,6 +131,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etEmail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -149,6 +153,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etMobileNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -170,6 +175,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etNationalId"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -187,7 +193,7 @@
                 android:layout_marginBottom="@dimen/spacing_md"
                 android:text="@string/address_information"
                 android:textColor="@color/zimpudo_primary"
-                android:textSize="22sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
             <!-- House Number Input -->
@@ -202,6 +208,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etHouseNumber"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -223,6 +230,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etStreet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -244,6 +252,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etSuburb"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -265,6 +274,7 @@
                 app:boxStrokeColor="@color/zimpudo_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:textSize="26sp"
                     android:id="@+id/etCity"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -275,15 +285,35 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Next Button -->
-            <Button
-                android:id="@+id/btnNext"
-                style="@style/Button.Primary"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/button_height"
-                android:layout_marginBottom="@dimen/spacing_lg"
-                android:text="@string/next"
-                android:drawableEnd="@drawable/ic_arrow_forward"
-                android:drawablePadding="@dimen/spacing_sm" />
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_weight="0.125"
+                    android:layout_height="1dp" />
+
+                <Button
+                    android:id="@+id/btnNext"
+                    style="@style/Button.Primary"
+                    android:layout_width="0dp"
+                    android:layout_weight="0.75"
+                    android:layout_height="120dp"
+                    android:textSize="44sp"
+                    android:text="@string/next"
+                    android:drawableEnd="@drawable/ic_arrow_forward"
+                    android:drawablePadding="@dimen/spacing_sm" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_weight="0.125"
+                    android:layout_height="1dp" />
+
+            </LinearLayout>
 
             <!-- Sign In Link -->
             <LinearLayout
@@ -303,7 +333,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/already_have_account"
                     android:textColor="@color/text_secondary"
-                    android:textSize="20sp" />
+                    android:textSize="24sp" />
 
                 <TextView
                     android:id="@+id/tvSignIn"
@@ -312,7 +342,7 @@
                     android:layout_marginStart="4dp"
                     android:text="@string/sign_in"
                     android:textColor="@color/zimpudo_primary"
-                    android:textSize="20sp"
+                    android:textSize="24sp"
                     android:textStyle="bold" />
 
             </LinearLayout>
